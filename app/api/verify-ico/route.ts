@@ -71,12 +71,29 @@ export async function GET(request: NextRequest) {
     // Extract DIČ (VAT ID)
     const dic = data.dic || null
 
-    // Extract bank accounts
+    // Extract bank accounts from various possible locations in ARES response
     const bankAccounts: string[] = []
-    if (data.czNace && Array.isArray(data.czNace)) {
-      data.czNace.forEach((nace: any) => {
-        if (nace.bankovniSpojeni) {
-          bankAccounts.push(nace.bankovniSpojeni)
+
+    // Try uverejneneUdaje (published data) - this is where ARES typically stores bank accounts
+    if (data.uverejneneUdaje && Array.isArray(data.uverejneneUdaje)) {
+      data.uverejneneUdaje.forEach((udaj: any) => {
+        if (udaj.bankovniSpojeni && Array.isArray(udaj.bankovniSpojeni)) {
+          udaj.bankovniSpojeni.forEach((ucet: any) => {
+            const accountString = `${ucet.cisloUctu || ""}/${ucet.kodBanky || ""}`
+            if (accountString !== "/") {
+              bankAccounts.push(accountString)
+            }
+          })
+        }
+      })
+    }
+
+    // Try direct bankovniSpojeni property
+    if (data.bankovniSpojeni && Array.isArray(data.bankovniSpojeni)) {
+      data.bankovniSpojeni.forEach((ucet: any) => {
+        const accountString = `${ucet.cisloUctu || ""}/${ucet.kodBanky || ""}`
+        if (accountString !== "/" && !bankAccounts.includes(accountString)) {
+          bankAccounts.push(accountString)
         }
       })
     }

@@ -26,6 +26,8 @@ interface VerificationResult {
     psc: string
     nazevKraje: string
   }
+  dic?: string
+  bankAccounts?: string[]
   jednatele?: string[]
   insolvencyStatus?: {
     hasInsolvency: boolean
@@ -128,6 +130,24 @@ export function IcoVerifier({ value, onChange, onVerified, label = "IČO", requi
                     <p>
                       {result.sidlo.psc} {result.sidlo.nazevObce}
                     </p>
+                  </div>
+                )}
+                {/* DIČ */}
+                {result.dic && (
+                  <div className="text-sm pt-2 border-t border-border">
+                    <p className="font-semibold text-foreground">DIČ:</p>
+                    <p className="text-muted-foreground">{result.dic}</p>
+                  </div>
+                )}
+                {/* Bank Accounts */}
+                {result.bankAccounts && result.bankAccounts.length > 0 && (
+                  <div className="text-sm pt-2 border-t border-border">
+                    <p className="font-semibold text-foreground">Bankovní účty:</p>
+                    <ul className="text-muted-foreground">
+                      {result.bankAccounts.map((account, idx) => (
+                        <li key={idx}>• {account}</li>
+                      ))}
+                    </ul>
                   </div>
                 )}
                 {result.jednatele && result.jednatele.length > 0 && (

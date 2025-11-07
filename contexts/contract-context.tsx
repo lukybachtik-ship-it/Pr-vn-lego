@@ -80,10 +80,6 @@ export function ContractProvider({ children }: { children: React.ReactNode }) {
     setIsDirty(false)
   }, [])
 
-  useEffect(() => {
-    setBlocks([])
-  }, [contractType])
-
   const saveContractDraft = useCallback(() => {
     if (typeof window !== "undefined") {
       const draft = {
