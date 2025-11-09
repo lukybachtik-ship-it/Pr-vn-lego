@@ -91,20 +91,64 @@ export default function DraftsPage() {
   }
 
   const handleDuplicate = (draft: Draft) => {
-    const key = draft.id
-    const saved = localStorage.getItem(key)
-    if (saved) {
-      const data = JSON.parse(saved)
-      const newKey = `${key}_copy_${Date.now()}`
-      localStorage.setItem(newKey, JSON.stringify({ ...data, name: `${data.name} (kopie)` }))
-      setDrafts([
-        ...drafts,
-        {
-          ...draft,
-          id: newKey,
-          name: `${draft.name} (kopie)`,
-        },
-      ])
+    // Always save copies to the contracts store
+    const contracts = localStorage.getItem("contracts")
+    const contractsData = contracts ? JSON.parse(contracts) : {}
+
+    let sourceData
+    if (draft.id === "contract-draft") {
+      const saved = localStorage.getItem("contract-draft")
+      sourceData = saved ? JSON.parse(saved) : null
+    } else {
+      sourceData = contractsData[draft.id]
+    }
+
+    if (sourceData) {
+      const newId = `contract-${Date.now()}`
+      const newContract = {
+        ...sourceData,
+        id: newId,
+        name: `${sourceData.name || draft.name} (kopie)`,
+        savedAt: new Date().toISOString(),
+        finalized: false,
+      }
+
+      contractsData[newId] = newContract
+      localStorage.setItem("contracts", JSON.stringify(contractsData))
+
+      // Refresh the drafts list
+      const loadDrafts = () => {
+        const allDrafts: Draft[] = []
+        const currentDraft = localStorage.getItem("contract-draft")
+        if (currentDraft) {
+          try {
+            const data = JSON.parse(currentDraft)
+            allDrafts.push({
+              id: "contract-draft",
+              name: `Aktuální koncept`,
+              type: data.type,
+              date: new Date(data.savedAt).toLocaleDateString("cs-CZ"),
+              blocks: data.blocks?.length || 0,
+            })
+          } catch (e) {}
+        }
+
+        Object.entries(contractsData).forEach(([id, contract]: [string, any]) => {
+          if (!contract.finalized) {
+            allDrafts.push({
+              id,
+              name: contract.name || `Koncept ${id.slice(0, 8)}`,
+              type: contract.type,
+              date: new Date(contract.savedAt).toLocaleDateString("cs-CZ"),
+              blocks: contract.blocks?.length || 0,
+            })
+          }
+        })
+
+        setDrafts(allDrafts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()))
+      }
+
+      loadDrafts()
     }
   }
 
