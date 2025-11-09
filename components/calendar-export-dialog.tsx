@@ -55,6 +55,8 @@ export function CalendarExportDialog({
 
   const handleAuth = () => {
     setIsAuthenticating(true)
+    // Store current URL to return after OAuth
+    localStorage.setItem("calendar_return_url", window.location.pathname)
     window.location.href = "/api/calendar/auth"
   }
 

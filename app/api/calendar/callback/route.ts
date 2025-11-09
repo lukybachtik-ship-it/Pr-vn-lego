@@ -33,9 +33,10 @@ export async function GET(request: NextRequest) {
       throw new Error("No access token received")
     }
 
-    // Store tokens in localStorage via URL params (client-side will handle)
+    // Redirect back to stored URL or homepage
+    // We'll use a temporary page that handles the token storage and redirect
     const response = NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL}/?calendar_success=true&access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token || ""}`
+      `${process.env.NEXTAUTH_URL}/calendar-callback?access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token || ""}`
     )
 
     return response

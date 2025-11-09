@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useMemo, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertCircle, Copy, ChevronLeft, CheckCircle } from "lucide-react"
@@ -24,16 +24,30 @@ interface ContractReviewProps {
 
 export function ContractReview({ contractType, blocks }: ContractReviewProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [exportFormat, setExportFormat] = useState<"docx" | "pdf">("docx")
   const [copied, setCopied] = useState(false)
   const [showFinalizeDialog, setShowFinalizeDialog] = useState(false)
   const [contractName, setContractName] = useState("")
+  const [showCalendarDialog, setShowCalendarDialog] = useState(false)
+  const [finalizedContractId, setFinalizedContractId] = useState<string | null>(null)
 
   // Analyze contract for missing blocks
   const analysis = useMemo(() => analyzeContract(contractType, blocks), [contractType, blocks])
 
   // Extract timeline deadlines
   const timeline = useMemo(() => extractContractDeadlines(blocks, contractType), [blocks, contractType])
+
+  // Check for OAuth callback return
+  useEffect(() => {
+    const calendarSuccess = searchParams.get("calendar_success")
+    if (calendarSuccess === "true" && timeline.deadlines.length > 0) {
+      // Reopen calendar dialog after OAuth
+      setShowCalendarDialog(true)
+      // Clean up URL
+      window.history.replaceState({}, "", window.location.pathname)
+    }
+  }, [searchParams, timeline.deadlines.length])
 
   const handleAddMissingBlock = (blockId: string) => {
     // Navigate back to builder with the block to add
@@ -327,9 +341,6 @@ export function ContractReview({ contractType, blocks }: ContractReviewProps) {
   const handleExport = (format: "docx" | "pdf") => {
     setExportFormat(format)
   }
-
-  const [showCalendarDialog, setShowCalendarDialog] = useState(false)
-  const [finalizedContractId, setFinalizedContractId] = useState<string | null>(null)
 
   const handleFinalizeContract = () => {
     const contract = finalizeContract(contractType, blocks, contractName || undefined)
