@@ -4,10 +4,11 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChevronLeft, FileText, Trash2 } from "lucide-react"
+import { ChevronLeft, FileText, Trash2, Calendar } from "lucide-react"
 import { getContract, deleteContract } from "@/lib/contract-storage"
 import { ContractTimelineComponent } from "@/components/contract-timeline"
 import { HandoverProtocolGenerator } from "@/components/handover-protocol-generator"
+import { CalendarExportDialog } from "@/components/calendar-export-dialog"
 import { extractContractDeadlines } from "@/lib/contract-timeline"
 import type { SavedContract } from "@/lib/contract-storage"
 
@@ -16,6 +17,7 @@ export default function ContractDetailPage() {
   const router = useRouter()
   const [contract, setContract] = useState<SavedContract | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [showCalendarDialog, setShowCalendarDialog] = useState(false)
 
   useEffect(() => {
     const contractId = params.id as string
@@ -167,7 +169,18 @@ export default function ContractDetailPage() {
             )}
 
             {/* Timeline */}
-            {timeline.deadlines.length > 0 && <ContractTimelineComponent timeline={timeline} />}
+            {timeline.deadlines.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">Časová osa smlouvy</h2>
+                  <Button onClick={() => setShowCalendarDialog(true)} variant="outline" size="sm">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Přidat do kalendáře
+                  </Button>
+                </div>
+                <ContractTimelineComponent timeline={timeline} />
+              </div>
+            )}
 
             {/* Contract Info */}
             <Card>
@@ -198,6 +211,17 @@ export default function ContractDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Calendar Export Dialog */}
+      {showCalendarDialog && (
+        <CalendarExportDialog
+          open={showCalendarDialog}
+          onOpenChange={setShowCalendarDialog}
+          deadlines={timeline.deadlines}
+          contractId={contract.id}
+          contractName={contract.name || "Vaše smlouva"}
+        />
+      )}
     </main>
   )
 }
