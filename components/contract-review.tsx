@@ -42,6 +42,17 @@ export function ContractReview({ contractType, blocks }: ContractReviewProps) {
   useEffect(() => {
     const calendarSuccess = searchParams.get("calendar_success")
     if (calendarSuccess === "true" && timeline.deadlines.length > 0) {
+      // Restore contract data from storage
+      const pendingContractId = localStorage.getItem("pending_calendar_contract_id")
+      const pendingContractName = localStorage.getItem("pending_calendar_contract_name")
+
+      if (pendingContractId) {
+        setFinalizedContractId(pendingContractId)
+      }
+      if (pendingContractName) {
+        setContractName(pendingContractName)
+      }
+
       // Reopen calendar dialog after OAuth
       setShowCalendarDialog(true)
       // Clean up URL
@@ -349,6 +360,9 @@ export function ContractReview({ contractType, blocks }: ContractReviewProps) {
 
     // Show calendar dialog if there are deadlines
     if (timeline.deadlines.length > 0) {
+      // Store contract data for OAuth return
+      localStorage.setItem("pending_calendar_contract_id", contract.id)
+      localStorage.setItem("pending_calendar_contract_name", contractName || "Vaše smlouva")
       setShowCalendarDialog(true)
     } else {
       router.push(`/?finalized=${contract.id}`)
@@ -357,6 +371,9 @@ export function ContractReview({ contractType, blocks }: ContractReviewProps) {
 
   const handleCalendarDialogClose = () => {
     setShowCalendarDialog(false)
+    // Clean up storage
+    localStorage.removeItem("pending_calendar_contract_id")
+    localStorage.removeItem("pending_calendar_contract_name")
     if (finalizedContractId) {
       router.push(`/?finalized=${finalizedContractId}`)
     }
