@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
   authUrl.searchParams.append("response_type", "code")
   authUrl.searchParams.append("scope", "https://www.googleapis.com/auth/calendar.events")
   authUrl.searchParams.append("access_type", "offline")
-  authUrl.searchParams.append("prompt", "consent")
 
   return NextResponse.redirect(authUrl.toString())
 }
