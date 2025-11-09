@@ -58,16 +58,19 @@ export function ContractBlock({ block, index, onRemove, onUpdate }: ContractBloc
               onVerified={(data) => handlePartyVerified("party1", data)}
               label="IČO 1. strany"
             />
-            <div className="text-sm text-muted-foreground">
-              {formData.party1Address && (
-                <>
-                  <p>{formData.party1Address}</p>
-                  <p>
+            {formData.party1Address && (
+              <div className="space-y-2 p-3 bg-accent/10 rounded-md border border-accent/20">
+                <p className="text-xs font-semibold text-accent">✓ Automaticky vyplněno z ARES:</p>
+                <div className="text-sm">
+                  <p className="font-medium">{formData.party1Name}</p>
+                  <p className="text-muted-foreground">{formData.party1Address}</p>
+                  <p className="text-muted-foreground">
                     {formData.party1Psc} {formData.party1City}
                   </p>
-                </>
-              )}
-            </div>
+                  {formData.party1Region && <p className="text-muted-foreground">{formData.party1Region}</p>}
+                </div>
+              </div>
+            )}
 
             <div className="border-t border-border pt-4 mt-4">
               <label className="text-sm font-semibold">Jméno 2. strany</label>
@@ -83,16 +86,19 @@ export function ContractBlock({ block, index, onRemove, onUpdate }: ContractBloc
               onVerified={(data) => handlePartyVerified("party2", data)}
               label="IČO 2. strany"
             />
-            <div className="text-sm text-muted-foreground">
-              {formData.party2Address && (
-                <>
-                  <p>{formData.party2Address}</p>
-                  <p>
+            {formData.party2Address && (
+              <div className="space-y-2 p-3 bg-accent/10 rounded-md border border-accent/20">
+                <p className="text-xs font-semibold text-accent">✓ Automaticky vyplněno z ARES:</p>
+                <div className="text-sm">
+                  <p className="font-medium">{formData.party2Name}</p>
+                  <p className="text-muted-foreground">{formData.party2Address}</p>
+                  <p className="text-muted-foreground">
                     {formData.party2Psc} {formData.party2City}
                   </p>
-                </>
-              )}
-            </div>
+                  {formData.party2Region && <p className="text-muted-foreground">{formData.party2Region}</p>}
+                </div>
+              </div>
+            )}
           </div>
         )
       case "scope":

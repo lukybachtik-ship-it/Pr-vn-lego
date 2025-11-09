@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Trash2, Play, Copy, Plus } from "lucide-react"
+import { ContractTypeSelector } from "@/components/contract-type-selector"
 
 interface Draft {
   id: string
@@ -18,6 +19,7 @@ export default function DraftsPage() {
   const router = useRouter()
   const [drafts, setDrafts] = useState<Draft[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [showTypeSelector, setShowTypeSelector] = useState(false)
 
   useEffect(() => {
     const loadDrafts = () => {
@@ -123,6 +125,13 @@ export default function DraftsPage() {
     return names[type] || type
   }
 
+  const handleSelectType = (type: string) => {
+    setShowTypeSelector(false)
+    // Clear the current draft before starting a new one
+    localStorage.removeItem("contract-draft")
+    router.push(`/builder?type=${type}`)
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
@@ -131,7 +140,7 @@ export default function DraftsPage() {
             <h1 className="text-3xl md:text-4xl font-bold mb-2">Moje koncepty</h1>
             <p className="text-muted-foreground">Všechny vaše uložené a rozpracované smlouvy</p>
           </div>
-          <Button onClick={() => router.push("/")} size="lg">
+          <Button onClick={() => setShowTypeSelector(true)} size="lg">
             <Plus className="w-4 h-4 mr-2" /> Nová smlouva
           </Button>
         </div>
@@ -144,7 +153,7 @@ export default function DraftsPage() {
           <Card className="text-center py-12">
             <CardContent>
               <p className="text-muted-foreground mb-4">Ještě jste nevytvořili žádný koncept</p>
-              <Button onClick={() => router.push("/")}>Vytvořit nový koncept</Button>
+              <Button onClick={() => setShowTypeSelector(true)}>Vytvořit nový koncept</Button>
             </CardContent>
           </Card>
         ) : (
@@ -183,6 +192,23 @@ export default function DraftsPage() {
           </Button>
         </div>
       </div>
+
+      {/* Type Selector Dialog */}
+      {showTypeSelector && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-background rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold">Vyber typ smlouvy</h2>
+                <Button variant="ghost" size="sm" onClick={() => setShowTypeSelector(false)}>
+                  ✕
+                </Button>
+              </div>
+              <ContractTypeSelector onSelect={handleSelectType} />
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
