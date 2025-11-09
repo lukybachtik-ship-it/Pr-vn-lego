@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { ContractExporter } from "./contract-exporter"
 import { MissingBlocksAnalysis } from "./missing-blocks-analysis"
 import { ContractTimelineComponent } from "./contract-timeline"
+import { CalendarExportDialog } from "./calendar-export-dialog"
 import { analyzeContract } from "@/lib/contract-analysis"
 import { extractContractDeadlines } from "@/lib/contract-timeline"
 import { finalizeContract } from "@/lib/contract-storage"
@@ -327,10 +328,27 @@ export function ContractReview({ contractType, blocks }: ContractReviewProps) {
     setExportFormat(format)
   }
 
+  const [showCalendarDialog, setShowCalendarDialog] = useState(false)
+  const [finalizedContractId, setFinalizedContractId] = useState<string | null>(null)
+
   const handleFinalizeContract = () => {
     const contract = finalizeContract(contractType, blocks, contractName || undefined)
     setShowFinalizeDialog(false)
-    router.push(`/?finalized=${contract.id}`)
+    setFinalizedContractId(contract.id)
+
+    // Show calendar dialog if there are deadlines
+    if (timeline.deadlines.length > 0) {
+      setShowCalendarDialog(true)
+    } else {
+      router.push(`/?finalized=${contract.id}`)
+    }
+  }
+
+  const handleCalendarDialogClose = () => {
+    setShowCalendarDialog(false)
+    if (finalizedContractId) {
+      router.push(`/?finalized=${finalizedContractId}`)
+    }
   }
 
   return (
@@ -474,6 +492,17 @@ export function ContractReview({ contractType, blocks }: ContractReviewProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Calendar Export Dialog */}
+      {showCalendarDialog && finalizedContractId && (
+        <CalendarExportDialog
+          open={showCalendarDialog}
+          onOpenChange={handleCalendarDialogClose}
+          deadlines={timeline.deadlines}
+          contractId={finalizedContractId}
+          contractName={contractName || "Vaše smlouva"}
+        />
+      )}
     </main>
   )
 }

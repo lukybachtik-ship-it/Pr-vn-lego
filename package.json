@@ -46,6 +46,7 @@
     "docx": "latest",
     "embla-carousel-react": "8.5.1",
     "file-saver": "^2.0.5",
+    "googleapis": "^165.0.0",
     "input-otp": "1.4.1",
     "jspdf": "3.0.3",
     "lucide-react": "^0.454.0",
