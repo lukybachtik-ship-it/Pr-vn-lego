@@ -70,11 +70,15 @@ export function CalendarExportDialog({
     try {
       const events = deadlines
         .filter((d) => selectedDeadlines.includes(d.id))
-        .map((d) => ({
-          title: `${d.isPast ? "⚠️ PO TERMÍNU: " : d.isUpcoming ? "🔔 BLÍŽÍ SE: " : "📅 "}${d.title} - ${contractName}`,
-          description: `Termín ze smlouvy: ${contractName}\\n\\n${d.description || ""}\\n\\nZobrazit smlouvu: ${window.location.origin}/contract/${contractId}`,
-          date: d.date,
-        }))
+        .map((d) => {
+          const dateObj = typeof d.date === "string" ? new Date(d.date) : d.date
+          const dateStr = dateObj.toISOString().split("T")[0] // YYYY-MM-DD format
+          return {
+            title: `${d.isPast ? "⚠️ PO TERMÍNU: " : d.isUpcoming ? "🔔 BLÍŽÍ SE: " : "📅 "}${d.title} - ${contractName}`,
+            description: `Termín ze smlouvy: ${contractName}\\n\\n${d.description || ""}\\n\\nZobrazit smlouvu: ${window.location.origin}/contract/${contractId}`,
+            date: dateStr,
+          }
+        })
 
       const response = await fetch("/api/calendar/add-events", {
         method: "POST",
@@ -113,8 +117,9 @@ export function CalendarExportDialog({
     setSelectedDeadlines((prev) => (prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]))
   }
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("cs-CZ", {
+  const formatDate = (date: Date | string) => {
+    const dateObj = typeof date === "string" ? new Date(date) : date
+    return dateObj.toLocaleDateString("cs-CZ", {
       day: "numeric",
       month: "long",
       year: "numeric",
