@@ -44,9 +44,11 @@ export async function POST(request: NextRequest) {
         if (response.ok) {
           results.push({ success: true, eventId: data.id, title: event.title })
         } else {
-          results.push({ success: false, error: data.error, title: event.title })
+          console.error("Calendar API error:", data)
+          results.push({ success: false, error: data.error?.message || JSON.stringify(data), title: event.title })
         }
       } catch (err) {
+        console.error("Event creation error:", err)
         results.push({ success: false, error: String(err), title: event.title })
       }
     }

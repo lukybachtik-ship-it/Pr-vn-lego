@@ -89,17 +89,27 @@ export function CalendarExportDialog({
       const data = await response.json()
 
       if (data.success) {
-        setExportResult({
-          success: true,
-          message: `✅ Přidáno ${data.successCount} z ${data.totalCount} termínů do kalendáře`,
-        })
+        const failedCount = data.totalCount - data.successCount
+        if (failedCount > 0) {
+          console.error("Some events failed:", data.results.filter((r: any) => !r.success))
+          setExportResult({
+            success: true,
+            message: `⚠️ Přidáno ${data.successCount} z ${data.totalCount} termínů (${failedCount} selhalo)`,
+          })
+        } else {
+          setExportResult({
+            success: true,
+            message: `✅ Přidáno ${data.successCount} z ${data.totalCount} termínů do kalendáře`,
+          })
+        }
         setTimeout(() => {
           onOpenChange(false)
         }, 2000)
       } else {
+        console.error("Export failed:", data)
         setExportResult({
           success: false,
-          message: "❌ Nepodařilo se přidat termíny. Zkuste to znovu.",
+          message: `❌ Chyba: ${data.error || "Nepodařilo se přidat termíny"}`,
         })
       }
     } catch (error) {
