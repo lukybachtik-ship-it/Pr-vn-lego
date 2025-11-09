@@ -31,6 +31,7 @@ export function ContractReview({ contractType, blocks }: ContractReviewProps) {
   const [contractName, setContractName] = useState("")
   const [showCalendarDialog, setShowCalendarDialog] = useState(false)
   const [finalizedContractId, setFinalizedContractId] = useState<string | null>(null)
+  const [restoredDeadlines, setRestoredDeadlines] = useState<any[] | null>(null)
 
   // Analyze contract for missing blocks
   const analysis = useMemo(() => analyzeContract(contractType, blocks), [contractType, blocks])
@@ -41,24 +42,34 @@ export function ContractReview({ contractType, blocks }: ContractReviewProps) {
   // Check for OAuth callback return
   useEffect(() => {
     const calendarSuccess = searchParams.get("calendar_success")
-    if (calendarSuccess === "true" && timeline.deadlines.length > 0) {
+    if (calendarSuccess === "true") {
       // Restore contract data from storage
       const pendingContractId = localStorage.getItem("pending_calendar_contract_id")
       const pendingContractName = localStorage.getItem("pending_calendar_contract_name")
+      const pendingDeadlines = localStorage.getItem("pending_calendar_deadlines")
 
-      if (pendingContractId) {
+      if (pendingContractId && pendingDeadlines) {
         setFinalizedContractId(pendingContractId)
-      }
-      if (pendingContractName) {
-        setContractName(pendingContractName)
+        if (pendingContractName) {
+          setContractName(pendingContractName)
+        }
+
+        // Parse and restore deadlines
+        try {
+          const deadlines = JSON.parse(pendingDeadlines)
+          setRestoredDeadlines(deadlines)
+
+          // Reopen calendar dialog after OAuth
+          setShowCalendarDialog(true)
+        } catch (e) {
+          console.error("Failed to parse deadlines:", e)
+        }
       }
 
-      // Reopen calendar dialog after OAuth
-      setShowCalendarDialog(true)
       // Clean up URL
       window.history.replaceState({}, "", window.location.pathname)
     }
-  }, [searchParams, timeline.deadlines.length])
+  }, [searchParams])
 
   const handleAddMissingBlock = (blockId: string) => {
     // Navigate back to builder with the block to add
@@ -360,9 +371,10 @@ export function ContractReview({ contractType, blocks }: ContractReviewProps) {
 
     // Show calendar dialog if there are deadlines
     if (timeline.deadlines.length > 0) {
-      // Store contract data for OAuth return
+      // Store contract data AND deadlines for OAuth return
       localStorage.setItem("pending_calendar_contract_id", contract.id)
       localStorage.setItem("pending_calendar_contract_name", contractName || "Vaše smlouva")
+      localStorage.setItem("pending_calendar_deadlines", JSON.stringify(timeline.deadlines))
       setShowCalendarDialog(true)
     } else {
       router.push(`/?finalized=${contract.id}`)
@@ -374,6 +386,8 @@ export function ContractReview({ contractType, blocks }: ContractReviewProps) {
     // Clean up storage
     localStorage.removeItem("pending_calendar_contract_id")
     localStorage.removeItem("pending_calendar_contract_name")
+    localStorage.removeItem("pending_calendar_deadlines")
+    setRestoredDeadlines(null)
     if (finalizedContractId) {
       router.push(`/?finalized=${finalizedContractId}`)
     }
@@ -526,7 +540,7 @@ export function ContractReview({ contractType, blocks }: ContractReviewProps) {
         <CalendarExportDialog
           open={showCalendarDialog}
           onOpenChange={handleCalendarDialogClose}
-          deadlines={timeline.deadlines}
+          deadlines={restoredDeadlines || timeline.deadlines}
           contractId={finalizedContractId}
           contractName={contractName || "Vaše smlouva"}
         />
