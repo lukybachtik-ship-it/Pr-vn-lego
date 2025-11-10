@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { FileText, Plus, Calendar, AlertCircle, CheckCircle, Eye, Wallet } from "lucide-react"
+import { FileText, Plus, Calendar, AlertCircle, CheckCircle, Eye, Wallet, Users } from "lucide-react"
 import { ContractTypeSelector } from "@/components/contract-type-selector"
 import { getFinalizedContracts } from "@/lib/contract-storage"
 import { extractContractDeadlines } from "@/lib/contract-timeline"
@@ -72,6 +72,10 @@ export default function Home() {
             <Button size="lg" variant="outline" onClick={() => router.push("/drafts")}>
               <FileText className="w-5 h-5 mr-2" />
               Moje koncepty
+            </Button>
+            <Button size="lg" variant="outline" onClick={() => router.push("/clients")}>
+              <Users className="w-5 h-5 mr-2" />
+              Klienti
             </Button>
             <Button size="lg" variant="outline" onClick={() => router.push("/cash-flow")}>
               <Wallet className="w-5 h-5 mr-2" />

@@ -4,9 +4,11 @@ import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { X, CheckCircle, AlertCircle } from "lucide-react"
+import { X, CheckCircle, AlertCircle, Users } from "lucide-react"
 import { IcoVerifier } from "./ico-verifier"
+import { ClientSelector } from "./client-selector"
 import type { ContractBlock as BlockType } from "@/types/contract"
+import type { Client } from "@/lib/clients"
 
 interface ContractBlockProps {
   block: BlockType
@@ -18,11 +20,35 @@ interface ContractBlockProps {
 export function ContractBlock({ block, index, onRemove, onUpdate }: ContractBlockProps) {
   const [isExpanded, setIsExpanded] = useState(true)
   const [formData, setFormData] = useState(block.data)
+  const [showClientSelector, setShowClientSelector] = useState(false)
+  const [selectedPartyField, setSelectedPartyField] = useState<"party1" | "party2" | null>(null)
 
   const handleChange = (field: string, value: string) => {
     const newData = { ...formData, [field]: value }
     setFormData(newData)
     onUpdate(block.id, newData)
+  }
+
+  const handleClientSelect = (client: Client) => {
+    if (!selectedPartyField) return
+
+    const newData = {
+      ...formData,
+      [`${selectedPartyField}Name`]: client.name,
+      [`${selectedPartyField}Ico`]: client.ico || "",
+      [`${selectedPartyField}Address`]: client.street || "",
+      [`${selectedPartyField}City`]: client.city || "",
+      [`${selectedPartyField}Psc`]: client.zip || "",
+      [`${selectedPartyField}Region`]: client.region || "",
+    }
+    setFormData(newData)
+    onUpdate(block.id, newData)
+    setSelectedPartyField(null)
+  }
+
+  const openClientSelector = (party: "party1" | "party2") => {
+    setSelectedPartyField(party)
+    setShowClientSelector(true)
   }
 
   const handlePartyVerified = (field: string, verificationData: any) => {
@@ -53,8 +79,20 @@ export function ContractBlock({ block, index, onRemove, onUpdate }: ContractBloc
       case "parties":
         return (
           <div className="space-y-3">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-semibold">1. strana</label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => openClientSelector("party1")}
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Přidat z kontaktů
+              </Button>
+            </div>
             <div>
-              <label className="text-sm font-semibold">Jméno 1. strany</label>
+              <label className="text-sm font-medium text-muted-foreground">Jméno 1. strany</label>
               <Input
                 placeholder="Tvé jméno nebo název firmy"
                 value={formData.party1Name || ""}
@@ -82,12 +120,26 @@ export function ContractBlock({ block, index, onRemove, onUpdate }: ContractBloc
             )}
 
             <div className="border-t border-border pt-4 mt-4">
-              <label className="text-sm font-semibold">Jméno 2. strany</label>
-              <Input
-                placeholder="Jméno či firma partnera"
-                value={formData.party2Name || ""}
-                onChange={(e) => handleChange("party2Name", e.target.value)}
-              />
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-semibold">2. strana</label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openClientSelector("party2")}
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Přidat z kontaktů
+                </Button>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Jméno 2. strany</label>
+                <Input
+                  placeholder="Jméno či firma partnera"
+                  value={formData.party2Name || ""}
+                  onChange={(e) => handleChange("party2Name", e.target.value)}
+                />
+              </div>
             </div>
             <IcoVerifier
               value={formData.party2Ico || ""}
@@ -732,35 +784,43 @@ export function ContractBlock({ block, index, onRemove, onUpdate }: ContractBloc
   }
 
   return (
-    <Card className="border-l-4 border-l-primary">
-      <div className="flex items-center justify-between p-4 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
-        <div className="flex items-center gap-3 flex-1">
-          <span className="text-2xl">{block.icon}</span>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold">{block.name}</p>
-            {block.isComplete && (
-              <p className="text-xs text-accent flex items-center gap-1">
-                <CheckCircle className="w-3 h-3" /> Vyplněno
-              </p>
-            )}
+    <>
+      <Card className="border-l-4 border-l-primary">
+        <div className="flex items-center justify-between p-4 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+          <div className="flex items-center gap-3 flex-1">
+            <span className="text-2xl">{block.icon}</span>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold">{block.name}</p>
+              {block.isComplete && (
+                <p className="text-xs text-accent flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" /> Vyplněno
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {!block.isComplete && block.templateId === "penalties" && <AlertCircle className="w-4 h-4 text-warning" />}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation()
+                onRemove(block.id)
+              }}
+            >
+              <X className="w-4 h-4" />
+            </Button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {!block.isComplete && block.templateId === "penalties" && <AlertCircle className="w-4 h-4 text-warning" />}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation()
-              onRemove(block.id)
-            }}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
 
-      {isExpanded && <div className="border-t border-border p-4 bg-muted/30">{renderBlockContent()}</div>}
-    </Card>
+        {isExpanded && <div className="border-t border-border p-4 bg-muted/30">{renderBlockContent()}</div>}
+      </Card>
+
+      <ClientSelector
+        open={showClientSelector}
+        onOpenChange={setShowClientSelector}
+        onSelect={handleClientSelect}
+      />
+    </>
   )
 }

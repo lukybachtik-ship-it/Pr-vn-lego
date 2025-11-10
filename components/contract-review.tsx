@@ -15,6 +15,7 @@ import { CalendarExportDialog } from "./calendar-export-dialog"
 import { analyzeContract } from "@/lib/contract-analysis"
 import { extractContractDeadlines } from "@/lib/contract-timeline"
 import { finalizeContract } from "@/lib/contract-storage"
+import { createClientFromParty } from "@/lib/clients"
 import type { ContractBlock } from "@/types/contract"
 
 interface ContractReviewProps {
@@ -368,6 +369,42 @@ export function ContractReview({ contractType, blocks }: ContractReviewProps) {
     const contract = finalizeContract(contractType, blocks, contractName || undefined)
     setShowFinalizeDialog(false)
     setFinalizedContractId(contract.id)
+
+    // Auto-create clients from contract parties
+    const partiesBlock = blocks.find((b) => b.templateId === "parties")
+    if (partiesBlock && partiesBlock.data) {
+      // Create client for party 1
+      if (partiesBlock.data.party1Name) {
+        try {
+          createClientFromParty({
+            name: partiesBlock.data.party1Name,
+            ico: partiesBlock.data.party1Ico,
+            address: partiesBlock.data.party1Address,
+            city: partiesBlock.data.party1City,
+            psc: partiesBlock.data.party1Psc,
+            region: partiesBlock.data.party1Region,
+          })
+        } catch (error) {
+          console.error("Failed to create client for party 1:", error)
+        }
+      }
+
+      // Create client for party 2
+      if (partiesBlock.data.party2Name) {
+        try {
+          createClientFromParty({
+            name: partiesBlock.data.party2Name,
+            ico: partiesBlock.data.party2Ico,
+            address: partiesBlock.data.party2Address,
+            city: partiesBlock.data.party2City,
+            psc: partiesBlock.data.party2Psc,
+            region: partiesBlock.data.party2Region,
+          })
+        } catch (error) {
+          console.error("Failed to create client for party 2:", error)
+        }
+      }
+    }
 
     // Show calendar dialog if there are deadlines
     if (timeline.deadlines.length > 0) {
