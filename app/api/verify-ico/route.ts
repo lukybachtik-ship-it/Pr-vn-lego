@@ -190,7 +190,8 @@ export async function GET(request: NextRequest) {
       obchodniJmeno,
       sidlo: {
         nazevUlice: sidlo.nazevUlice || sidlo.street || "",
-        cisloDomovniho: sidlo.cisloDomovniho || sidlo.buildingNumber || "",
+        cisloDomovni: sidlo.cisloDomovni || sidlo.cisloDomovniho || sidlo.buildingNumber || "",
+        cisloOrientacni: sidlo.cisloOrientacni || sidlo.orientationNumber || "",
         nazevObce: sidlo.nazevObce || sidlo.city || "",
         psc: sidlo.psc || sidlo.zipCode || "",
         nazevKraje: sidlo.nazevKraje || sidlo.region || "",

@@ -21,7 +21,8 @@ interface VerificationResult {
   obchodniJmeno?: string
   sidlo?: {
     nazevUlice: string
-    cisloDomovniho: string
+    cisloDomovni: string
+    cisloOrientacni?: string
     nazevObce: string
     psc: string
     nazevKraje: string
@@ -125,7 +126,9 @@ export function IcoVerifier({ value, onChange, onVerified, label = "IČO", requi
                 {result.sidlo && (
                   <div className="text-sm text-muted-foreground">
                     <p>
-                      {result.sidlo.nazevUlice} {result.sidlo.cisloDomovniho}
+                      {result.sidlo.nazevUlice}{" "}
+                      {result.sidlo.cisloDomovni}
+                      {result.sidlo.cisloOrientacni && `/${result.sidlo.cisloOrientacni}`}
                     </p>
                     <p>
                       {result.sidlo.psc} {result.sidlo.nazevObce}

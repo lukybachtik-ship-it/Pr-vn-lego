@@ -39,6 +39,10 @@ export default function CashFlowPage() {
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
+  // Month filter state
+  const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM format
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth)
+
   // Form state
   const [type, setType] = useState<"income" | "expense">("income")
   const [from, setFrom] = useState("")
@@ -82,10 +86,6 @@ export default function CashFlowPage() {
     }
   }
 
-  const summary = calculateCashFlowSummary(invoices)
-  const currentMonthInvoices = getCurrentMonthInvoices(invoices)
-  const unpaidInvoices = invoices.filter((inv) => !inv.isPaid).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-
   const getInvoiceStatusBadge = (invoice: Invoice) => {
     if (invoice.isPaid) {
       return (
@@ -115,6 +115,26 @@ export default function CashFlowPage() {
         </Badge>
     )
   }
+
+  // Filter invoices by selected month
+  const filteredInvoices = invoices.filter((inv) => {
+    const invoiceDate = new Date(inv.dueDate)
+    const invoiceMonth = `${invoiceDate.getFullYear()}-${String(invoiceDate.getMonth() + 1).padStart(2, "0")}`
+    return invoiceMonth === selectedMonth
+  })
+
+  // Calculate summary for filtered invoices
+  const summary = calculateCashFlowSummary(filteredInvoices)
+
+  // Get available months from all invoices
+  const availableMonths = Array.from(
+    new Set(
+      invoices.map((inv) => {
+        const date = new Date(inv.dueDate)
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
+      }),
+    ),
+  ).sort((a, b) => b.localeCompare(a)) // Sort descending (newest first)
 
   if (isLoading) {
     return (
@@ -148,6 +168,37 @@ export default function CashFlowPage() {
               Přidat fakturu
             </Button>
           </div>
+
+          {/* Month Selector */}
+          {availableMonths.length > 0 && (
+            <div className="mt-6 flex items-center gap-4">
+              <Label htmlFor="month-select" className="text-sm font-medium">
+                Zobrazit měsíc:
+              </Label>
+              <select
+                id="month-select"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                {availableMonths.map((month) => {
+                  const [year, monthNum] = month.split("-")
+                  const monthName = new Date(parseInt(year), parseInt(monthNum) - 1).toLocaleDateString("cs-CZ", {
+                    month: "long",
+                    year: "numeric",
+                  })
+                  return (
+                    <option key={month} value={month}>
+                      {monthName.charAt(0).toUpperCase() + monthName.slice(1)}
+                    </option>
+                  )
+                })}
+              </select>
+              <span className="text-sm text-muted-foreground">
+                (Celkem {filteredInvoices.length} faktur)
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Summary Cards */}
@@ -212,7 +263,8 @@ export default function CashFlowPage() {
           <CardHeader>
             <CardTitle>Tento měsíc</CardTitle>
             <CardDescription>
-              Přehled příjmů a výdajů pro {new Date().toLocaleDateString("cs-CZ", { month: "long", year: "numeric" })}
+              Přehled příjmů a výdajů pro{" "}
+              {new Date(selectedMonth + "-01").toLocaleDateString("cs-CZ", { month: "long", year: "numeric" })}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -221,7 +273,7 @@ export default function CashFlowPage() {
                 <span className="text-sm text-muted-foreground">Příjmy</span>
                 <span className="text-2xl font-bold text-green-600">
                   {formatCurrency(
-                    currentMonthInvoices.filter((inv) => inv.type === "income").reduce((sum, inv) => sum + inv.amount, 0),
+                    filteredInvoices.filter((inv) => inv.type === "income").reduce((sum, inv) => sum + inv.amount, 0),
                   )}
                 </span>
               </div>
@@ -229,7 +281,7 @@ export default function CashFlowPage() {
                 <span className="text-sm text-muted-foreground">Výdaje</span>
                 <span className="text-2xl font-bold text-red-600">
                   {formatCurrency(
-                    currentMonthInvoices.filter((inv) => inv.type === "expense").reduce((sum, inv) => sum + inv.amount, 0),
+                    filteredInvoices.filter((inv) => inv.type === "expense").reduce((sum, inv) => sum + inv.amount, 0),
                   )}
                 </span>
               </div>
@@ -237,8 +289,8 @@ export default function CashFlowPage() {
                 <span className="text-sm text-muted-foreground">Čistý zisk</span>
                 <span className="text-2xl font-bold">
                   {formatCurrency(
-                    currentMonthInvoices.filter((inv) => inv.type === "income").reduce((sum, inv) => sum + inv.amount, 0) -
-                      currentMonthInvoices.filter((inv) => inv.type === "expense").reduce((sum, inv) => sum + inv.amount, 0),
+                    filteredInvoices.filter((inv) => inv.type === "income").reduce((sum, inv) => sum + inv.amount, 0) -
+                      filteredInvoices.filter((inv) => inv.type === "expense").reduce((sum, inv) => sum + inv.amount, 0),
                   )}
                 </span>
               </div>
@@ -249,15 +301,20 @@ export default function CashFlowPage() {
         {/* Unpaid Invoices */}
         <Card>
           <CardHeader>
-            <CardTitle>Nezaplacené faktury</CardTitle>
-            <CardDescription>{unpaidInvoices.length} faktur čeká na zaplacení</CardDescription>
+            <CardTitle>Faktury za vybraný měsíc</CardTitle>
+            <CardDescription>
+              {filteredInvoices.length} faktur celkem (
+              {filteredInvoices.filter((inv) => !inv.isPaid).length} nezaplacených)
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            {unpaidInvoices.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">Žádné nezaplacené faktury</p>
+            {filteredInvoices.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">Žádné faktury pro vybraný měsíc</p>
             ) : (
               <div className="space-y-3">
-                {unpaidInvoices.map((invoice) => (
+                {filteredInvoices
+                  .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+                  .map((invoice) => (
                   <div
                     key={invoice.id}
                     className={`flex items-center justify-between p-4 border rounded-lg ${

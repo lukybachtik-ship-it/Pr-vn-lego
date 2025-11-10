@@ -26,11 +26,20 @@ export function ContractBlock({ block, index, onRemove, onUpdate }: ContractBloc
   }
 
   const handlePartyVerified = (field: string, verificationData: any) => {
+    // Build full address with house number and optional orientation number
+    const streetAddress = [
+      verificationData.sidlo?.nazevUlice,
+      verificationData.sidlo?.cisloDomovni,
+      verificationData.sidlo?.cisloOrientacni ? `/${verificationData.sidlo.cisloOrientacni}` : null,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .trim()
+
     const newData = {
       ...formData,
       [`${field}Name`]: verificationData.obchodniJmeno || formData[`${field}Name`],
-      [`${field}Address`]:
-        `${verificationData.sidlo?.nazevUlice || ""} ${verificationData.sidlo?.cisloDomovniho || ""}`.trim(),
+      [`${field}Address`]: streetAddress,
       [`${field}City`]: verificationData.sidlo?.nazevObce || "",
       [`${field}Psc`]: verificationData.sidlo?.psc || "",
       [`${field}Region`]: verificationData.sidlo?.nazevKraje || "",
