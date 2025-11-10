@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, Building2, User, Phone, Mail, FileText, Receipt } from "lucide-react"
+import { Search, Plus, Building2, User, Phone, Mail, FileText, Receipt, Home } from "lucide-react"
 import Link from "next/link"
 import { getAllClients, searchClients, getClientHistory, type Client } from "@/lib/clients"
 
@@ -63,9 +63,16 @@ export default function ClientsPage() {
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Klienti</h1>
-          <p className="text-muted-foreground mt-1">Adresář všech vašich obchodních kontaktů</p>
+        <div className="flex items-center gap-4">
+          <Link href="/">
+            <Button variant="ghost" size="icon">
+              <Home className="w-5 h-5" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Klienti</h1>
+            <p className="text-muted-foreground mt-1">Adresář všech vašich obchodních kontaktů</p>
+          </div>
         </div>
         <Link href="/clients/new">
           <Button>

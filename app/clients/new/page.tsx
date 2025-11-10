@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Save } from "lucide-react"
+import { ArrowLeft, Save, Home } from "lucide-react"
 import Link from "next/link"
 import { saveClient } from "@/lib/clients"
 import { IcoVerifier } from "@/components/ico-verifier"
@@ -74,8 +74,13 @@ export default function NewClientPage() {
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
+          <Link href="/">
+            <Button variant="ghost" size="icon" title="Domů">
+              <Home className="w-4 h-4" />
+            </Button>
+          </Link>
           <Link href="/clients">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" title="Zpět na klienty">
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>

@@ -23,6 +23,7 @@ import {
   CheckCircle,
   AlertCircle,
   Trash2,
+  Home,
 } from "lucide-react"
 import Link from "next/link"
 import { getClient, saveClient, deleteClient, getClientHistory, type Client } from "@/lib/clients"
@@ -105,8 +106,13 @@ export default function ClientDetailPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-4">
+          <Link href="/">
+            <Button variant="ghost" size="icon" title="Domů">
+              <Home className="w-4 h-4" />
+            </Button>
+          </Link>
           <Link href="/clients">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" title="Zpět na klienty">
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
