@@ -196,7 +196,10 @@ export function getClientHistory(clientId: string): ClientHistory {
 
   const clientInvoices = Object.values(invoices)
     .filter((invoice: any) => {
-      // Match by name (invoices don't have ICO)
+      // Match by clientId first, then fallback to name matching
+      if (invoice.clientId) {
+        return invoice.clientId === clientId
+      }
       return invoice.from === client.name
     })
     .map((invoice: any) => ({

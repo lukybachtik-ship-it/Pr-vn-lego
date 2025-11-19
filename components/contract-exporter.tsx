@@ -10,12 +10,47 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 interface ContractExporterProps {
   blocks: ContractBlock[]
   contractText: string
+  contractType: string
   onExport?: (format: "docx" | "pdf") => void
 }
 
-export function ContractExporter({ blocks, contractText }: ContractExporterProps) {
+export function ContractExporter({ blocks, contractText, contractType }: ContractExporterProps) {
   const [isExporting, setIsExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
+
+  const getContractTitle = () => {
+    switch (contractType) {
+      case "rental-contract":
+        return "NÁJEMNÍ SMLOUVA"
+      case "purchase-contract":
+        return "KUPNÍ SMLOUVA"
+      case "trade-contract":
+        return "OBCHODNÍ PODMÍNKY"
+      case "other-contract":
+        return "SMLOUVA"
+      case "work-contract":
+        return "SMLOUVA O DÍLO"
+      default:
+        return "SMLOUVA O DÍLO"
+    }
+  }
+
+  const getContractFileName = () => {
+    switch (contractType) {
+      case "rental-contract":
+        return "najemni-smlouva"
+      case "purchase-contract":
+        return "kupni-smlouva"
+      case "trade-contract":
+        return "obchodni-podminky"
+      case "other-contract":
+        return "smlouva"
+      case "work-contract":
+        return "smlouva-o-dilo"
+      default:
+        return "smlouva"
+    }
+  }
 
   const handleExportDocx = async () => {
     setIsExporting(true)
@@ -46,7 +81,7 @@ export function ContractExporter({ blocks, contractText }: ContractExporterProps
           {
             children: [
               new Paragraph({
-                children: [new TextRun({ text: "SMLOUVA O DÍLO", bold: true, size: 28 })],
+                children: [new TextRun({ text: getContractTitle(), bold: true, size: 28 })],
                 spacing: { after: 400 },
               }),
               ...paragraphs,
@@ -59,7 +94,7 @@ export function ContractExporter({ blocks, contractText }: ContractExporterProps
       const url = URL.createObjectURL(buffer)
       const link = document.createElement("a")
       link.href = url
-      link.download = "smlouva.docx"
+      link.download = `${getContractFileName()}.docx`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -78,7 +113,7 @@ export function ContractExporter({ blocks, contractText }: ContractExporterProps
       const element = document.createElement("a")
       const file = new Blob([contractText], { type: "text/plain;charset=utf-8" })
       element.href = URL.createObjectURL(file)
-      element.download = "smlouva.txt"
+      element.download = `${getContractFileName()}.txt`
       document.body.appendChild(element)
       element.click()
       document.body.removeChild(element)

@@ -2,6 +2,7 @@ export interface Invoice {
   id: string
   type: "income" | "expense"
   from: string // Kdo platí / Komu platím
+  clientId?: string // ID klienta z databáze klientů
   amount: number
   dueDate: string
   isPaid: boolean
@@ -36,11 +37,13 @@ export function createInvoice(
   amount: number,
   dueDate: string,
   description?: string,
+  clientId?: string,
 ): Invoice {
   const invoice: Invoice = {
     id: `invoice-${Date.now()}`,
     type,
     from,
+    clientId,
     amount,
     dueDate,
     isPaid: false,
@@ -204,4 +207,17 @@ export function formatCurrency(amount: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount)
+}
+
+/**
+ * Get invoices for a specific client
+ */
+export function getInvoicesByClient(clientId: string): Invoice[] {
+  if (typeof window === "undefined") return []
+
+  const invoicesJson = localStorage.getItem("invoices")
+  if (!invoicesJson) return []
+
+  const invoices = JSON.parse(invoicesJson)
+  return (Object.values(invoices) as Invoice[]).filter((inv) => inv.clientId === clientId)
 }

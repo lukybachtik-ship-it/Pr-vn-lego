@@ -561,7 +561,7 @@ export function ContractReview({ contractType, blocks }: ContractReviewProps) {
 
           {/* Export Panel */}
           <div className="space-y-6">
-            <ContractExporter blocks={blocks} contractText={contractText} onExport={handleExport} />
+            <ContractExporter blocks={blocks} contractText={contractText} contractType={contractType} onExport={handleExport} />
 
             {/* Finalize Contract Card */}
             <Card className="border-green-500 bg-green-50">

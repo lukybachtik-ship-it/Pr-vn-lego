@@ -20,6 +20,7 @@ import {
   CheckCircle,
   Trash2,
   Calendar,
+  Users,
 } from "lucide-react"
 import {
   getAllInvoices,
@@ -32,11 +33,14 @@ import {
   formatCurrency,
   type Invoice,
 } from "@/lib/cash-flow"
+import { getAllClients, type Client } from "@/lib/clients"
+import { ClientSelector } from "@/components/client-selector"
 
 export default function CashFlowPage() {
   const router = useRouter()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [showAddDialog, setShowAddDialog] = useState(false)
+  const [showClientSelector, setShowClientSelector] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   // Month filter state
@@ -46,6 +50,7 @@ export default function CashFlowPage() {
   // Form state
   const [type, setType] = useState<"income" | "expense">("income")
   const [from, setFrom] = useState("")
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [amount, setAmount] = useState("")
   const [dueDate, setDueDate] = useState(new Date().toISOString().split("T")[0])
   const [description, setDescription] = useState("")
@@ -60,14 +65,28 @@ export default function CashFlowPage() {
     setIsLoading(false)
   }
 
+  const handleClientSelect = (client: Client) => {
+    setSelectedClient(client)
+    setFrom(client.name)
+    setShowClientSelector(false)
+  }
+
   const handleAddInvoice = () => {
-    const invoice = createInvoice(type, from, parseFloat(amount), dueDate, description || undefined)
+    const invoice = createInvoice(
+      type,
+      from,
+      parseFloat(amount),
+      dueDate,
+      description || undefined,
+      selectedClient?.id,
+    )
     saveInvoice(invoice)
     loadInvoices()
 
     // Reset form
     setShowAddDialog(false)
     setFrom("")
+    setSelectedClient(null)
     setAmount("")
     setDescription("")
     setDueDate(new Date().toISOString().split("T")[0])
@@ -384,8 +403,33 @@ export default function CashFlowPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="from">{type === "income" ? "Od koho" : "Komu platím"}</Label>
-              <Input id="from" placeholder="např. ABC s.r.o." value={from} onChange={(e) => setFrom(e.target.value)} />
+              <div className="flex items-center justify-between">
+                <Label htmlFor="from">{type === "income" ? "Od koho" : "Komu platím"}</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowClientSelector(true)}
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Vybrat z klientů
+                </Button>
+              </div>
+              <Input
+                id="from"
+                placeholder="např. ABC s.r.o."
+                value={from}
+                onChange={(e) => {
+                  setFrom(e.target.value)
+                  setSelectedClient(null) // Clear selected client if manually typing
+                }}
+              />
+              {selectedClient && (
+                <div className="text-xs text-muted-foreground bg-accent/10 p-2 rounded">
+                  ✓ Klient: {selectedClient.name}
+                  {selectedClient.ico && ` (IČO: ${selectedClient.ico})`}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -427,6 +471,13 @@ export default function CashFlowPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Client Selector Dialog */}
+      <ClientSelector
+        open={showClientSelector}
+        onOpenChange={setShowClientSelector}
+        onSelect={handleClientSelect}
+      />
     </main>
   )
 }
