@@ -40,6 +40,7 @@ export function QRInvoicePreview({ invoice, open, onOpenChange }: QRInvoicePrevi
       setBankAccount(account)
 
       const qrCode = await generateQRCode({
+        iban: account.iban,
         accountNumber: account.accountNumber,
         bankCode: account.bankCode,
         amount: invoice.amount,

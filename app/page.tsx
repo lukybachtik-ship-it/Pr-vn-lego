@@ -65,31 +65,38 @@ export default function Home() {
             Sestavte si právní smlouvu jako stavebnici. Přetáhněte bloky, vyplňte údaje a máte hotovo.
           </p>
 
-          <div className="flex flex-col md:flex-row gap-4 justify-center flex-wrap">
-            <Button size="lg" onClick={() => setShowTypeSelector(true)} className="text-lg">
-              <Plus className="w-5 h-5 mr-2" />
-              Nová smlouva
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => router.push("/drafts")}>
-              <FileText className="w-5 h-5 mr-2" />
-              Moje koncepty
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => router.push("/clients")}>
-              <Users className="w-5 h-5 mr-2" />
-              Klienti
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => router.push("/cash-flow")}>
-              <Wallet className="w-5 h-5 mr-2" />
-              Peníze
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => router.push("/time-tracking")}>
-              <Clock className="w-5 h-5 mr-2" />
-              Time Tracking
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => router.push("/settings/bank-accounts")}>
-              <Settings className="w-5 h-5 mr-2" />
-              Bankovní účty
-            </Button>
+          <div className="flex flex-col items-center gap-4">
+            {/* Hlavní tlačítka */}
+            <div className="flex flex-col md:flex-row gap-4 justify-center flex-wrap">
+              <Button size="lg" onClick={() => setShowTypeSelector(true)} className="text-lg">
+                <Plus className="w-5 h-5 mr-2" />
+                Nová smlouva
+              </Button>
+              <Button size="lg" variant="outline" onClick={() => router.push("/drafts")}>
+                <FileText className="w-5 h-5 mr-2" />
+                Moje koncepty
+              </Button>
+              <Button size="lg" variant="outline" onClick={() => router.push("/clients")}>
+                <Users className="w-5 h-5 mr-2" />
+                Klienti
+              </Button>
+              <Button size="lg" variant="outline" onClick={() => router.push("/cash-flow")}>
+                <Wallet className="w-5 h-5 mr-2" />
+                Peníze
+              </Button>
+            </div>
+
+            {/* Vedlejší tlačítka - menší */}
+            <div className="flex flex-col md:flex-row gap-2 justify-center flex-wrap">
+              <Button size="sm" variant="ghost" onClick={() => router.push("/time-tracking")}>
+                <Clock className="w-4 h-4 mr-2" />
+                Time Tracking
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => router.push("/settings/bank-accounts")}>
+                <Settings className="w-4 h-4 mr-2" />
+                Bankovní účty
+              </Button>
+            </div>
           </div>
         </div>
       </section>

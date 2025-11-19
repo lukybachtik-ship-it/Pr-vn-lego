@@ -4,8 +4,9 @@
  */
 
 export interface QRPaymentData {
-  accountNumber: string // číslo účtu (bez kódu banky)
-  bankCode: string // kód banky
+  accountNumber?: string // číslo účtu (bez kódu banky)
+  bankCode?: string // kód banky
+  iban?: string // IBAN (pokud je k dispozici, použije se místo accountNumber+bankCode)
   amount: number
   currency: string // CZK, EUR, USD
   vs?: string // variabilní symbol
@@ -21,8 +22,8 @@ export interface QRPaymentData {
 export function generateSPDString(data: QRPaymentData): string {
   const parts: string[] = ["SPD*1.0"]
 
-  // Account (IBAN format for Czech accounts)
-  const iban = formatToIBAN(data.accountNumber, data.bankCode)
+  // Account (use IBAN if available, otherwise format from account number)
+  const iban = data.iban || formatToIBAN(data.accountNumber!, data.bankCode!)
   parts.push(`ACC:${iban}`)
 
   // Amount
@@ -63,15 +64,27 @@ export function generateSPDString(data: QRPaymentData): string {
  * Format: CZ{check digits}{bank code}{prefix(6)}{account(10)}
  */
 function formatToIBAN(accountNumber: string, bankCode: string): string {
-  const cleanAccount = accountNumber.replace(/[-\s]/g, "")
-  const [prefix, number] = cleanAccount.includes("-") ? cleanAccount.split("-") : ["", cleanAccount]
+  // Split account number by dash (format: prefix-number or just number)
+  let prefix = ""
+  let number = accountNumber
+
+  if (accountNumber.includes("-")) {
+    const parts = accountNumber.split("-")
+    prefix = parts[0]
+    number = parts[1]
+  }
 
   // Pad prefix to 6 digits, number to 10 digits
   const paddedPrefix = prefix.padStart(6, "0")
   const paddedNumber = number.padStart(10, "0")
 
-  // Calculate check digits (simplified - in production use proper IBAN validation library)
-  const checkDigits = "65" // Placeholder - real implementation would calculate this
+  // Calculate check digits using MOD 97-10 algorithm for IBAN
+  const bban = `${bankCode}${paddedPrefix}${paddedNumber}`
+  const numericIban = `${bban}123500` // CZ = 1235, add 00 for check calculation
+
+  // Convert to BigInt for modulo calculation
+  const remainder = BigInt(numericIban) % BigInt(97)
+  const checkDigits = String(BigInt(98) - remainder).padStart(2, "0")
 
   return `CZ${checkDigits}${bankCode}${paddedPrefix}${paddedNumber}`
 }
