@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Play, StopCircle, Clock, Trash2, DollarSign, FileText } from "lucide-react"
+import { ArrowLeft, Play, StopCircle, Clock, Trash2, DollarSign, FileText, Plus } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   getAllTimeEntries,
   getRunningTimeEntry,
@@ -17,6 +18,7 @@ import {
   getTimeTrackingStats,
   getUnbilledTimeEntries,
   formatDuration,
+  createManualTimeEntry,
 } from "@/lib/time-tracking"
 import { getAllClients } from "@/lib/clients"
 import { getFinalizedContracts } from "@/lib/contract-storage"
@@ -42,6 +44,15 @@ export default function TimeTrackingPage() {
   const [hourlyRate, setHourlyRate] = useState("1000")
   const [selectedClientId, setSelectedClientId] = useState("")
   const [selectedContractId, setSelectedContractId] = useState("")
+
+  // Manual entry dialog state
+  const [showManualDialog, setShowManualDialog] = useState(false)
+  const [manualDescription, setManualDescription] = useState("")
+  const [manualHours, setManualHours] = useState("")
+  const [manualMinutes, setManualMinutes] = useState("")
+  const [manualHourlyRate, setManualHourlyRate] = useState("1000")
+  const [manualClientId, setManualClientId] = useState("")
+  const [manualContractId, setManualContractId] = useState("")
 
   useEffect(() => {
     loadData()
@@ -115,6 +126,41 @@ export default function TimeTrackingPage() {
     loadData()
   }
 
+  const handleManualEntry = () => {
+    if (!manualDescription) {
+      alert("Vyplň popis práce")
+      return
+    }
+
+    const hours = parseInt(manualHours) || 0
+    const minutes = parseInt(manualMinutes) || 0
+    const totalMinutes = hours * 60 + minutes
+
+    if (totalMinutes <= 0) {
+      alert("Zadej dobu trvání")
+      return
+    }
+
+    try {
+      createManualTimeEntry(
+        manualDescription,
+        totalMinutes,
+        parseFloat(manualHourlyRate),
+        manualClientId || undefined,
+        manualContractId || undefined,
+      )
+      loadData()
+      setShowManualDialog(false)
+      setManualDescription("")
+      setManualHours("")
+      setManualMinutes("")
+      setManualClientId("")
+      setManualContractId("")
+    } catch (error: any) {
+      alert(error.message)
+    }
+  }
+
   const handleGenerateInvoice = () => {
     const unbilled = getUnbilledTimeEntries()
     if (unbilled.length === 0) {
@@ -160,6 +206,10 @@ export default function TimeTrackingPage() {
               <p className="text-muted-foreground">Evidence práce a vyfakturování hodin</p>
             </div>
           </div>
+          <Button onClick={() => setShowManualDialog(true)} variant="outline">
+            <Plus className="w-4 h-4 mr-2" />
+            Přidat čas ručně
+          </Button>
         </div>
 
         {/* Stats Cards */}
@@ -372,6 +422,121 @@ export default function TimeTrackingPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Manual Entry Dialog */}
+      <Dialog open={showManualDialog} onOpenChange={setShowManualDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Přidat čas ručně</DialogTitle>
+            <DialogDescription>Zaznamenej odpracovanou dobu bez spuštění časomíry</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="manualDescription">Co jsi dělal?</Label>
+              <Input
+                id="manualDescription"
+                placeholder="např. Vývoj smlouvy, Konzultace..."
+                value={manualDescription}
+                onChange={(e) => setManualDescription(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="manualHours">Hodiny</Label>
+                <Input
+                  id="manualHours"
+                  type="number"
+                  placeholder="0"
+                  min="0"
+                  value={manualHours}
+                  onChange={(e) => setManualHours(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="manualMinutes">Minuty</Label>
+                <Input
+                  id="manualMinutes"
+                  type="number"
+                  placeholder="0"
+                  min="0"
+                  max="59"
+                  value={manualMinutes}
+                  onChange={(e) => setManualMinutes(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="manualClient">Klient (volitelné)</Label>
+              <select
+                id="manualClient"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={manualClientId}
+                onChange={(e) => setManualClientId(e.target.value)}
+              >
+                <option value="">Vyberte klienta</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <Label htmlFor="manualContract">Smlouva (volitelné)</Label>
+              <select
+                id="manualContract"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={manualContractId}
+                onChange={(e) => setManualContractId(e.target.value)}
+                disabled={!manualClientId}
+              >
+                <option value="">Žádná smlouva</option>
+                {contracts
+                  .filter((c) => {
+                    if (!manualClientId) return false
+                    const partiesBlock = c.blocks.find((b) => b.templateId === "parties")
+                    if (!partiesBlock) return false
+                    const client = clients.find((cl) => cl.id === manualClientId)
+                    if (!client) return false
+                    return (
+                      partiesBlock.data.party1Name === client.name || partiesBlock.data.party2Name === client.name
+                    )
+                  })
+                  .map((contract) => (
+                    <option key={contract.id} value={contract.id}>
+                      {contract.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            <div>
+              <Label htmlFor="manualHourlyRate">Hodinová sazba (Kč/hod)</Label>
+              <Input
+                id="manualHourlyRate"
+                type="number"
+                placeholder="1000"
+                value={manualHourlyRate}
+                onChange={(e) => setManualHourlyRate(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowManualDialog(false)}>
+              Zrušit
+            </Button>
+            <Button onClick={handleManualEntry}>
+              <Plus className="w-4 h-4 mr-2" />
+              Přidat záznam
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

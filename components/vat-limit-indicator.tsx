@@ -18,11 +18,14 @@ export function VATLimitIndicator() {
   const severity = getVATLimitSeverity(status)
   const message = getVATLimitMessage(status)
 
+  // Kompaktní režim pro nízké hodnoty (< 80%)
+  const isCompact = status.percentageUsed < 80
+
   const severityConfig = {
     safe: {
       color: "bg-green-500",
-      icon: <CheckCircle className="w-5 h-5 text-green-600" />,
-      cardClass: "border-green-200 bg-green-50",
+      icon: <CheckCircle className={isCompact ? "w-4 h-4 text-green-600" : "w-5 h-5 text-green-600"} />,
+      cardClass: isCompact ? "border-green-200" : "border-green-200 bg-green-50",
       titleClass: "text-green-900",
     },
     warning: {
@@ -41,6 +44,38 @@ export function VATLimitIndicator() {
 
   const config = severityConfig[severity]
 
+  // Kompaktní verze pro < 80%
+  if (isCompact) {
+    return (
+      <Card className={config.cardClass}>
+        <CardContent className="pt-4 pb-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              {config.icon}
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Limit pro plátce DPH</p>
+                <p className="text-xs text-muted-foreground">{status.percentageUsed}% využito</p>
+              </div>
+            </div>
+            <div className="flex-1 max-w-xs">
+              <div className="relative w-full h-2 bg-secondary rounded-full overflow-hidden">
+                <div
+                  className={`h-full ${config.color} transition-all duration-300`}
+                  style={{ width: `${Math.min(status.percentageUsed, 100)}%` }}
+                />
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-semibold">{Math.round(status.totalRevenueLast12Months).toLocaleString("cs-CZ")} Kč</p>
+              <p className="text-xs text-muted-foreground">z 2M Kč</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Rozšířená verze pro >= 80%
   return (
     <Card className={config.cardClass}>
       <CardHeader>

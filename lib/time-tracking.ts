@@ -45,6 +45,41 @@ export function getRunningTimeEntry(): TimeEntry | null {
 }
 
 /**
+ * Create manual time entry (without timer)
+ */
+export function createManualTimeEntry(
+  description: string,
+  durationMinutes: number,
+  hourlyRate: number,
+  clientId?: string,
+  contractId?: string,
+): TimeEntry {
+  if (typeof window === "undefined") throw new Error("Cannot create entry on server")
+
+  const now = new Date()
+  const startTime = new Date(now.getTime() - durationMinutes * 60000) // Zpětné vypočítání času
+
+  const entry: TimeEntry = {
+    id: `time-${Date.now()}`,
+    clientId,
+    contractId,
+    description,
+    startTime: startTime.toISOString(),
+    endTime: now.toISOString(),
+    durationMinutes,
+    hourlyRate,
+    billable: true,
+    createdAt: now.toISOString(),
+  }
+
+  const entries = getAllTimeEntries()
+  entries.push(entry)
+  localStorage.setItem("timeEntries", JSON.stringify(entries))
+
+  return entry
+}
+
+/**
  * Start new time entry
  */
 export function startTimeEntry(

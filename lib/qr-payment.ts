@@ -114,13 +114,14 @@ export async function generateQRCode(data: QRPaymentData): Promise<string> {
 
 /**
  * Generate invoice number from current date
+ * Max 10 characters for variable symbol compatibility
  */
 export function generateInvoiceNumber(): string {
   const now = new Date()
-  const year = now.getFullYear()
+  const year = now.getFullYear().toString().slice(-2) // Last 2 digits of year
   const month = String(now.getMonth() + 1).padStart(2, "0")
   const day = String(now.getDate()).padStart(2, "0")
   const timestamp = now.getTime().toString().slice(-4)
 
-  return `${year}${month}${day}${timestamp}`
+  return `${year}${month}${day}${timestamp}` // Format: YYMMDDXXXX (10 chars)
 }
