@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Download, FileText, AlertCircle } from "lucide-react"
+import { Download, FileText, AlertCircle, File } from "lucide-react"
 import type { ContractBlock } from "@/types/contract"
 import { useState } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -108,6 +108,67 @@ export function ContractExporter({ blocks, contractText, contractType }: Contrac
     }
   }
 
+  const handleExportPdf = async () => {
+    setIsExporting(true)
+    setExportError(null)
+    try {
+      const { jsPDF } = await import("jspdf")
+      const doc = new jsPDF()
+
+      // Title
+      doc.setFontSize(16)
+      doc.setFont("helvetica", "bold")
+      doc.text(getContractTitle(), 15, 20)
+
+      // Content
+      doc.setFontSize(11)
+      doc.setFont("helvetica", "normal")
+
+      const lines = contractText.split("\n")
+      let yPosition = 35
+      const lineHeight = 7
+      const pageHeight = doc.internal.pageSize.height
+      const margin = 20
+
+      for (const line of lines) {
+        const trimmed = line.trim()
+
+        // Check if we need a new page
+        if (yPosition > pageHeight - margin) {
+          doc.addPage()
+          yPosition = 20
+        }
+
+        if (!trimmed) {
+          yPosition += lineHeight / 2
+          continue
+        }
+
+        // Section headers (all caps with colon)
+        if (trimmed.match(/^[A-ZČŠŽ\d\-\s]+:$/) && trimmed.length < 100) {
+          doc.setFont("helvetica", "bold")
+          doc.text(trimmed, 15, yPosition)
+          doc.setFont("helvetica", "normal")
+          yPosition += lineHeight + 2
+          continue
+        }
+
+        // Split long lines
+        const splitText = doc.splitTextToSize(trimmed, 180)
+        doc.text(splitText, 15, yPosition)
+        yPosition += lineHeight * splitText.length
+      }
+
+      doc.save(`${getContractFileName()}.pdf`)
+      console.log("[v0] PDF exported successfully")
+    } catch (error) {
+      console.error("[v0] PDF export error:", error)
+      setExportError("Chyba při exportu PDF. Zkuste prosím později.")
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const handleExportTxt = () => {
     try {
       const element = document.createElement("a")
@@ -139,12 +200,17 @@ export function ContractExporter({ blocks, contractText, contractType }: Contrac
           </Alert>
         )}
 
-        <Button onClick={handleExportDocx} className="w-full" size="lg" disabled={isExporting}>
+        <Button onClick={handleExportPdf} className="w-full" size="lg" disabled={isExporting}>
+          <File className="w-4 h-4 mr-2" />
+          {isExporting ? "Exportuji..." : "Stáhnout jako PDF"}
+        </Button>
+
+        <Button onClick={handleExportDocx} variant="secondary" className="w-full" size="lg" disabled={isExporting}>
           <FileText className="w-4 h-4 mr-2" />
           {isExporting ? "Exportuji..." : "Stáhnout jako Word"}
         </Button>
 
-        <Button onClick={handleExportTxt} variant="secondary" className="w-full" size="lg" disabled={isExporting}>
+        <Button onClick={handleExportTxt} variant="outline" className="w-full" size="lg" disabled={isExporting}>
           <Download className="w-4 h-4 mr-2" />
           Stáhnout jako Text
         </Button>

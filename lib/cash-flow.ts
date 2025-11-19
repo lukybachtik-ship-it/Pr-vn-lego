@@ -9,6 +9,10 @@ export interface Invoice {
   paidDate?: string
   description?: string
   createdAt: string
+  // QR payment data
+  invoiceNumber?: string // číslo faktury
+  variableSymbol?: string // variabilní symbol
+  bankAccountId?: string // ID bankovního účtu pro platbu
 }
 
 export interface CashFlowSummary {
