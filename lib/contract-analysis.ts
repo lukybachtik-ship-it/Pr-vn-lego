@@ -62,7 +62,7 @@ const RECOMMENDATION_RULES: Record<
     recommended: ["liability", "privacy", "dispute", "intellectual"],
     reasons: {
       delivery: "Stanovuje, kde a kdy bude zboží dodáno a kdo platí za dopravu.",
-      quality: "Definuje standardy kvality a lhůty pro reklamaci. Chrání kupującího.",
+      quality: "Definuje standardy kvality a lhůty pro reklamaci. Chrání kupujícího.",
       returns: "Podmínky vrácení zboží jsou důležité zejména pro spotřebitelské smlouvy.",
       liability: "Omezuje odpovědnost prodávajícího a definuje, co není zahrnuto v záručních podmínkách.",
       privacy:
@@ -70,6 +70,15 @@ const RECOMMENDATION_RULES: Record<
       dispute: "Mimosoudní řešení sporů může ušetřit čas a peníze oproti soudnímu řízení.",
       intellectual:
         "Pokud prodáváte kreativní práci nebo software, definuje práva k duševnímu vlastnictví.",
+    },
+  },
+  "purchase-contract": {
+    required: ["parties", "purchase-item", "purchase-price", "ownership-transfer"],
+    highlyRecommended: ["item-condition", "warranty"],
+    recommended: [],
+    reasons: {
+      "item-condition": "Popis stavu a známých vad chrání obě strany před budoucími spory o kvalitu.",
+      warranty: "Záruční podmínky stanovují, co se stane, pokud se objeví vady po koupi.",
     },
   },
   "other-contract": {
@@ -202,6 +211,10 @@ function getBlockName(blockId: string): string {
     dispute: "Řešení sporů",
     intellectual: "Duševní vlastnictví",
     duration: "Trvání smlouvy",
+    "purchase-item": "Předmět koupě",
+    "purchase-price": "Kupní cena",
+    "ownership-transfer": "Přechod vlastnictví",
+    "item-condition": "Stav a vady",
   }
   return names[blockId] || blockId
 }
@@ -237,6 +250,10 @@ function getBlockIcon(blockId: string): string {
     dispute: "⚔️",
     intellectual: "🧠",
     duration: "⏱️",
+    "purchase-item": "📦",
+    "purchase-price": "💰",
+    "ownership-transfer": "🔄",
+    "item-condition": "🔍",
   }
   return icons[blockId] || "📄"
 }
@@ -245,6 +262,7 @@ function getContractTypeName(contractType: string): string {
   const names: Record<string, string> = {
     "work-contract": "smlouvu o dílo",
     "rental-contract": "nájemní smlouvu",
+    "purchase-contract": "kupní smlouvu",
     "trade-contract": "obchodní podmínky",
     "other-contract": "tuto smlouvu",
   }

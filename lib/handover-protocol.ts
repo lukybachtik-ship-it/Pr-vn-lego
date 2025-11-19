@@ -89,6 +89,8 @@ export function getContractTypeLabel(type: string): string {
       return "Smlouva o dílo"
     case "rental-contract":
       return "Nájemní smlouva"
+    case "purchase-contract":
+      return "Kupní smlouva"
     case "trade-contract":
       return "Obchodní podmínky"
     case "other-contract":

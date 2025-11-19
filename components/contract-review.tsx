@@ -83,10 +83,14 @@ export function ContractReview({ contractType, blocks }: ContractReviewProps) {
     switch (contractType) {
       case "rental-contract":
         return "NÁJEMNÍ SMLOUVA"
+      case "purchase-contract":
+        return "KUPNÍ SMLOUVA"
       case "trade-contract":
         return "OBCHODNÍ PODMÍNKY"
       case "other-contract":
         return "SMLOUVA"
+      case "work-contract":
+        return "SMLOUVA O DÍLO"
       default:
         return "SMLOUVA O DÍLO"
     }
@@ -343,6 +347,73 @@ export function ContractReview({ contractType, blocks }: ContractReviewProps) {
       const penaltyBlock = blocks.find((b) => b.templateId === "penalties")
       text += "SMLUVNÍ POKUTY:\n"
       text += `Pokuta za zpoždění: ${penaltyBlock?.data.penaltyAmount} Kč za den\n\n`
+    }
+
+    // Purchase contract sections
+    if (blocks.some((b) => b.templateId === "purchase-item" && b.isComplete)) {
+      const itemBlock = blocks.find((b) => b.templateId === "purchase-item")
+      text += "PŘEDMĚT KOUPĚ:\n"
+      if (itemBlock?.data.itemType === "movable") {
+        text += `Typ: Movitá věc\n`
+        if (itemBlock?.data.itemDescription) text += `Popis: ${itemBlock.data.itemDescription}\n`
+        if (itemBlock?.data.serialNumber) text += `Výrobní číslo/VIN: ${itemBlock.data.serialNumber}\n`
+        if (itemBlock?.data.yearOfManufacture) text += `Rok výroby: ${itemBlock.data.yearOfManufacture}\n`
+      } else if (itemBlock?.data.itemType === "real-estate") {
+        text += `Typ: Nemovitost\n`
+        if (itemBlock?.data.cadastralArea) text += `Katastrální území: ${itemBlock.data.cadastralArea}\n`
+        if (itemBlock?.data.lvNumber) text += `Číslo LV: ${itemBlock.data.lvNumber}\n`
+        if (itemBlock?.data.parcelNumber) text += `Parcelní číslo: ${itemBlock.data.parcelNumber}\n`
+        if (itemBlock?.data.buildingNumber) text += `Číslo popisné: ${itemBlock.data.buildingNumber}\n`
+      }
+      text += "\n"
+    }
+
+    if (blocks.some((b) => b.templateId === "purchase-price" && b.isComplete)) {
+      const priceBlock = blocks.find((b) => b.templateId === "purchase-price")
+      text += "KUPNÍ CENA:\n"
+      if (priceBlock?.data.purchasePrice) text += `Kupní cena: ${priceBlock.data.purchasePrice} Kč\n`
+      if (priceBlock?.data.paymentMethod) {
+        const methodMap: Record<string, string> = {
+          direct: "Přímý bankovní převod",
+          escrow: "Advokátní/notářská úschova",
+          cash: "Hotovost",
+        }
+        text += `Způsob úhrady: ${methodMap[priceBlock.data.paymentMethod] || priceBlock.data.paymentMethod}\n`
+      }
+      if (priceBlock?.data.paymentDueDays) text += `Splatnost: ${priceBlock.data.paymentDueDays} dnů od podpisu\n`
+      text += "\n"
+    }
+
+    if (blocks.some((b) => b.templateId === "ownership-transfer" && b.isComplete)) {
+      const ownershipBlock = blocks.find((b) => b.templateId === "ownership-transfer")
+      text += "PŘECHOD VLASTNICTVÍ:\n"
+      if (ownershipBlock?.data.ownershipTransferMoment) {
+        const momentMap: Record<string, string> = {
+          payment: "Úplným zaplacením kupní ceny",
+          handover: "Předáním věci",
+          registration: "Vkladem do katastru nemovitostí",
+        }
+        text += `Vlastnictví přechází: ${momentMap[ownershipBlock.data.ownershipTransferMoment] || ownershipBlock.data.ownershipTransferMoment}\n`
+      }
+      text += "\n"
+    }
+
+    if (blocks.some((b) => b.templateId === "item-condition" && b.isComplete)) {
+      const conditionBlock = blocks.find((b) => b.templateId === "item-condition")
+      text += "STAV A VADY:\n"
+      if (conditionBlock?.data.itemCondition) {
+        const conditionMap: Record<string, string> = {
+          new: "Nová",
+          used: "Použitá",
+          damaged: "S vadami",
+        }
+        text += `Stav: ${conditionMap[conditionBlock.data.itemCondition] || conditionBlock.data.itemCondition}\n`
+      }
+      if (conditionBlock?.data.knownDefects) text += `Známé vady: ${conditionBlock.data.knownDefects}\n`
+      if (conditionBlock?.data.noLegalDefects === "true") {
+        text += `Prohlášení o bezdlužnosti: Prodávající prohlašuje, že na věci není exekuce, zástava ani jiné právní vady\n`
+      }
+      text += "\n"
     }
 
     text += "---\n\n"

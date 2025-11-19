@@ -24,6 +24,7 @@ export default function Home() {
     const names: Record<string, string> = {
       "work-contract": "Smlouva o dílo",
       "rental-contract": "Nájemní smlouva",
+      "purchase-contract": "Kupní smlouva",
       "trade-contract": "Obchodní podmínky",
       "other-contract": "Vlastní smlouva",
     }
