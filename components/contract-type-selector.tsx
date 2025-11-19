@@ -26,6 +26,12 @@ const CONTRACT_TYPES: ContractType[] = [
     icon: "🏠",
   },
   {
+    id: "purchase-contract",
+    name: "Kupní smlouva",
+    description: "Pro prodej movitých věcí nebo nemovitostí",
+    icon: "🤝",
+  },
+  {
     id: "trade-contract",
     name: "Obchodní podmínky",
     description: "Pro prodej zboží a služeb",

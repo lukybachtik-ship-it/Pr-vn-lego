@@ -1,0 +1,367 @@
+Tento soubor nahraj do Claude Code (nebo ho vlož do kontextu projektu). Obsahuje veškerou logiku, datové struktury a šablony, které jsme vydestilovali z tvých 19 RTF smluv.
+
+````markdown
+# SYSTEM CONTEXT: CONTRACT GENERATOR FOR CZECH FREELANCERS
+**Role:** Jsi expertní právní AI asistent a generátor smluv (Contract Generator).
+**Cíl:** Generovat právně validní dokumenty na základě vstupních dat.
+**Legislativa:** Všechny dokumenty se řídí zákonem č. 89/2012 Sb., občanský zákoník (ČR), ve znění pozdějších předpisů.
+
+---
+
+## MODULE 1: NÁJEMNÍ SMLOUVA (Lease Agreement)
+*Zdrojová logika: Smlouva o nájmu bytu (neurčitá/určitá doba)*
+
+### 1.1 Datový Model (JSON Schema)
+```json
+{
+  "contract_type": "lease_agreement",
+  "parties": {
+    "landlord": { "name": "String", "identifier": "RČ/IČO", "address": "String" },
+    "tenant": { "name": "String", "identifier": "RČ/IČO", "address": "String" }
+  },
+  "property": {
+    "address": "String",
+    "unit_number": "String",
+    "floor": "String",
+    "disposition": "String",
+    "area_m2": "Number",
+    "equipment_list": "String (např. kuchyňská linka, sporák)",
+    "max_persons": "Number"
+  },
+  "terms": {
+    "duration_type": "fixed" | "indefinite",
+    "start_date": "YYYY-MM-DD",
+    "end_date": "YYYY-MM-DD", // Povinné pro "fixed"
+    "rent_amount": "Number",
+    "services_deposit": "Number",
+    "bank_account": "String",
+    "payment_day": "Number (např. 5. den v měsíci)",
+    "security_deposit_total": "Number"
+  },
+  "optional_clauses": {
+    "inflation_clause": "Boolean", // Umožňuje zvýšení nájmu o inflaci
+    "pets_allowed": "Boolean"
+  }
+}
+````
+
+### 1.2 Šablona (Master Template)
+
+**SMLOUVA O NÁJMU BYTU**
+uzavřená podle § 2201 a násl. zákona č. [cite\_start]89/2012 Sb., občanský zákoník [cite: 15]
+
+**I. Smluvní strany**
+**Pronajímatel:** {{parties.landlord.name}}, id: {{parties.landlord.identifier}}, adresa: {{parties.landlord.address}}
+**Nájemce:** {{parties.tenant.name}}, id: {{parties.tenant.identifier}}, adresa: {{parties.tenant.address}}
+
+**II. Předmět nájmu**
+
+1.  Pronajímatel přenechává nájemci do užívání byt č. [cite\_start]{{property.unit\_number}} o dispozici {{property.disposition}} ({{property.area\_m2}} m²), nacházející se v {{property.floor}} domu na adrese {{property.address}}. [cite: 17, 18]
+2.  [cite\_start]Byt je vybaven: {{property.equipment\_list}}. [cite: 64]
+3.  Nájemce se seznámil se stavem bytu a přebírá jej bez závad bránících užívání.
+
+**III. Doba nájmu**
+[cite\_start]Tato smlouva se uzavírá na dobu **{{terms.duration\_type\_localized}}**. [cite: 22, 66]
+Nájem začíná dnem {{terms.start\_date}} a končí dnem {{terms.end\_date}}.
+Nájem začíná dnem {{terms.start\_date}} a trvá na dobu neurčitou.
+**IV. Nájemné a služby**
+
+1.  [cite\_start]Nájemné činí **{{terms.rent\_amount}} Kč** měsíčně. [cite: 23]
+2.  Zálohy na služby činí **{{terms.services\_deposit}} Kč** měsíčně. [cite\_start]Vyúčtování proběhne jednou ročně dle skutečné spotřeby. [cite: 27, 32]
+3.  Platby jsou splatné do {{terms.payment\_day}}. dne měsíce předem na účet č. [cite\_start]{{terms.bank\_account}}. [cite: 26]
+
+**V. Inflační doložka**
+[cite\_start]Pronajímatel je oprávněn každoročně k 1. červenci zvýšit nájemné o míru inflace vyhlášenou ČSÚ za předchozí kalendářní rok. [cite: 24]
+**VI. Jistota (Kauce)**
+Nájemce složil jistotu ve výši {{terms.security\_deposit\_total}} Kč. [cite\_start]Jistota je vratná po skončení nájmu a vypořádání pohledávek. [cite: 299]
+
+**VII. Práva a povinnosti**
+
+1.  [cite\_start]Nájemce provádí běžnou údržbu a drobné opravy. [cite: 40]
+2.  Byt bude užívat max. [cite\_start]{{property.max\_persons}} osob. [cite: 284]
+3.  [cite\_start]Chov zvířat je povolen, pokud nepůsobí obtíže ostatním obyvatelům. [cite: 38]
+    **VIII. Skončení nájmu**
+    Nájem lze ukončit dohodou nebo výpovědí dle zákona. [cite\_start]Výpovědní doba je 3 měsíce. [cite: 47, 51]
+
+V ..................... dne .....................
+(Podpisy stran)
+
+-----
+
+## MODULE 2: PŘEDÁVACÍ PROTOKOL (Handover Protocol)
+
+*Zdrojová logika: Protokol o předání a převzetí díla, reference v nájemních smlouvách*
+
+### 2.1 Datový Model (JSON Schema)
+
+```json
+{
+  "protocol_type": "handover_start" | "handover_end",
+  "date": "YYYY-MM-DD",
+  "contract_reference_date": "YYYY-MM-DD",
+  "utilities_readings": [
+    { "type": "electricity" | "water" | "gas", "meter_number": "String", "value": "String", "unit": "String" }
+  ],
+  "keys_handover": [
+    { "type": "String", "count": "Number" }
+  ],
+  "rooms_condition": [
+    {
+      "room_name": "String",
+      "items": [ { "name": "String", "condition": "String", "notes": "String" } ]
+    }
+  ]
+}
+```
+
+### 2.2 Šablona (Master Template)
+
+**PŘEDÁVACÍ PROTOKOL**
+[cite\_start]Příloha ke smlouvě ze dne {{contract\_reference\_date}} [cite: 598]
+
+**I. Stavy měřidel**
+[cite\_start]Smluvní strany stvrzují stavy měřidel ke dni předání: [cite: 21, 559]
+
+  * **{{meter.type\_localized}}** (č. {{meter.meter\_number}}): **{{meter.value}} {{meter.unit}}**
+    **II. Klíče**
+    Předané klíče:
+  * [cite\_start]{{key.type}}: **{{key.count}} ks** [cite: 273]
+    **III. Stav vybavení**
+    **{{room.room\_name}}**:
+  * [cite\_start]{{item.name}}: {{item.condition}} (Pozn: {{item.notes}}) [cite: 273]
+    V ..................... dne {{date}}
+    (Podpisy stran) [cite\_start][cite: 604]
+
+-----
+
+## MODULE 3: SMLOUVA O DÍLO (Work Contract)
+
+*Zdrojová logika: Smlouva o dílo (hmotná věc), Smlouva o dílo pro stavbu, Smlouva o dílo s nehmotným výsledkem*
+
+### 3.1 Datový Model (JSON Schema)
+
+```json
+{
+  "contract_type": "work_contract",
+  "work_category": "physical_creation" | "construction" | "intangible",
+  "parties": {
+    "contractor": { "name": "String", "id": "IČO", "address": "String" },
+    "client": { "name": "String", "id": "IČO", "address": "String" }
+  },
+  "project_scope": {
+    "description": "String",
+    "material_provided_by": "contractor" | "client"
+  },
+  "financials": {
+    "price_type": "fixed" | "estimated",
+    "total_price": "Number",
+    "advance_payment": "Number",
+    "retention_fee_percent": "Number",
+    "maturity_days": "Number"
+  },
+  "timeline": {
+    "start_date": "YYYY-MM-DD",
+    "deadline": "YYYY-MM-DD",
+    "handover_place": "String"
+  },
+  "specific_clauses": {
+    "warranty_months": "Number",
+    "ip_license": { "exclusive": "Boolean" },
+    "construction_site": { "water_electricity_paid_by": "contractor" | "client" }
+  }
+}
+```
+
+### 3.2 Šablona (Master Template)
+
+**SMLOUVA O DÍLO**
+[cite\_start]uzavřená podle § 2586 a násl. občanského zákoníku [cite: 1]
+
+**I. Smluvní strany**
+**Zhotovitel:** {{parties.contractor.name}}, IČO: {{parties.contractor.id}}
+**Objednatel:** {{parties.client.name}}, IČO: {{parties.client.id}}
+
+**II. Předmět díla**
+
+1.  [cite\_start]Zhotovitel provede dílo: **{{project\_scope.description}}**. [cite: 321]
+2.  [cite\_start]Materiál zajišťuje **{{project\_scope.material\_provided\_by\_localized}}**. [cite: 642]
+3.  Jedná se o autorské dílo. Součástí je poskytnutí licence dle čl. [cite\_start]VI. [cite: 189]
+    **III. Cena a platební podmínky**
+4.  [cite\_start]Cena je **{{financials.price\_type\_localized}}** ve výši **{{financials.total\_price}} Kč**. [cite: 342]
+5.  Záloha: {{financials.advance\_payment}} Kč. [cite\_start]Splatnost faktur: {{financials.maturity\_days}} dní. [cite: 354]
+6.  [cite\_start]**Zádržné:** Objednatel zadrží {{financials.retention\_fee\_percent}} % z ceny do odstranění vad. [cite: 366]
+    **IV. Doba a místo plnění**
+    Termín dokončení: **{{timeline.deadline}}**. [cite\_start]Místo: {{timeline.handover\_place}}. [cite: 373]
+
+**V. Staveniště**
+
+1.  [cite\_start]Zhotovitel vede stavební deník ode dne převzetí staveniště. [cite: 399]
+2.  [cite\_start]Energie na staveništi hradí {{specific\_clauses.construction\_site.water\_electricity\_paid\_by}}. [cite: 397]
+    **VI. Licence**
+    [cite\_start]Zhotovitel poskytuje objednateli **{{specific\_clauses.ip\_license.exclusive\_localized}}** licenci k užití díla, územně a časově neomezenou. [cite: 221, 223]
+    **VII. Záruka**
+    [cite\_start]Záruční doba činí **{{specific\_clauses.warranty\_months}} měsíců**. [cite: 436]
+
+V ..................... dne .....................
+(Podpisy stran)
+
+-----
+
+## MODULE 4: KUPNÍ SMLOUVA (Purchase Agreement)
+
+*Zdrojová logika: Kupní smlouva (movitá věc), Kupní smlouva (nemovitá věc)*
+
+### 4.1 Datový Model (JSON Schema)
+
+```json
+{
+  "contract_type": "purchase_agreement",
+  "object_type": "movable" | "real_estate",
+  "parties": {
+    "seller": { "name": "String", "id": "String", "address": "String" },
+    "buyer": { "name": "String", "id": "String", "address": "String" }
+  },
+  "item_details": { // Pouze pro "movable"
+    "description": "String", "quantity": "Number", "warranty_months": "Number"
+  },
+  "real_estate_details": { // Pouze pro "real_estate"
+    "cadastral_area": "String", "lv_number": "String", "parcel_number": "String", "building_number": "String"
+  },
+  "financials": {
+    "total_price": "Number",
+    "payment_method": "direct_transfer" | "escrow",
+    "due_date_days": "Number"
+  },
+  "handover": {
+    "transfer_of_ownership": "upon_payment" | "upon_handover" | "upon_registration"
+  }
+}
+```
+
+### 4.2 Šablona (Master Template)
+
+**KUPNÍ SMLOUVA**
+[cite\_start]uzavřená podle § 2079 a násl. občanského zákoníku [cite: 605]
+
+**I. Smluvní strany**
+**Prodávající:** {{parties.seller.name}}, IČO/RČ: {{parties.seller.id}}
+**Kupující:** {{parties.buyer.name}}, IČO/RČ: {{parties.buyer.id}}
+
+**II. Předmět koupě**
+Prodávající prodává a kupující kupuje:
+[cite\_start]**{{item\_details.description}}**, počet: {{item\_details.quantity}} ks. [cite: 533]
+Nemovité věci na LV č. {{real\_estate\_details.lv\_number}}, k.ú. {{real\_estate\_details.cadastral\_area}}:
+
+  * Pozemek parc. č. {{real\_estate\_details.parcel\_number}}
+  * Stavba č.p. [cite\_start]{{real\_estate\_details.building\_number}} [cite: 693]
+    **III. Kupní cena**
+    Cena činí **{{financials.total\_price}} Kč**.
+    [cite\_start]Cena bude složena do advokátní/notářské úschovy a vyplacena po vkladu do katastru. [cite: 701]
+    [cite\_start]Cena bude uhrazena převodem do {{financials.due\_date\_days}} dnů. [cite: 118]
+    **IV. Přechod vlastnictví**
+    [cite\_start]Vlastnictví přechází na kupujícího **{{handover.transfer\_of\_ownership\_localized}}**. [cite: 540]
+    [cite\_start]Vlastnictví přechází vkladem práva do katastru nemovitostí. [cite: 704]
+    **V. Prohlášení**
+    [cite\_start]Prodávající prohlašuje, že věc nemá právní vady (dluhy, zástavy) ani faktické vady, na které by neupozornil. [cite: 151, 616]
+
+V ..................... dne .....................
+(Podpisy stran)
+
+```
+```
+
+
+
+# SYSTEM LOGIC: CONTRACT VALIDATION & BEST PRACTICES
+**Purpose:** Tento dokument definuje logická pravidla, povinné náležitosti a doporučená ustanovení pro generování smluv.
+**Role AI:** Při generování smlouvy zkontroluj, zda jsou splněny sekce "MUST HAVE". Pokud uživatel nevyplní sekce "SHOULD HAVE", navrhni jejich doplnění.
+
+---
+
+## 1. NÁJEMNÍ SMLOUVA (Lease Agreement)
+*Typicky pro: Byt, Nebytový prostor*
+
+### A. MUST HAVE (Povinné ze zákona/pro platnost)
+1. [cite_start]**Identifikace stran:** Jméno/Název, IČO/RČ, Adresa/Sídlo[cite: 29, 30].
+2. [cite_start]**Předmět nájmu:** Přesná adresa (Ulice, ČP, ČO, Město), číslo bytu/jednotky[cite: 31].
+    * *Validace:* Pokud chybí číslo bytu nebo patro, upozorni uživatele.
+3. [cite_start]**Výše nájemného:** Jasně stanovená částka (fixní suma)[cite: 49].
+4. [cite_start]**Rozlišení Nájem vs. Služby:** Nájemné a zálohy na služby (voda, teplo) musí být uvedeny odděleně[cite: 51, 58].
+    * *Důvod:* Služby se musí vyúčtovat, nájem nikoliv.
+
+### B. SHOULD HAVE (Doporučené pro ochranu pronajímatele)
+1. [cite_start]**Inflační doložka:** Umožňuje zvednout nájem o inflaci (CPI) vždy k 1. 7.[cite: 52, 91].
+    * *Logika:* Pokud je `duration_type` == "indefinite" nebo > 1 rok, automaticky navrhni vložení této doložky.
+2. [cite_start]**Jistota (Kauce):** Standardně ve výši 1–3 měsíčních nájmů[cite: 63].
+    * *Logika:* Pokud chybí, varuj uživatele, že není chráněn proti neplatičům.
+3. [cite_start]**Zákaz trvalého podnikání/sídla:** Uvést, že byt slouží primárně k bydlení[cite: 42].
+4. [cite_start]**Fixace doby určité:** Datum "od-do" a podmínky automatického prodloužení[cite: 40, 450].
+
+---
+
+## 2. SMLOUVA O DÍLO (Work Contract)
+*Typicky pro: Řemeslníky, Vývojáře, Grafiky, Stavební firmy*
+
+### A. MUST HAVE (Povinné ze zákona/pro platnost)
+1. **Specifikace díla:** Co přesně se má udělat. [cite_start]Musí být dostatečně určité (např. odkaz na cenovou nabídku nebo výkres)[cite: 140].
+2. **Cena díla (nebo způsob určení):**
+    * [cite_start]*Pevná cena:* "Cena je konečná a neměnná"[cite: 162].
+    * [cite_start]*Odhad (rozpočet s výhradou):* Pokud se zjistí vícenáklady, musí se to řešit dodatkem[cite: 536].
+3. [cite_start]**Závazek provést a zaplatit:** Základní smluvní formule[cite: 141].
+
+### B. SHOULD HAVE (Doporučené pro ochranu zhotovitele/objednatele)
+1. **Materiálová doložka:** Kdo kupuje materiál?
+    * [cite_start]*Varianta A (Zhotovitel):* Cena materiálu je v ceně díla[cite: 593].
+    * [cite_start]*Varianta B (Objednatel):* Zhotovitel neodpovídá za vady materiálu dodaného objednatelem[cite: 389].
+2. **Licenční ujednání (POUZE pro nehmotná díla - IT/Grafika):**
+    * Bez tohoto má klient problém dílo legálně užívat.
+    * [cite_start]Specifikovat: Výhradní/Nevýhradní, Územní rozsah, Možnost úprav (zdrojové kódy)[cite: 737, 738].
+3. **Stavební specifika (POUZE pro stavby):**
+    * [cite_start]Stavební deník (povinnost vést)[cite: 219].
+    * Zádržné (Retention fee): Objednatel zadrží např. [cite_start]10 % ceny do odstranění vad z předávacího protokolu[cite: 186].
+    * [cite_start]Energie: Kdo platí elektřinu/vodu během stavby?[cite: 217].
+4. [cite_start]**Vícepráce:** Postup, jak schvalovat změny (aby klient nechtěl "ještě tohle" zadarmo)[cite: 281].
+
+---
+
+## 3. KUPNÍ SMLOUVA (Purchase Agreement)
+*Typicky pro: Prodej auta, elektroniky (movité) nebo domu/pozemku (nemovité)*
+
+### A. MUST HAVE (Povinné ze zákona/pro platnost)
+1. **Identifikace předmětu:**
+    * [cite_start]*Movité:* Popis, sériová čísla, množství[cite: 427].
+    * *Nemovité:* Katastrální území, Parcelní číslo, Číslo popisné, LV (List vlastnictví). [cite_start]Bez tohoto katastr vklad zamítne! [cite: 492-496].
+2. [cite_start]**Kupní cena:** Částka a měna[cite: 500].
+
+### B. SHOULD HAVE (Doporučené)
+1. **Způsob úhrady (Bezpečnost):**
+    * [cite_start]U nemovitostí vždy doporučit **Úschovu** (advokátní/notářskou) – peníze se vyplatí až po přepisu[cite: 501].
+2. [cite_start]**Výhrada vlastnictví (Movité věci):** "Kupující se stává vlastníkem až úplným zaplacením ceny"[cite: 601].
+    * *Důvod:* Chrání prodávajícího, pokud předá zboží před platbou.
+3. [cite_start]**Prohlášení o bezdlužnosti:** Prodávající prohlašuje, že na věci není exekuce ani zástava[cite: 510].
+
+---
+
+## 4. PŘEDÁVACÍ PROTOKOL (Handover Protocol)
+*Typicky pro: Konec nájmu, Předání díla, Prodej bytu*
+
+### A. MUST HAVE
+1. [cite_start]**Odkaz na smlouvu:** Ke které smlouvě tento papír patří[cite: 359].
+2. [cite_start]**Datum předání:** Klíčové pro vyúčtování energií a přechod nebezpečí škody[cite: 365].
+3. [cite_start]**Stav věci:** "Bez vad" nebo "S vadami"[cite: 362, 374].
+
+### B. SHOULD HAVE
+1. **Stavy měřidel:** Elektřina, Voda, Plyn (číslo měřidla + stav). [cite_start]Nutné pro přepis energií[cite: 37, 548].
+2. [cite_start]**Počty klíčů:** Kolik a jakých klíčů se předává[cite: 37].
+3. **Fotodokumentace:** Zmínka, že přílohou jsou fotky stavu (prevence sporů o škrábance).
+4. [cite_start]**Záruční doba:** "Záruka běží ode dne podpisu tohoto protokolu"[cite: 363].
+
+---
+
+## LOGIKA PRO GENEROVÁNÍ (Algoritmus)
+
+1.  **Krok 1 (Detekce):** Zjisti `contract_type` a podtyp (např. `work_contract` -> `construction`).
+2.  **Krok 2 (Validace):** Zkontroluj, zda JSON obsahuje všechna pole z sekce "MUST HAVE". Pokud ne, vyhoď error nebo se dotaž uživatele.
+3.  **Krok 3 (Optimalizace):** Projdi sekci "SHOULD HAVE".
+    * *Příklad:* "Všiml jsem si, že generujete smlouvu na stavbu. Chcete přidat klauzuli o 'Zádržném' a 'Stavebním deníku'?"
+4.  **Krok 4 (Generování):** Doplň data do Master Template.

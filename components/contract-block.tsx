@@ -4,7 +4,9 @@ import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { X, CheckCircle, AlertCircle, Users } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { X, CheckCircle, AlertCircle, Users, HelpCircle } from "lucide-react"
 import { IcoVerifier } from "./ico-verifier"
 import { ClientSelector } from "./client-selector"
 import type { ContractBlock as BlockType } from "@/types/contract"
@@ -186,17 +188,87 @@ export function ContractBlock({ block, index, onRemove, onUpdate }: ContractBloc
       case "payment":
         return (
           <div className="space-y-3">
-            <div>
-              <label className="text-sm font-semibold">Celková částka (Kč)</label>
-              <Input
-                type="number"
-                placeholder="50000"
-                value={formData.amount || ""}
-                onChange={(e) => handleChange("amount", e.target.value)}
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-semibold">Celková částka (Kč)</label>
+                <Input
+                  type="number"
+                  placeholder="50000"
+                  value={formData.amount || ""}
+                  onChange={(e) => handleChange("amount", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold">Typ ceny</label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={formData.priceType || "fixed"}
+                  onChange={(e) => handleChange("priceType", e.target.value)}
+                >
+                  <option value="fixed">Pevná cena</option>
+                  <option value="estimated">Odhadová cena</option>
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formData.priceType === "estimated"
+                    ? "Cena může být upravena dle skutečnosti"
+                    : "Cena je konečná a neměnná"}
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-semibold">Záloha (Kč)</label>
+                <Input
+                  type="number"
+                  placeholder="20000"
+                  value={formData.advancePayment || ""}
+                  onChange={(e) => handleChange("advancePayment", e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground mt-1">Platba před zahájením prací</p>
+              </div>
+              <div>
+                <label className="text-sm font-semibold">Splatnost faktur (dny)</label>
+                <Input
+                  type="number"
+                  placeholder="14"
+                  value={formData.maturityDays || ""}
+                  onChange={(e) => handleChange("maturityDays", e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground mt-1">Počet dnů od vystavení faktury</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-md border border-amber-200">
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-semibold">Zádržné (%)</label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p className="text-sm">
+                          Část ceny (obvykle 5-10%), kterou objednatel zadrží až do odstranění všech vad zjištěných při předání díla.
+                          Chrání objednatele před nutností domáhat se nápravy po doplacení celé částky. Doporučeno zejména pro stavby.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Input
+                  type="number"
+                  placeholder="10"
+                  min="0"
+                  max="100"
+                  value={formData.retentionFee || ""}
+                  onChange={(e) => handleChange("retentionFee", e.target.value)}
+                  className="mt-2"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Doporučeno 5-10% pro stavby a větší projekty</p>
+              </div>
             </div>
             <div>
-              <label className="text-sm font-semibold">Podmínky platby</label>
+              <label className="text-sm font-semibold">Podmínky platby (volitelné)</label>
               <Input
                 placeholder="např. 50% záloha, 50% po dodání"
                 value={formData.paymentTerms || ""}
@@ -267,21 +339,39 @@ export function ContractBlock({ block, index, onRemove, onUpdate }: ContractBloc
         return (
           <div className="space-y-3">
             <div>
-              <label className="text-sm font-semibold">Délka záruky (měsíce)</label>
-              <Input
-                type="number"
-                placeholder="12"
-                value={formData.warrantyPeriod || ""}
-                onChange={(e) => handleChange("warrantyPeriod", e.target.value)}
-              />
+              <label className="text-sm font-semibold">Kdo dodává materiál</label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={formData.materialProvidedBy || "contractor"}
+                onChange={(e) => handleChange("materialProvidedBy", e.target.value)}
+              >
+                <option value="contractor">Zhotovitel</option>
+                <option value="client">Objednatel</option>
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">
+                {formData.materialProvidedBy === "client"
+                  ? "Zhotovitel neodpovídá za vady materiálu dodaného objednatelem"
+                  : "Cena materiálu je zahrnuta v ceně díla"}
+              </p>
             </div>
-            <div>
-              <label className="text-sm font-semibold">Rozsah záruky</label>
-              <Input
-                placeholder="Co záruka pokrývá"
-                value={formData.warrantyCoverage || ""}
-                onChange={(e) => handleChange("warrantyCoverage", e.target.value)}
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-semibold">Délka záruky (měsíce)</label>
+                <Input
+                  type="number"
+                  placeholder="24"
+                  value={formData.warrantyPeriod || ""}
+                  onChange={(e) => handleChange("warrantyPeriod", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold">Rozsah záruky</label>
+                <Input
+                  placeholder="Co záruka pokrývá"
+                  value={formData.warrantyCoverage || ""}
+                  onChange={(e) => handleChange("warrantyCoverage", e.target.value)}
+                />
+              </div>
             </div>
           </div>
         )
@@ -348,10 +438,56 @@ export function ContractBlock({ block, index, onRemove, onUpdate }: ContractBloc
                 onChange={(e) => handleChange("propertyAddress", e.target.value)}
               />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-semibold">Patro</label>
+                <Input
+                  placeholder="např. 3. patro"
+                  value={formData.propertyFloor || ""}
+                  onChange={(e) => handleChange("propertyFloor", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold">Dispozice</label>
+                <Input
+                  placeholder="např. 2+kk, 3+1"
+                  value={formData.propertyDisposition || ""}
+                  onChange={(e) => handleChange("propertyDisposition", e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-semibold">Výměra (m²)</label>
+                <Input
+                  type="number"
+                  placeholder="např. 65"
+                  value={formData.propertyArea || ""}
+                  onChange={(e) => handleChange("propertyArea", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold">Max. počet osob</label>
+                <Input
+                  type="number"
+                  placeholder="např. 2"
+                  value={formData.propertyMaxPersons || ""}
+                  onChange={(e) => handleChange("propertyMaxPersons", e.target.value)}
+                />
+              </div>
+            </div>
             <div>
-              <label className="text-sm font-semibold">Popis (pokoje, vybavení, atd.)</label>
+              <label className="text-sm font-semibold">Vybavení bytu</label>
               <Input
-                placeholder="Popis pronajímané nemovitosti"
+                placeholder="např. kuchyňská linka, sporák, lednička, pračka..."
+                value={formData.propertyEquipment || ""}
+                onChange={(e) => handleChange("propertyEquipment", e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-semibold">Popis (pokoje, stav, atd.)</label>
+              <Input
+                placeholder="Další detaily o nemovitosti"
                 value={formData.propertyDescription || ""}
                 onChange={(e) => handleChange("propertyDescription", e.target.value)}
               />
@@ -390,30 +526,78 @@ export function ContractBlock({ block, index, onRemove, onUpdate }: ContractBloc
       case "rental-price":
         return (
           <div className="space-y-3">
-            <div>
-              <label className="text-sm font-semibold">Měsíční nájemné (Kč)</label>
-              <Input
-                type="number"
-                placeholder="10000"
-                value={formData.monthlyRent || ""}
-                onChange={(e) => handleChange("monthlyRent", e.target.value)}
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-semibold">Měsíční nájemné (Kč)</label>
+                <Input
+                  type="number"
+                  placeholder="10000"
+                  value={formData.monthlyRent || ""}
+                  onChange={(e) => handleChange("monthlyRent", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold">Zálohy na služby (Kč)</label>
+                <Input
+                  type="number"
+                  placeholder="3000"
+                  value={formData.servicesDeposit || ""}
+                  onChange={(e) => handleChange("servicesDeposit", e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground mt-1">Energie, voda, plyn - vyúčtovává se ročně</p>
+              </div>
             </div>
-            <div>
-              <label className="text-sm font-semibold">Splatnost</label>
-              <Input
-                placeholder="Do 5. dne v měsíci, do 10. atd."
-                value={formData.rentalDueDate || ""}
-                onChange={(e) => handleChange("rentalDueDate", e.target.value)}
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-semibold">Splatnost (den v měsíci)</label>
+                <Input
+                  type="number"
+                  placeholder="5"
+                  min="1"
+                  max="31"
+                  value={formData.rentalPaymentDay || ""}
+                  onChange={(e) => handleChange("rentalPaymentDay", e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground mt-1">např. 5 = do 5. dne v měsíci</p>
+              </div>
+              <div>
+                <label className="text-sm font-semibold">Způsob platby</label>
+                <Input
+                  placeholder="Bankovní převod"
+                  value={formData.rentalPaymentMethod || ""}
+                  onChange={(e) => handleChange("rentalPaymentMethod", e.target.value)}
+                />
+              </div>
             </div>
-            <div>
-              <label className="text-sm font-semibold">Způsob platby</label>
-              <Input
-                placeholder="Bankovní převod, hotovost, atd."
-                value={formData.rentalPaymentMethod || ""}
-                onChange={(e) => handleChange("rentalPaymentMethod", e.target.value)}
+            <div className="flex items-start gap-2 p-3 bg-accent/10 rounded-md border border-accent/20">
+              <Checkbox
+                id="inflationClause"
+                checked={formData.inflationClause === "true"}
+                onCheckedChange={(checked) => handleChange("inflationClause", checked ? "true" : "false")}
               />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <label htmlFor="inflationClause" className="text-sm font-semibold cursor-pointer">
+                    Inflační doložka
+                  </label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p className="text-sm">
+                          Umožňuje zvednout nájem každoročně k 1. červenci o míru inflace (CPI) vyhlášenou ČSÚ za předchozí rok.
+                          Doporučeno pro dlouhodobé nájmy, chrání pronajímatele před znehodnocením příjmů.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Doporučeno: Chrání pronajímatele před inflací při dlouhodobém nájmu
+                </p>
+              </div>
             </div>
           </div>
         )
@@ -749,10 +933,50 @@ export function ContractBlock({ block, index, onRemove, onUpdate }: ContractBloc
       case "intellectual":
         return (
           <div className="space-y-3">
+            <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
+              <p className="text-sm font-semibold text-blue-900 mb-2">⚖️ Důležité pro IT, grafiku, design</p>
+              <p className="text-xs text-blue-800">
+                Bez licence má klient problém dílo legálně užívat. Vždy specifikujte podmínky!
+              </p>
+            </div>
             <div>
-              <label className="text-sm font-semibold">Duševní vlastnictví</label>
+              <label className="text-sm font-semibold">Typ licence</label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={formData.licenseType || "non-exclusive"}
+                onChange={(e) => handleChange("licenseType", e.target.value)}
+              >
+                <option value="non-exclusive">Nevýhradní (může být poskytnuta i jiným)</option>
+                <option value="exclusive">Výhradní (jen pro tohoto klienta)</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-semibold">Územní rozsah</label>
               <Input
-                placeholder="Copyrighty, licence, patenty, atd."
+                placeholder="např. Česká republika, EU, celosvětově"
+                value={formData.licenseTerritory || ""}
+                onChange={(e) => handleChange("licenseTerritory", e.target.value)}
+              />
+            </div>
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="sourceCodeIncluded"
+                checked={formData.sourceCodeIncluded === "true"}
+                onCheckedChange={(checked) => handleChange("sourceCodeIncluded", checked ? "true" : "false")}
+              />
+              <div className="flex-1">
+                <label htmlFor="sourceCodeIncluded" className="text-sm font-medium cursor-pointer">
+                  Předání zdrojových kódů / editovatelných souborů
+                </label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Umožňuje klientovi upravovat dílo (např. AI, PSD, zdrojový kód)
+                </p>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-semibold">Další podmínky (volitelné)</label>
+              <Input
+                placeholder="např. zákaz dalšího prodeje, povinnost uvádět autora..."
                 value={formData.intellectualTerms || ""}
                 onChange={(e) => handleChange("intellectualTerms", e.target.value)}
               />
@@ -771,6 +995,199 @@ export function ContractBlock({ block, index, onRemove, onUpdate }: ContractBloc
                 value={formData.penaltyAmount || ""}
                 onChange={(e) => handleChange("penaltyAmount", e.target.value)}
               />
+            </div>
+          </div>
+        )
+      case "purchase-item":
+        return (
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-semibold">Typ předmětu</label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={formData.itemType || "movable"}
+                onChange={(e) => handleChange("itemType", e.target.value)}
+              >
+                <option value="movable">Movitá věc (auto, elektronika, nábytek...)</option>
+                <option value="real-estate">Nemovitost (dům, byt, pozemek)</option>
+              </select>
+            </div>
+
+            {formData.itemType === "movable" ? (
+              <>
+                <div>
+                  <label className="text-sm font-semibold">Popis věci</label>
+                  <Input
+                    placeholder="např. Osobní automobil Škoda Octavia"
+                    value={formData.itemDescription || ""}
+                    onChange={(e) => handleChange("itemDescription", e.target.value)}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-semibold">Výrobní číslo / VIN</label>
+                    <Input
+                      placeholder="např. VIN nebo sériové číslo"
+                      value={formData.serialNumber || ""}
+                      onChange={(e) => handleChange("serialNumber", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold">Rok výroby</label>
+                    <Input
+                      type="number"
+                      placeholder="např. 2020"
+                      value={formData.yearOfManufacture || ""}
+                      onChange={(e) => handleChange("yearOfManufacture", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
+                  <p className="text-sm font-semibold text-blue-900 mb-1">⚠️ Důležité pro nemovitosti</p>
+                  <p className="text-xs text-blue-800">
+                    Údaje z katastru nemovitostí jsou povinné. Bez nich katastr vklad zamítne!
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold">Katastrální území</label>
+                  <Input
+                    placeholder="např. Praha 4"
+                    value={formData.cadastralArea || ""}
+                    onChange={(e) => handleChange("cadastralArea", e.target.value)}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-semibold">Číslo LV (List vlastnictví)</label>
+                    <Input
+                      placeholder="např. 1234"
+                      value={formData.lvNumber || ""}
+                      onChange={(e) => handleChange("lvNumber", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold">Parcelní číslo</label>
+                    <Input
+                      placeholder="např. 123/45"
+                      value={formData.parcelNumber || ""}
+                      onChange={(e) => handleChange("parcelNumber", e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold">Číslo popisné stavby</label>
+                  <Input
+                    placeholder="např. č.p. 567"
+                    value={formData.buildingNumber || ""}
+                    onChange={(e) => handleChange("buildingNumber", e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        )
+      case "purchase-price":
+        return (
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-semibold">Kupní cena (Kč)</label>
+              <Input
+                type="number"
+                placeholder="500000"
+                value={formData.purchasePrice || ""}
+                onChange={(e) => handleChange("purchasePrice", e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-semibold">Způsob úhrady</label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={formData.paymentMethod || "direct"}
+                onChange={(e) => handleChange("paymentMethod", e.target.value)}
+              >
+                <option value="direct">Přímý bankovní převod</option>
+                <option value="escrow">Advokátní/notářská úschova</option>
+                <option value="cash">Hotovost</option>
+              </select>
+              {formData.paymentMethod === "escrow" && (
+                <p className="text-xs text-green-700 mt-1 bg-green-50 p-2 rounded">
+                  ✅ Doporučeno pro nemovitosti - peníze se vyplatí až po vkladu do katastru
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="text-sm font-semibold">Splatnost (dny od podpisu)</label>
+              <Input
+                type="number"
+                placeholder="14"
+                value={formData.paymentDueDays || ""}
+                onChange={(e) => handleChange("paymentDueDays", e.target.value)}
+              />
+            </div>
+          </div>
+        )
+      case "ownership-transfer":
+        return (
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-semibold">Vlastnictví přechází</label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={formData.ownershipTransferMoment || "payment"}
+                onChange={(e) => handleChange("ownershipTransferMoment", e.target.value)}
+              >
+                <option value="payment">Úplným zaplacením ceny</option>
+                <option value="handover">Předáním věci</option>
+                <option value="registration">Vkladem do katastru (jen nemovitosti)</option>
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">
+                {formData.ownershipTransferMoment === "payment" && "Prodávající je chráněn až do zaplacení"}
+                {formData.ownershipTransferMoment === "handover" && "Kupující získává vlastnictví ihned při převzetí"}
+                {formData.ownershipTransferMoment === "registration" && "Standardní postup pro nemovitosti"}
+              </p>
+            </div>
+          </div>
+        )
+      case "item-condition":
+        return (
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-semibold">Stav věci</label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={formData.itemCondition || "used"}
+                onChange={(e) => handleChange("itemCondition", e.target.value)}
+              >
+                <option value="new">Nová</option>
+                <option value="used">Použitá</option>
+                <option value="damaged">S vadami</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-semibold">Popis vad (pokud existují)</label>
+              <Input
+                placeholder="např. poškrábané dveře, nefungující klimatizace..."
+                value={formData.knownDefects || ""}
+                onChange={(e) => handleChange("knownDefects", e.target.value)}
+              />
+            </div>
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="noLegalDefects"
+                checked={formData.noLegalDefects === "true"}
+                onCheckedChange={(checked) => handleChange("noLegalDefects", checked ? "true" : "false")}
+              />
+              <div className="flex-1">
+                <label htmlFor="noLegalDefects" className="text-sm font-medium cursor-pointer">
+                  Prohlášení o bezdlužnosti
+                </label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Prodávající prohlašuje, že na věci není exekuce, zástava ani jiné právní vady
+                </p>
+              </div>
             </div>
           </div>
         )

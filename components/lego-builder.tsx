@@ -150,6 +150,50 @@ const AVAILABLE_BLOCKS = {
       description: "Výpověď a vypořádání",
     },
   ],
+  "purchase-contract": [
+    {
+      id: "parties",
+      name: "Smluvní strany",
+      category: "required" as const,
+      icon: "👥",
+      description: "Prodávající a kupující",
+    },
+    {
+      id: "purchase-item",
+      name: "Předmět koupě",
+      category: "required" as const,
+      icon: "📦",
+      description: "Co se prodává",
+    },
+    {
+      id: "purchase-price",
+      name: "Kupní cena",
+      category: "required" as const,
+      icon: "💰",
+      description: "Cena a způsob úhrady",
+    },
+    {
+      id: "ownership-transfer",
+      name: "Přechod vlastnictví",
+      category: "required" as const,
+      icon: "🔄",
+      description: "Kdy přechází vlastnictví",
+    },
+    {
+      id: "item-condition",
+      name: "Stav a vady",
+      category: "optional" as const,
+      icon: "🔍",
+      description: "Popis stavu a prohlášení o vadách",
+    },
+    {
+      id: "warranty",
+      name: "Záruka",
+      category: "optional" as const,
+      icon: "🛡️",
+      description: "Záruční doba a rozsah",
+    },
+  ],
   "trade-contract": [
     {
       id: "parties",
