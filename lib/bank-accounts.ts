@@ -96,6 +96,31 @@ export function deleteBankAccount(accountId: string): void {
 }
 
 /**
+ * Set default bank account
+ */
+export function setDefaultBankAccount(accountId: string): void {
+  if (typeof window === "undefined") return
+
+  const accountsJson = localStorage.getItem("bankAccounts")
+  if (!accountsJson) return
+
+  const accounts: BankAccount[] = JSON.parse(accountsJson)
+
+  // Set all to non-default first
+  accounts.forEach((acc) => {
+    acc.isDefault = false
+  })
+
+  // Set the selected account as default
+  const account = accounts.find((acc) => acc.id === accountId)
+  if (account) {
+    account.isDefault = true
+  }
+
+  localStorage.setItem("bankAccounts", JSON.stringify(accounts))
+}
+
+/**
  * Format account number for display
  */
 export function formatAccountNumber(accountNumber: string, bankCode: string): string {

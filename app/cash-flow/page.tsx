@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -21,6 +21,8 @@ import {
   Trash2,
   Calendar,
   Users,
+  QrCode,
+  Eye,
 } from "lucide-react"
 import {
   getAllInvoices,
@@ -35,12 +37,19 @@ import {
 } from "@/lib/cash-flow"
 import { getAllClients, type Client } from "@/lib/clients"
 import { ClientSelector } from "@/components/client-selector"
+import { QRInvoicePreview } from "@/components/qr-invoice-preview"
+import { VATLimitIndicator } from "@/components/vat-limit-indicator"
+import { generateInvoiceNumber } from "@/lib/qr-payment"
+import { getDefaultBankAccount } from "@/lib/bank-accounts"
 
 export default function CashFlowPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showClientSelector, setShowClientSelector] = useState(false)
+  const [showQRPreview, setShowQRPreview] = useState(false)
+  const [selectedInvoiceForQR, setSelectedInvoiceForQR] = useState<Invoice | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   // Month filter state
@@ -57,7 +66,34 @@ export default function CashFlowPage() {
 
   useEffect(() => {
     loadInvoices()
-  }, [])
+
+    // Handle prefilled data from URL parameters
+    const prefill = searchParams.get("prefill")
+    if (prefill === "contract" || prefill === "time") {
+      const fromParam = searchParams.get("from")
+      const amountParam = searchParams.get("amount")
+      const dueDateParam = searchParams.get("dueDate")
+      const descriptionParam = searchParams.get("description")
+      const clientIdParam = searchParams.get("clientId")
+
+      if (fromParam) setFrom(fromParam)
+      if (amountParam) setAmount(amountParam)
+      if (dueDateParam) setDueDate(dueDateParam)
+      if (descriptionParam) setDescription(descriptionParam)
+
+      // Load client if provided
+      if (clientIdParam) {
+        const clients = getAllClients()
+        const client = clients.find((c) => c.id === clientIdParam)
+        if (client) {
+          setSelectedClient(client)
+          setFrom(client.name)
+        }
+      }
+
+      setShowAddDialog(true)
+    }
+  }, [searchParams])
 
   const loadInvoices = () => {
     const allInvoices = getAllInvoices()
@@ -80,6 +116,17 @@ export default function CashFlowPage() {
       description || undefined,
       selectedClient?.id,
     )
+
+    // Add invoice number and bank account for QR payments
+    if (type === "income") {
+      invoice.invoiceNumber = generateInvoiceNumber()
+      invoice.variableSymbol = invoice.invoiceNumber
+      const defaultAccount = getDefaultBankAccount()
+      if (defaultAccount) {
+        invoice.bankAccountId = defaultAccount.id
+      }
+    }
+
     saveInvoice(invoice)
     loadInvoices()
 
@@ -91,6 +138,11 @@ export default function CashFlowPage() {
     setDescription("")
     setDueDate(new Date().toISOString().split("T")[0])
     setType("income")
+  }
+
+  const handleShowQR = (invoice: Invoice) => {
+    setSelectedInvoiceForQR(invoice)
+    setShowQRPreview(true)
   }
 
   const handleMarkAsPaid = (invoiceId: string) => {
@@ -186,6 +238,11 @@ export default function CashFlowPage() {
               <Plus className="w-4 h-4 mr-2" />
               Přidat fakturu
             </Button>
+          </div>
+
+          {/* VAT Limit Indicator */}
+          <div className="mt-6">
+            <VATLimitIndicator />
           </div>
 
           {/* Month Selector */}
@@ -357,10 +414,24 @@ export default function CashFlowPage() {
                       {invoice.description && <div className="text-xs text-muted-foreground mt-1">{invoice.description}</div>}
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="bg-green-50" onClick={() => handleMarkAsPaid(invoice.id)}>
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Zaplaceno
-                      </Button>
+                      {invoice.type === "income" && !invoice.isPaid && (
+                        <Button size="sm" variant="outline" onClick={() => handleShowQR(invoice)}>
+                          <QrCode className="w-3 h-3 mr-1" />
+                          QR
+                        </Button>
+                      )}
+                      {!invoice.isPaid && (
+                        <Button size="sm" variant="outline" className="bg-green-50" onClick={() => handleMarkAsPaid(invoice.id)}>
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          Zaplaceno
+                        </Button>
+                      )}
+                      {invoice.isPaid && (
+                        <Button size="sm" variant="ghost" onClick={() => handleShowQR(invoice)}>
+                          <Eye className="w-3 h-3 mr-1" />
+                          Detail
+                        </Button>
+                      )}
                       <Button size="sm" variant="destructive" onClick={() => handleDelete(invoice.id)}>
                         <Trash2 className="w-3 h-3" />
                       </Button>
@@ -478,6 +549,15 @@ export default function CashFlowPage() {
         onOpenChange={setShowClientSelector}
         onSelect={handleClientSelect}
       />
+
+      {/* QR Invoice Preview */}
+      {selectedInvoiceForQR && (
+        <QRInvoicePreview
+          invoice={selectedInvoiceForQR}
+          open={showQRPreview}
+          onOpenChange={setShowQRPreview}
+        />
+      )}
     </main>
   )
 }

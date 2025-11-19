@@ -112,54 +112,68 @@ export function ContractExporter({ blocks, contractText, contractType }: Contrac
     setIsExporting(true)
     setExportError(null)
     try {
-      const { jsPDF } = await import("jspdf")
-      const doc = new jsPDF()
-
-      // Title
-      doc.setFontSize(16)
-      doc.setFont("helvetica", "bold")
-      doc.text(getContractTitle(), 15, 20)
-
-      // Content
-      doc.setFontSize(11)
-      doc.setFont("helvetica", "normal")
+      const pdfMake = await import("pdfmake/build/pdfmake")
+      const pdfFonts = await import("pdfmake/build/vfs_fonts")
+      // @ts-ignore - vfs_fonts module structure
+      pdfMake.default.vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.default
 
       const lines = contractText.split("\n")
-      let yPosition = 35
-      const lineHeight = 7
-      const pageHeight = doc.internal.pageSize.height
-      const margin = 20
+      const content: any[] = []
 
+      // Title
+      content.push({
+        text: getContractTitle(),
+        style: "title",
+        margin: [0, 0, 0, 20],
+      })
+
+      // Process content lines
       for (const line of lines) {
         const trimmed = line.trim()
 
-        // Check if we need a new page
-        if (yPosition > pageHeight - margin) {
-          doc.addPage()
-          yPosition = 20
-        }
-
         if (!trimmed) {
-          yPosition += lineHeight / 2
+          content.push({ text: "", margin: [0, 5] })
           continue
         }
 
         // Section headers (all caps with colon)
         if (trimmed.match(/^[A-ZČŠŽ\d\-\s]+:$/) && trimmed.length < 100) {
-          doc.setFont("helvetica", "bold")
-          doc.text(trimmed, 15, yPosition)
-          doc.setFont("helvetica", "normal")
-          yPosition += lineHeight + 2
-          continue
+          content.push({
+            text: trimmed,
+            style: "header",
+            margin: [0, 10, 0, 5],
+          })
+        } else {
+          content.push({
+            text: trimmed,
+            style: "normal",
+            margin: [0, 2],
+          })
         }
-
-        // Split long lines
-        const splitText = doc.splitTextToSize(trimmed, 180)
-        doc.text(splitText, 15, yPosition)
-        yPosition += lineHeight * splitText.length
       }
 
-      doc.save(`${getContractFileName()}.pdf`)
+      const docDefinition: any = {
+        content,
+        styles: {
+          title: {
+            fontSize: 18,
+            bold: true,
+            alignment: "center",
+          },
+          header: {
+            fontSize: 12,
+            bold: true,
+          },
+          normal: {
+            fontSize: 11,
+          },
+        },
+        defaultStyle: {
+          font: "Roboto",
+        },
+      }
+
+      pdfMake.default.createPdf(docDefinition).download(`${getContractFileName()}.pdf`)
       console.log("[v0] PDF exported successfully")
     } catch (error) {
       console.error("[v0] PDF export error:", error)

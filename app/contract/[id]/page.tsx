@@ -4,12 +4,26 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChevronLeft, FileText, Trash2, Calendar } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
+import { ChevronLeft, FileText, Trash2, Calendar, DollarSign, Plus, CheckCircle, XCircle, AlertCircle, Download } from "lucide-react"
 import { getContract, deleteContract } from "@/lib/contract-storage"
 import { ContractTimelineComponent } from "@/components/contract-timeline"
 import { HandoverProtocolGenerator } from "@/components/handover-protocol-generator"
 import { CalendarExportDialog } from "@/components/calendar-export-dialog"
 import { extractContractDeadlines } from "@/lib/contract-timeline"
+import { generateInvoiceFromContract } from "@/lib/contract-to-invoice"
+import {
+  getChangeRequestsByContract,
+  createChangeRequest,
+  updateChangeRequestStatus,
+  deleteChangeRequest,
+  generateAmendmentText,
+  type ChangeRequest,
+} from "@/lib/change-requests"
 import type { SavedContract } from "@/lib/contract-storage"
 
 export default function ContractDetailPage() {
@@ -18,6 +32,13 @@ export default function ContractDetailPage() {
   const [contract, setContract] = useState<SavedContract | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showCalendarDialog, setShowCalendarDialog] = useState(false)
+
+  // Change requests state
+  const [changeRequests, setChangeRequests] = useState<ChangeRequest[]>([])
+  const [showChangeRequestDialog, setShowChangeRequestDialog] = useState(false)
+  const [changeDescription, setChangeDescription] = useState("")
+  const [priceIncrease, setPriceIncrease] = useState("")
+  const [deadlineExtension, setDeadlineExtension] = useState("")
 
   useEffect(() => {
     const contractId = params.id as string
@@ -29,8 +50,14 @@ export default function ContractDetailPage() {
     }
 
     setContract(loadedContract)
+    loadChangeRequests(contractId)
     setIsLoading(false)
   }, [params.id, router])
+
+  const loadChangeRequests = (contractId: string) => {
+    const requests = getChangeRequestsByContract(contractId)
+    setChangeRequests(requests)
+  }
 
   const handleDelete = () => {
     if (!contract) return
@@ -38,6 +65,106 @@ export default function ContractDetailPage() {
     if (confirm("Opravdu chcete smazat tuto smlouvu?")) {
       deleteContract(contract.id)
       router.push("/")
+    }
+  }
+
+  const handleGenerateInvoice = () => {
+    if (!contract) return
+
+    const preset = generateInvoiceFromContract(contract)
+    if (!preset) {
+      alert("Nelze vygenerovat fakturu z této smlouvy. Zkontroluj, zda má smlouva vyplněnou cenu a platební podmínky.")
+      return
+    }
+
+    const params = new URLSearchParams({
+      prefill: "contract",
+      from: preset.from,
+      amount: preset.amount.toString(),
+      dueDate: preset.dueDate,
+      description: preset.description,
+    })
+
+    if (preset.clientId) {
+      params.append("clientId", preset.clientId)
+    }
+
+    router.push(`/cash-flow?${params.toString()}`)
+  }
+
+  const handleCreateChangeRequest = () => {
+    if (!contract) return
+    if (!changeDescription) {
+      alert("Vyplň popis změny")
+      return
+    }
+
+    const price = parseFloat(priceIncrease) || 0
+    const days = parseInt(deadlineExtension) || 0
+
+    createChangeRequest(contract.id, changeDescription, price, days)
+    loadChangeRequests(contract.id)
+
+    setShowChangeRequestDialog(false)
+    setChangeDescription("")
+    setPriceIncrease("")
+    setDeadlineExtension("")
+  }
+
+  const handleApproveChangeRequest = (requestId: string) => {
+    if (!contract) return
+    updateChangeRequestStatus(requestId, "approved")
+    loadChangeRequests(contract.id)
+  }
+
+  const handleRejectChangeRequest = (requestId: string) => {
+    if (!contract) return
+    updateChangeRequestStatus(requestId, "rejected")
+    loadChangeRequests(contract.id)
+  }
+
+  const handleDeleteChangeRequest = (requestId: string) => {
+    if (!confirm("Opravdu smazat tento změnový list?")) return
+    if (!contract) return
+    deleteChangeRequest(requestId)
+    loadChangeRequests(contract.id)
+  }
+
+  const handleDownloadAmendment = (request: ChangeRequest) => {
+    if (!contract) return
+    const text = generateAmendmentText(request, contract.name)
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `${contract.name}_Dodatek_${request.requestNumber}.txt`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const getChangeRequestStatusBadge = (status: ChangeRequest["status"]) => {
+    switch (status) {
+      case "approved":
+        return (
+          <Badge variant="outline" className="bg-green-100 text-green-700">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Schváleno
+          </Badge>
+        )
+      case "rejected":
+        return (
+          <Badge variant="destructive">
+            <XCircle className="w-3 h-3 mr-1" />
+            Zamítnuto
+          </Badge>
+        )
+      case "pending":
+        return (
+          <Badge variant="secondary">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            Čeká
+          </Badge>
+        )
     }
   }
 
@@ -199,10 +326,16 @@ export default function ContractDetailPage() {
                 Vytvořeno: {new Date(contract.createdAt).toLocaleDateString("cs-CZ")}
               </p>
             </div>
-            <Button variant="destructive" onClick={handleDelete}>
-              <Trash2 className="w-4 h-4 mr-2" />
-              Smazat
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleGenerateInvoice}>
+                <DollarSign className="w-4 h-4 mr-2" />
+                Vystavit fakturu
+              </Button>
+              <Button variant="destructive" onClick={handleDelete}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Smazat
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -229,6 +362,95 @@ export default function ContractDetailPage() {
 
           {/* Side Panel */}
           <div className="space-y-6">
+            {/* Change Requests */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Změnové listy</CardTitle>
+                  <Button onClick={() => setShowChangeRequestDialog(true)} size="sm" variant="outline">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nový
+                  </Button>
+                </div>
+                <CardDescription>Dodatky a změny smlouvy</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {changeRequests.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">Zatím žádné změnové listy</p>
+                  ) : (
+                    changeRequests.map((request) => (
+                      <div key={request.id} className="p-3 border rounded-lg space-y-2">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-semibold text-sm">Dodatek #{request.requestNumber}</span>
+                              {getChangeRequestStatusBadge(request.status)}
+                            </div>
+                            <p className="text-sm text-muted-foreground">{request.description}</p>
+                          </div>
+                        </div>
+
+                        {(request.priceIncrease > 0 || request.deadlineExtensionDays > 0) && (
+                          <div className="flex gap-2 text-xs text-muted-foreground">
+                            {request.priceIncrease > 0 && (
+                              <span>+{request.priceIncrease.toLocaleString("cs-CZ")} Kč</span>
+                            )}
+                            {request.deadlineExtensionDays > 0 && (
+                              <span>+{request.deadlineExtensionDays}d</span>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="flex gap-2 pt-2">
+                          {request.status === "pending" && (
+                            <>
+                              <Button
+                                onClick={() => handleApproveChangeRequest(request.id)}
+                                size="sm"
+                                variant="outline"
+                                className="flex-1"
+                              >
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Schválit
+                              </Button>
+                              <Button
+                                onClick={() => handleRejectChangeRequest(request.id)}
+                                size="sm"
+                                variant="outline"
+                                className="flex-1"
+                              >
+                                <XCircle className="w-3 h-3 mr-1" />
+                                Zamítnout
+                              </Button>
+                            </>
+                          )}
+                          {request.status === "approved" && (
+                            <Button
+                              onClick={() => handleDownloadAmendment(request)}
+                              size="sm"
+                              variant="outline"
+                              className="flex-1"
+                            >
+                              <Download className="w-3 h-3 mr-1" />
+                              Stáhnout dodatek
+                            </Button>
+                          )}
+                          <Button
+                            onClick={() => handleDeleteChangeRequest(request.id)}
+                            size="sm"
+                            variant="ghost"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Handover Protocol Generator - only for work contracts */}
             {contract.type === "work-contract" && (
               <HandoverProtocolGenerator
@@ -293,6 +515,63 @@ export default function ContractDetailPage() {
           contractName={contract.name || "Vaše smlouva"}
         />
       )}
+
+      {/* Change Request Dialog */}
+      <Dialog open={showChangeRequestDialog} onOpenChange={setShowChangeRequestDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nový změnový list</DialogTitle>
+            <DialogDescription>
+              Zaznamenej změnu požadovanou klientem a vytvořit dodatek ke smlouvě
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="changeDescription">Co klient chce změnit?</Label>
+              <Textarea
+                id="changeDescription"
+                placeholder="např. Rozšíření projektu o další funkcionalitu..."
+                value={changeDescription}
+                onChange={(e) => setChangeDescription(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="priceIncrease">Navýšení ceny (Kč)</Label>
+              <Input
+                id="priceIncrease"
+                type="number"
+                placeholder="0"
+                value={priceIncrease}
+                onChange={(e) => setPriceIncrease(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="deadlineExtension">Prodloužení termínu (dny)</Label>
+              <Input
+                id="deadlineExtension"
+                type="number"
+                placeholder="0"
+                value={deadlineExtension}
+                onChange={(e) => setDeadlineExtension(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowChangeRequestDialog(false)}>
+              Zrušit
+            </Button>
+            <Button onClick={handleCreateChangeRequest}>
+              <Plus className="w-4 h-4 mr-2" />
+              Vytvořit změnový list
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

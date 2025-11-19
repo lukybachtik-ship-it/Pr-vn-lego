@@ -3,7 +3,6 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ContractProvider } from "@/contexts/contract-context"
-import { TimeTrackerWidget } from "@/components/time-tracker-widget"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -23,10 +22,7 @@ export default function RootLayout({
   return (
     <html lang="cs">
       <body className={`font-sans antialiased`}>
-        <ContractProvider>
-          {children}
-          <TimeTrackerWidget />
-        </ContractProvider>
+        <ContractProvider>{children}</ContractProvider>
         <Analytics />
       </body>
     </html>

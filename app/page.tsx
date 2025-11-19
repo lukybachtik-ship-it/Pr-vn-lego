@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { FileText, Plus, Calendar, AlertCircle, CheckCircle, Eye, Wallet, Users } from "lucide-react"
+import { FileText, Plus, Calendar, AlertCircle, CheckCircle, Eye, Wallet, Users, Clock, Settings } from "lucide-react"
 import { ContractTypeSelector } from "@/components/contract-type-selector"
 import { getFinalizedContracts } from "@/lib/contract-storage"
 import { extractContractDeadlines } from "@/lib/contract-timeline"
@@ -65,7 +65,7 @@ export default function Home() {
             Sestavte si právní smlouvu jako stavebnici. Přetáhněte bloky, vyplňte údaje a máte hotovo.
           </p>
 
-          <div className="flex flex-col md:flex-row gap-4 justify-center">
+          <div className="flex flex-col md:flex-row gap-4 justify-center flex-wrap">
             <Button size="lg" onClick={() => setShowTypeSelector(true)} className="text-lg">
               <Plus className="w-5 h-5 mr-2" />
               Nová smlouva
@@ -81,6 +81,14 @@ export default function Home() {
             <Button size="lg" variant="outline" onClick={() => router.push("/cash-flow")}>
               <Wallet className="w-5 h-5 mr-2" />
               Peníze
+            </Button>
+            <Button size="lg" variant="outline" onClick={() => router.push("/time-tracking")}>
+              <Clock className="w-5 h-5 mr-2" />
+              Time Tracking
+            </Button>
+            <Button size="lg" variant="outline" onClick={() => router.push("/settings/bank-accounts")}>
+              <Settings className="w-5 h-5 mr-2" />
+              Bankovní účty
             </Button>
           </div>
         </div>
