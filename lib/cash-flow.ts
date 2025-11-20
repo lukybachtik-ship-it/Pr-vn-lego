@@ -1,3 +1,5 @@
+import { supabase } from "./supabase"
+
 export interface Invoice {
   id: string
   type: "income" | "expense"
@@ -30,6 +32,80 @@ export interface MonthlyStats {
   income: number
   expenses: number
   net: number
+}
+
+/**
+ * Sync invoice to cloud
+ */
+async function syncInvoiceToCloud(invoice: Invoice) {
+  try {
+    const user = await supabase.auth.getUser()
+    if (!user.data.user) return
+
+    const { error } = await supabase.from("invoices").upsert({
+      id: invoice.id,
+      user_id: user.data.user.id,
+      type: invoice.type,
+      from_name: invoice.from,
+      client_id: invoice.clientId || null,
+      amount: invoice.amount,
+      due_date: invoice.dueDate,
+      is_paid: invoice.isPaid,
+      paid_date: invoice.paidDate || null,
+      description: invoice.description || null,
+      invoice_number: invoice.invoiceNumber || null,
+      variable_symbol: invoice.variableSymbol || null,
+      bank_account_id: invoice.bankAccountId || null,
+      created_at: invoice.createdAt,
+    } as any)
+    if (error) throw error
+  } catch (error) {
+    console.error("Invoice cloud sync failed:", error)
+  }
+}
+
+/**
+ * Load invoices from cloud
+ */
+async function loadInvoicesFromCloud() {
+  try {
+    const user = await supabase.auth.getUser()
+    if (!user.data.user) return
+
+    const { data } = await supabase.from("invoices").select("*").eq("user_id", user.data.user.id)
+
+    if (!data || data.length === 0) return
+
+    const localStr = localStorage.getItem("invoices")
+    const local: Record<string, Invoice> = localStr ? JSON.parse(localStr) : {}
+
+    data.forEach((inv: any) => {
+      local[inv.id] = {
+        id: inv.id,
+        type: inv.type,
+        from: inv.from_name,
+        clientId: inv.client_id || undefined,
+        amount: inv.amount,
+        dueDate: inv.due_date,
+        isPaid: inv.is_paid,
+        paidDate: inv.paid_date || undefined,
+        description: inv.description || undefined,
+        invoiceNumber: inv.invoice_number || undefined,
+        variableSymbol: inv.variable_symbol || undefined,
+        bankAccountId: inv.bank_account_id || undefined,
+        createdAt: inv.created_at,
+      }
+    })
+
+    localStorage.setItem("invoices", JSON.stringify(local))
+  } catch (error) {
+    console.error("Invoices cloud load failed:", error)
+  }
+}
+
+// Auto-load on module import
+if (typeof window !== "undefined") {
+  loadInvoicesFromCloud()
 }
 
 /**
@@ -69,6 +145,9 @@ export function saveInvoice(invoice: Invoice): void {
 
   invoices[invoice.id] = invoice
   localStorage.setItem("invoices", JSON.stringify(invoices))
+
+  // Sync to cloud
+  syncInvoiceToCloud(invoice)
 }
 
 /**
@@ -98,6 +177,9 @@ export function markInvoiceAsPaid(invoiceId: string): void {
     invoices[invoiceId].isPaid = true
     invoices[invoiceId].paidDate = new Date().toISOString()
     localStorage.setItem("invoices", JSON.stringify(invoices))
+
+    // Sync to cloud
+    syncInvoiceToCloud(invoices[invoiceId])
   }
 }
 
@@ -113,6 +195,9 @@ export function deleteInvoice(invoiceId: string): void {
   const invoices = JSON.parse(invoicesJson)
   delete invoices[invoiceId]
   localStorage.setItem("invoices", JSON.stringify(invoices))
+
+  // Delete from cloud
+  supabase.from("invoices").delete().eq("id", invoiceId).then()
 }
 
 /**

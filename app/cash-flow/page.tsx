@@ -51,6 +51,7 @@ export default function CashFlowPage() {
   const [showQRPreview, setShowQRPreview] = useState(false)
   const [selectedInvoiceForQR, setSelectedInvoiceForQR] = useState<Invoice | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [vatRefreshTrigger, setVatRefreshTrigger] = useState(0)
 
   // Month filter state
   const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM format
@@ -98,6 +99,7 @@ export default function CashFlowPage() {
   const loadInvoices = () => {
     const allInvoices = getAllInvoices()
     setInvoices(allInvoices)
+    setVatRefreshTrigger((prev) => prev + 1) // Trigger VAT limit recalculation
     setIsLoading(false)
   }
 
@@ -242,7 +244,7 @@ export default function CashFlowPage() {
 
           {/* VAT Limit Indicator */}
           <div className="mt-6">
-            <VATLimitIndicator />
+            <VATLimitIndicator refreshTrigger={vatRefreshTrigger} />
           </div>
 
           {/* Month Selector */}

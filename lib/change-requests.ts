@@ -3,6 +3,8 @@
  * Manage contract amendments and scope changes
  */
 
+import { supabase } from "./supabase"
+
 export interface ChangeRequest {
   id: string
   contractId: string
@@ -16,6 +18,73 @@ export interface ChangeRequest {
   rejectedAt?: string
   notes?: string
   createdAt: string
+}
+
+/**
+ * Sync change request to cloud
+ */
+async function syncChangeRequestToCloud(request: ChangeRequest) {
+  try {
+    const user = await supabase.auth.getUser()
+    if (!user.data.user) return
+
+    const { error } = await supabase.from("change_requests").upsert({
+      id: request.id,
+      user_id: user.data.user.id,
+      contract_id: request.contractId,
+      request_number: request.requestNumber,
+      request_date: request.requestDate,
+      description: request.description,
+      price_increase: request.priceIncrease,
+      deadline_extension_days: request.deadlineExtensionDays,
+      status: request.status,
+      approved_at: request.approvedAt || null,
+      rejected_at: request.rejectedAt || null,
+      notes: request.notes || null,
+      created_at: request.createdAt,
+    } as any)
+    if (error) throw error
+  } catch (error) {
+    console.error("Change request cloud sync failed:", error)
+  }
+}
+
+/**
+ * Load change requests from cloud
+ */
+async function loadChangeRequestsFromCloud() {
+  try {
+    const user = await supabase.auth.getUser()
+    if (!user.data.user) return
+
+    const { data } = await supabase.from("change_requests").select("*").eq("user_id", user.data.user.id)
+
+    if (!data || data.length === 0) return
+
+    const requests: ChangeRequest[] = data.map((r: any) => ({
+      id: r.id,
+      contractId: r.contract_id,
+      requestNumber: r.request_number,
+      requestDate: r.request_date,
+      description: r.description,
+      priceIncrease: r.price_increase,
+      deadlineExtensionDays: r.deadline_extension_days,
+      status: r.status,
+      approvedAt: r.approved_at || undefined,
+      rejectedAt: r.rejected_at || undefined,
+      notes: r.notes || undefined,
+      createdAt: r.created_at,
+    }))
+
+    localStorage.setItem("changeRequests", JSON.stringify(requests))
+  } catch (error) {
+    console.error("Change requests cloud load failed:", error)
+  }
+}
+
+// Auto-load on module import
+if (typeof window !== "undefined") {
+  loadChangeRequestsFromCloud()
 }
 
 /**
@@ -72,6 +141,9 @@ export function createChangeRequest(
   requests.push(changeRequest)
   localStorage.setItem("changeRequests", JSON.stringify(requests))
 
+  // Sync to cloud
+  syncChangeRequestToCloud(changeRequest)
+
   return changeRequest
 }
 
@@ -105,6 +177,9 @@ export function updateChangeRequestStatus(
   requests[requestIndex] = request
   localStorage.setItem("changeRequests", JSON.stringify(requests))
 
+  // Sync to cloud
+  syncChangeRequestToCloud(request)
+
   return request
 }
 
@@ -117,6 +192,9 @@ export function deleteChangeRequest(requestId: string): void {
   const requests = getAllChangeRequests()
   const filtered = requests.filter((r) => r.id !== requestId)
   localStorage.setItem("changeRequests", JSON.stringify(filtered))
+
+  // Delete from cloud
+  supabase.from("change_requests").delete().eq("id", requestId).then()
 }
 
 /**

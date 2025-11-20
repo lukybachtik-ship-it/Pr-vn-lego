@@ -453,7 +453,6 @@ export function ContractReview({ contractType, blocks }: ContractReviewProps) {
             address: partiesBlock.data.party1Address,
             city: partiesBlock.data.party1City,
             psc: partiesBlock.data.party1Psc,
-            region: partiesBlock.data.party1Region,
           })
         } catch (error) {
           console.error("Failed to create client for party 1:", error)
@@ -469,7 +468,6 @@ export function ContractReview({ contractType, blocks }: ContractReviewProps) {
             address: partiesBlock.data.party2Address,
             city: partiesBlock.data.party2City,
             psc: partiesBlock.data.party2Psc,
-            region: partiesBlock.data.party2Region,
           })
         } catch (error) {
           console.error("Failed to create client for party 2:", error)

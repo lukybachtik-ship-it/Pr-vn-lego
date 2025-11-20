@@ -56,12 +56,8 @@ export default function NewClientPage() {
       street: formData.street || undefined,
       city: formData.city || undefined,
       zip: formData.zip || undefined,
-      region: formData.region || undefined,
-      contactPerson: formData.contactPerson || undefined,
       phone: formData.phone || undefined,
       email: formData.email || undefined,
-      notes: formData.notes || undefined,
-      source: ico ? "ares" : "manual",
     })
 
     router.push(`/clients/${newClient.id}`)

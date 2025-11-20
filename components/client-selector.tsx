@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, User, Building2 } from "lucide-react"
+import { Search, User, Building2, Phone } from "lucide-react"
 import { getAllClients, searchClients, type Client } from "@/lib/clients"
 
 interface ClientSelectorProps {
@@ -67,13 +67,9 @@ export function ClientSelector({ open, onOpenChange, onSelect }: ClientSelectorP
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-semibold">{client.name}</h4>
-                      {client.source === "ares" ? (
+                      {client.ico && (
                         <Badge variant="outline" className="text-xs">
-                          ARES
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="text-xs">
-                          Manuální
+                          IČO
                         </Badge>
                       )}
                     </div>
@@ -86,11 +82,10 @@ export function ClientSelector({ open, onOpenChange, onSelect }: ClientSelectorP
                           {client.zip} {client.city}
                         </p>
                       )}
-                      {client.contactPerson && (
+                      {client.phone && (
                         <div className="flex items-center gap-2">
-                          <User className="w-3 h-3" />
-                          <span>{client.contactPerson}</span>
-                          {client.phone && <span>• {client.phone}</span>}
+                          <Phone className="w-3 h-3" />
+                          <span>{client.phone}</span>
                         </div>
                       )}
                     </div>

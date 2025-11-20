@@ -5,19 +5,26 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { FileText, Plus, Calendar, AlertCircle, CheckCircle, Eye, Wallet, Users, Clock, Settings } from "lucide-react"
+import { FileText, Plus, Calendar, AlertCircle, CheckCircle, Eye, Wallet, Users, Clock, Settings, LogOut, Database } from "lucide-react"
 import { ContractTypeSelector } from "@/components/contract-type-selector"
 import { getFinalizedContracts } from "@/lib/contract-storage"
 import { extractContractDeadlines } from "@/lib/contract-timeline"
+import { VATLimitIndicator } from "@/components/vat-limit-indicator"
+import { useAuth } from "@/components/auth-provider"
 import type { SavedContract } from "@/lib/contract-storage"
 
 export default function Home() {
   const router = useRouter()
+  const { user, signOut } = useAuth()
   const [contracts, setContracts] = useState<SavedContract[]>([])
   const [showTypeSelector, setShowTypeSelector] = useState(false)
+  const [vatRefreshTrigger, setVatRefreshTrigger] = useState(0)
 
   useEffect(() => {
     setContracts(getFinalizedContracts())
+
+    // Trigger VAT refresh when returning to home page
+    setVatRefreshTrigger((prev) => prev + 1)
   }, [])
 
   const getContractTypeName = (type: string) => {
@@ -54,6 +61,17 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
+      {/* User Menu */}
+      {user && (
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">{user.email}</span>
+          <Button variant="ghost" size="sm" onClick={signOut}>
+            <LogOut className="w-4 h-4 mr-2" />
+            Odhlásit
+          </Button>
+        </div>
+      )}
+
       {/* Hero Section */}
       <section className="py-12 md:py-20 px-4">
         <div className="max-w-6xl mx-auto text-center">
@@ -64,6 +82,11 @@ export default function Home() {
           <p className="text-base md:text-lg text-muted-foreground mb-12 max-w-2xl mx-auto">
             Sestavte si právní smlouvu jako stavebnici. Přetáhněte bloky, vyplňte údaje a máte hotovo.
           </p>
+
+          {/* VAT Limit Indicator */}
+          <div className="mb-8 max-w-3xl mx-auto">
+            <VATLimitIndicator refreshTrigger={vatRefreshTrigger} />
+          </div>
 
           <div className="flex flex-col items-center gap-4">
             {/* Hlavní tlačítka */}

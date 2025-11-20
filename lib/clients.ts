@@ -1,28 +1,21 @@
 /**
  * Client Management Library
- * Manages client contacts and their relationship with contracts and invoices
+ * Auto-syncs to Supabase when user is logged in
  */
+
+import { supabase } from "./supabase"
 
 export interface Client {
   id: string
-  // Basic Info (from ARES or manual)
   ico?: string
+  dic?: string
   name: string
-  // Address
   street?: string
   city?: string
   zip?: string
-  region?: string
-  // Manual Contact Info
-  contactPerson?: string
   phone?: string
   email?: string
-  notes?: string
-  // Metadata
   createdAt: string
-  updatedAt: string
-  // Source
-  source: "ares" | "manual"
 }
 
 export interface ClientHistory {
@@ -41,6 +34,74 @@ export interface ClientHistory {
     isPaid: boolean
     description?: string
   }>
+}
+
+/**
+ * Sync client to cloud
+ */
+async function syncClientToCloud(client: Client) {
+  try {
+    const user = await supabase.auth.getUser()
+    if (!user.data.user) return
+
+    const { error } = await supabase.from("clients").upsert({
+      id: client.id,
+      user_id: user.data.user.id,
+      name: client.name,
+      ico: client.ico || null,
+      dic: client.dic || null,
+      street: client.street || null,
+      city: client.city || null,
+      zip: client.zip || null,
+      email: client.email || null,
+      phone: client.phone || null,
+      created_at: client.createdAt,
+    } as any)
+    if (error) throw error
+  } catch (error) {
+    console.error("Client cloud sync failed:", error)
+  }
+}
+
+/**
+ * Load clients from cloud
+ */
+async function loadClientsFromCloud() {
+  try {
+    const user = await supabase.auth.getUser()
+    if (!user.data.user) return
+
+    const { data } = await supabase.from("clients").select("*").eq("user_id", user.data.user.id)
+
+    if (!data || data.length === 0) return
+
+    const localStr = localStorage.getItem("clients")
+    const local: Record<string, Client> = localStr ? JSON.parse(localStr) : {}
+
+    data.forEach((c: any) => {
+      local[c.id] = {
+        id: c.id,
+        name: c.name,
+        ico: c.ico || undefined,
+        dic: c.dic || undefined,
+        street: c.street || undefined,
+        city: c.city || undefined,
+        zip: c.zip || undefined,
+        email: c.email || undefined,
+        phone: c.phone || undefined,
+        createdAt: c.created_at,
+      }
+    })
+
+    localStorage.setItem("clients", JSON.stringify(local))
+  } catch (error) {
+    console.error("Clients cloud load failed:", error)
+  }
+}
+
+// Auto-load on module import
+if (typeof window !== "undefined") {
+  loadClientsFromCloud()
 }
 
 /**
@@ -93,21 +154,20 @@ export function saveClient(client: Partial<Client>): Client {
     id: clientId,
     name: client.name || "",
     ico: client.ico,
+    dic: client.dic,
     street: client.street,
     city: client.city,
     zip: client.zip,
-    region: client.region,
-    contactPerson: client.contactPerson,
     phone: client.phone,
     email: client.email,
-    notes: client.notes,
-    source: client.source || "manual",
     createdAt: client.createdAt || now,
-    updatedAt: now,
   }
 
   clients[clientId] = savedClient
   localStorage.setItem("clients", JSON.stringify(clients))
+
+  // Sync to cloud
+  syncClientToCloud(savedClient)
 
   return savedClient
 }
@@ -124,10 +184,13 @@ export function deleteClient(clientId: string): void {
   const clients = JSON.parse(clientsJson)
   delete clients[clientId]
   localStorage.setItem("clients", JSON.stringify(clients))
+
+  // Delete from cloud
+  supabase.from("clients").delete().eq("id", clientId).then()
 }
 
 /**
- * Auto-create client from contract party data
+ * Auto-create client from party data
  */
 export function createClientFromParty(partyData: {
   name: string
@@ -135,14 +198,10 @@ export function createClientFromParty(partyData: {
   address?: string
   city?: string
   psc?: string
-  region?: string
 }): Client {
-  // Check if client with this ICO already exists
   if (partyData.ico) {
     const existing = findClientByIco(partyData.ico)
-    if (existing) {
-      return existing
-    }
+    if (existing) return existing
   }
 
   return saveClient({
@@ -151,19 +210,15 @@ export function createClientFromParty(partyData: {
     street: partyData.address,
     city: partyData.city,
     zip: partyData.psc,
-    region: partyData.region,
-    source: partyData.ico ? "ares" : "manual",
   })
 }
 
 /**
- * Get client history (contracts and invoices)
+ * Get client history
  */
 export function getClientHistory(clientId: string): ClientHistory {
   const client = getClient(clientId)
-  if (!client) {
-    return { contracts: [], invoices: [] }
-  }
+  if (!client) return { contracts: [], invoices: [] }
 
   // Get contracts
   const contractsJson = localStorage.getItem("contracts")
@@ -171,7 +226,6 @@ export function getClientHistory(clientId: string): ClientHistory {
 
   const clientContracts = Object.values(contracts)
     .filter((contract: any) => {
-      // Match by ICO or name
       const party1Match =
         (client.ico && contract.blocks?.some((b: any) => b.data?.party1Ico === client.ico)) ||
         contract.blocks?.some((b: any) => b.data?.party1Name === client.name)
@@ -196,10 +250,7 @@ export function getClientHistory(clientId: string): ClientHistory {
 
   const clientInvoices = Object.values(invoices)
     .filter((invoice: any) => {
-      // Match by clientId first, then fallback to name matching
-      if (invoice.clientId) {
-        return invoice.clientId === clientId
-      }
+      if (invoice.clientId) return invoice.clientId === clientId
       return invoice.from === client.name
     })
     .map((invoice: any) => ({
@@ -218,16 +269,13 @@ export function getClientHistory(clientId: string): ClientHistory {
 }
 
 /**
- * Search clients by name or ICO
+ * Search clients
  */
 export function searchClients(query: string): Client[] {
   const clients = getAllClients()
   const lowercaseQuery = query.toLowerCase()
 
   return clients.filter(
-    (client) =>
-      client.name.toLowerCase().includes(lowercaseQuery) ||
-      client.ico?.includes(query) ||
-      client.contactPerson?.toLowerCase().includes(lowercaseQuery),
+    (client) => client.name.toLowerCase().includes(lowercaseQuery) || client.ico?.includes(query),
   )
 }

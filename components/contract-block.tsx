@@ -41,7 +41,6 @@ export function ContractBlock({ block, index, onRemove, onUpdate }: ContractBloc
       [`${selectedPartyField}Address`]: client.street || "",
       [`${selectedPartyField}City`]: client.city || "",
       [`${selectedPartyField}Psc`]: client.zip || "",
-      [`${selectedPartyField}Region`]: client.region || "",
     }
     setFormData(newData)
     onUpdate(block.id, newData)

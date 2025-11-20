@@ -3,6 +3,8 @@
  * Track billable hours and generate invoices
  */
 
+import { supabase } from "./supabase"
+
 export interface TimeEntry {
   id: string
   clientId?: string
@@ -22,6 +24,71 @@ export interface TimeTrackingStats {
   billableHoursThisMonth: number
   unbilledRevenue: number // hodiny * sazba
   runningEntry: TimeEntry | null
+}
+
+/**
+ * Sync time entry to cloud
+ */
+async function syncTimeEntryToCloud(entry: TimeEntry) {
+  try {
+    const user = await supabase.auth.getUser()
+    if (!user.data.user) return
+
+    const { error } = await supabase.from("time_entries").upsert({
+      id: entry.id,
+      user_id: user.data.user.id,
+      client_id: entry.clientId || null,
+      contract_id: entry.contractId || null,
+      description: entry.description,
+      start_time: entry.startTime,
+      end_time: entry.endTime || null,
+      duration_minutes: entry.durationMinutes || null,
+      hourly_rate: entry.hourlyRate || null,
+      billable: entry.billable,
+      invoice_id: entry.invoiceId || null,
+      created_at: entry.createdAt,
+    } as any)
+    if (error) throw error
+  } catch (error) {
+    console.error("Time entry cloud sync failed:", error)
+  }
+}
+
+/**
+ * Load time entries from cloud
+ */
+async function loadTimeEntriesFromCloud() {
+  try {
+    const user = await supabase.auth.getUser()
+    if (!user.data.user) return
+
+    const { data } = await supabase.from("time_entries").select("*").eq("user_id", user.data.user.id)
+
+    if (!data || data.length === 0) return
+
+    const entries: TimeEntry[] = data.map((e: any) => ({
+      id: e.id,
+      clientId: e.client_id || undefined,
+      contractId: e.contract_id || undefined,
+      description: e.description,
+      startTime: e.start_time,
+      endTime: e.end_time || undefined,
+      durationMinutes: e.duration_minutes || undefined,
+      hourlyRate: e.hourly_rate || undefined,
+      billable: e.billable,
+      invoiceId: e.invoice_id || undefined,
+      createdAt: e.created_at,
+    }))
+
+    localStorage.setItem("timeEntries", JSON.stringify(entries))
+  } catch (error) {
+    console.error("Time entries cloud load failed:", error)
+  }
+}
+
+// Auto-load on module import
+if (typeof window !== "undefined") {
+  loadTimeEntriesFromCloud()
 }
 
 /**
@@ -75,6 +142,9 @@ export function createManualTimeEntry(
   const entries = getAllTimeEntries()
   entries.push(entry)
   localStorage.setItem("timeEntries", JSON.stringify(entries))
+
+  // Sync to cloud (manual entry je už dokončený)
+  syncTimeEntryToCloud(entry)
 
   return entry
 }
@@ -144,6 +214,9 @@ export function stopTimeEntry(entryId: string): TimeEntry {
   entries[entryIndex] = entry
   localStorage.setItem("timeEntries", JSON.stringify(entries))
 
+  // Sync to cloud when stopped
+  syncTimeEntryToCloud(entry)
+
   return entry
 }
 
@@ -163,6 +236,9 @@ export function updateTimeEntry(entryId: string, updates: Partial<TimeEntry>): T
   entries[entryIndex] = { ...entries[entryIndex], ...updates }
   localStorage.setItem("timeEntries", JSON.stringify(entries))
 
+  // Sync to cloud
+  syncTimeEntryToCloud(entries[entryIndex])
+
   return entries[entryIndex]
 }
 
@@ -175,6 +251,9 @@ export function deleteTimeEntry(entryId: string): void {
   const entries = getAllTimeEntries()
   const filtered = entries.filter((e) => e.id !== entryId)
   localStorage.setItem("timeEntries", JSON.stringify(filtered))
+
+  // Delete from cloud
+  supabase.from("time_entries").delete().eq("id", entryId).then()
 }
 
 /**

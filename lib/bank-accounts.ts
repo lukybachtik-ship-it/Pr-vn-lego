@@ -3,6 +3,8 @@
  * Manages multiple bank accounts for invoicing with QR payments
  */
 
+import { supabase } from "./supabase"
+
 export interface BankAccount {
   id: string
   accountNumber: string // předčíslí-číslo účtu
@@ -12,6 +14,81 @@ export interface BankAccount {
   label: string // např. "Hlavní účet CZK", "EUR účet"
   isDefault: boolean
   createdAt: string
+}
+
+/**
+ * Sync bank account to cloud
+ */
+async function syncBankAccountToCloud(account: BankAccount) {
+  try {
+    const user = await supabase.auth.getUser()
+    if (!user.data.user) return
+
+    const { error } = await supabase.from("bank_accounts").upsert({
+      id: account.id,
+      user_id: user.data.user.id,
+      account_number: account.accountNumber,
+      bank_code: account.bankCode,
+      iban: account.iban || null,
+      currency: account.currency,
+      label: account.label,
+      is_default: account.isDefault,
+      created_at: account.createdAt,
+    } as any)
+    if (error) throw error
+  } catch (error) {
+    console.error("Bank account cloud sync failed:", error)
+  }
+}
+
+/**
+ * Sync all accounts to cloud (for bulk updates like setDefault)
+ */
+async function syncAllAccountsToCloud(accounts: BankAccount[]) {
+  try {
+    const user = await supabase.auth.getUser()
+    if (!user.data.user) return
+
+    for (const account of accounts) {
+      await syncBankAccountToCloud(account)
+    }
+  } catch (error) {
+    console.error("Bank accounts bulk sync failed:", error)
+  }
+}
+
+/**
+ * Load bank accounts from cloud
+ */
+async function loadBankAccountsFromCloud() {
+  try {
+    const user = await supabase.auth.getUser()
+    if (!user.data.user) return
+
+    const { data } = await supabase.from("bank_accounts").select("*").eq("user_id", user.data.user.id)
+
+    if (!data || data.length === 0) return
+
+    const accounts: BankAccount[] = data.map((acc: any) => ({
+      id: acc.id,
+      accountNumber: acc.account_number,
+      bankCode: acc.bank_code,
+      iban: acc.iban || undefined,
+      currency: acc.currency,
+      label: acc.label,
+      isDefault: acc.is_default,
+      createdAt: acc.created_at,
+    }))
+
+    localStorage.setItem("bankAccounts", JSON.stringify(accounts))
+  } catch (error) {
+    console.error("Bank accounts cloud load failed:", error)
+  }
+}
+
+// Auto-load on module import
+if (typeof window !== "undefined") {
+  loadBankAccountsFromCloud()
 }
 
 /**
@@ -72,6 +149,10 @@ export function saveBankAccount(account: Partial<BankAccount>): BankAccount {
   }
 
   localStorage.setItem("bankAccounts", JSON.stringify(accounts))
+
+  // Sync to cloud (including default changes)
+  syncAllAccountsToCloud(accounts)
+
   return savedAccount
 }
 
@@ -93,6 +174,14 @@ export function deleteBankAccount(accountId: string): void {
   }
 
   localStorage.setItem("bankAccounts", JSON.stringify(accounts))
+
+  // Delete from cloud
+  supabase.from("bank_accounts").delete().eq("id", accountId).then()
+
+  // Sync remaining accounts if default changed
+  if (accounts.length > 0) {
+    syncAllAccountsToCloud(accounts)
+  }
 }
 
 /**
@@ -118,6 +207,9 @@ export function setDefaultBankAccount(accountId: string): void {
   }
 
   localStorage.setItem("bankAccounts", JSON.stringify(accounts))
+
+  // Sync all accounts to cloud (default changed)
+  syncAllAccountsToCloud(accounts)
 }
 
 /**

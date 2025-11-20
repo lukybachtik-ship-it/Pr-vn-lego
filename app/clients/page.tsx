@@ -163,13 +163,9 @@ export default function ClientsPage() {
                           <p className="text-sm text-muted-foreground">IČO: {client.ico}</p>
                         )}
                       </div>
-                      {client.source === "ares" ? (
+                      {client.ico && (
                         <Badge variant="outline" className="shrink-0">
-                          ARES
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="shrink-0">
-                          Manuální
+                          IČO
                         </Badge>
                       )}
                     </div>
@@ -188,12 +184,6 @@ export default function ClientsPage() {
 
                     {/* Contact Info */}
                     <div className="space-y-2">
-                      {client.contactPerson && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <User className="w-4 h-4 text-muted-foreground" />
-                          <span>{client.contactPerson}</span>
-                        </div>
-                      )}
                       {client.phone && (
                         <div className="flex items-center gap-2 text-sm">
                           <Phone className="w-4 h-4 text-muted-foreground" />

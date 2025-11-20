@@ -119,8 +119,8 @@ export default function ClientDetailPage() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold">{client.name}</h1>
-              {client.source === "ares" ? (
-                <Badge variant="outline">ARES</Badge>
+              {client.ico ? (
+                <Badge variant="outline">IČO: {client.ico}</Badge>
               ) : (
                 <Badge variant="secondary">Manuální</Badge>
               )}
@@ -181,7 +181,6 @@ export default function ClientDetailPage() {
                     <p>
                       {client.zip} {client.city}
                     </p>
-                    {client.region && <p className="text-muted-foreground">{client.region}</p>}
                   </div>
                 </div>
               )}
@@ -199,19 +198,6 @@ export default function ClientDetailPage() {
             <CardContent className="space-y-4">
               {isEditing ? (
                 <>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Kontaktní osoba</label>
-                    <Input
-                      placeholder="např. Jan Novák"
-                      value={editedClient.contactPerson || ""}
-                      onChange={(e) =>
-                        setEditedClient({
-                          ...editedClient,
-                          contactPerson: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
                   <div>
                     <label className="text-sm font-medium mb-2 block">Telefon</label>
                     <Input
@@ -242,14 +228,6 @@ export default function ClientDetailPage() {
                 </>
               ) : (
                 <>
-                  {client.contactPerson ? (
-                    <div className="flex items-center gap-3">
-                      <User className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm">{client.contactPerson}</span>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground italic">Kontaktní osoba není vyplněna</p>
-                  )}
                   {client.phone ? (
                     <div className="flex items-center gap-3">
                       <Phone className="w-4 h-4 text-muted-foreground" />
@@ -281,23 +259,7 @@ export default function ClientDetailPage() {
               <CardTitle className="text-base">Poznámky</CardTitle>
             </CardHeader>
             <CardContent>
-              {isEditing ? (
-                <Textarea
-                  placeholder="Interní poznámky o klientovi..."
-                  value={editedClient.notes || ""}
-                  onChange={(e) =>
-                    setEditedClient({
-                      ...editedClient,
-                      notes: e.target.value,
-                    })
-                  }
-                  rows={4}
-                />
-              ) : client.notes ? (
-                <p className="text-sm whitespace-pre-wrap">{client.notes}</p>
-              ) : (
-                <p className="text-sm text-muted-foreground italic">Žádné poznámky</p>
-              )}
+              <p className="text-sm text-muted-foreground italic">Poznámky nejsou podporovány</p>
             </CardContent>
           </Card>
         </div>

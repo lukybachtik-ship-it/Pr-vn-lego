@@ -1,4 +1,5 @@
 import type { ContractBlock } from "@/types/contract"
+import { supabase } from "./supabase"
 
 export interface SavedContract {
   id: string
@@ -13,6 +14,75 @@ export interface SavedContract {
 
 export interface ContractsStore {
   [id: string]: SavedContract
+}
+
+/**
+ * Sync localStorage to Supabase (background)
+ */
+async function syncToCloud(contract: SavedContract) {
+  try {
+    const user = await supabase.auth.getUser()
+    if (!user.data.user) return
+
+    const { error } = await supabase.from("contracts").upsert({
+      id: contract.id,
+      user_id: user.data.user.id,
+      name: contract.name,
+      type: contract.type,
+      blocks: contract.blocks as any,
+      finalized: contract.finalized,
+      finalized_at: contract.finalizedAt,
+      created_at: contract.createdAt,
+      updated_at: contract.savedAt,
+    } as any)
+    if (error) throw error
+  } catch (error) {
+    console.error("Cloud sync failed:", error)
+  }
+}
+
+/**
+ * Load from cloud on startup
+ */
+async function loadFromCloud() {
+  try {
+    const user = await supabase.auth.getUser()
+    if (!user.data.user) return
+
+    const { data } = await supabase
+      .from("contracts")
+      .select("*")
+      .eq("user_id", user.data.user.id)
+      .eq("finalized", true)
+
+    if (!data || data.length === 0) return
+
+    // Merge with localStorage
+    const localStr = localStorage.getItem("contracts")
+    const local: ContractsStore = localStr ? JSON.parse(localStr) : {}
+
+    data.forEach((c: any) => {
+      local[c.id] = {
+        id: c.id,
+        name: c.name,
+        type: c.type,
+        blocks: c.blocks as ContractBlock[],
+        finalized: c.finalized,
+        createdAt: c.created_at,
+        savedAt: c.updated_at,
+        finalizedAt: c.finalized_at || undefined,
+      }
+    })
+
+    localStorage.setItem("contracts", JSON.stringify(local))
+  } catch (error) {
+    console.error("Cloud load failed:", error)
+  }
+}
+
+// Auto-load on module import
+if (typeof window !== "undefined") {
+  loadFromCloud()
 }
 
 /**
@@ -41,15 +111,13 @@ export function finalizeContract(
     finalizedAt: now,
   }
 
-  // Load existing contracts
   const contractsStr = localStorage.getItem("contracts")
   const contracts: ContractsStore = contractsStr ? JSON.parse(contractsStr) : {}
-
-  // Add new contract
   contracts[id] = contract
-
-  // Save back
   localStorage.setItem("contracts", JSON.stringify(contracts))
+
+  // Sync to cloud in background
+  syncToCloud(contract)
 
   return contract
 }
@@ -101,32 +169,10 @@ export function deleteContract(id: string): void {
   const contractsStr = localStorage.getItem("contracts")
   if (!contractsStr) return
 
-  try {
-    const contracts: ContractsStore = JSON.parse(contractsStr)
-    delete contracts[id]
-    localStorage.setItem("contracts", JSON.stringify(contracts))
-  } catch (e) {
-    console.error("Error deleting contract:", e)
-  }
-}
+  const contracts: ContractsStore = JSON.parse(contractsStr)
+  delete contracts[id]
+  localStorage.setItem("contracts", JSON.stringify(contracts))
 
-/**
- * Update contract name
- */
-export function updateContractName(id: string, name: string): void {
-  if (typeof window === "undefined") return
-
-  const contractsStr = localStorage.getItem("contracts")
-  if (!contractsStr) return
-
-  try {
-    const contracts: ContractsStore = JSON.parse(contractsStr)
-    if (contracts[id]) {
-      contracts[id].name = name
-      contracts[id].savedAt = new Date().toISOString()
-      localStorage.setItem("contracts", JSON.stringify(contracts))
-    }
-  } catch (e) {
-    console.error("Error updating contract:", e)
-  }
+  // Delete from cloud
+  supabase.from("contracts").delete().eq("id", id).then()
 }
