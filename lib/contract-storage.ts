@@ -108,6 +108,11 @@ export async function loadContractsFromCloud() {
 
     localStorage.setItem("contracts", JSON.stringify(local))
     console.log(`Loaded ${data.length} contracts to localStorage`)
+
+    // Dispatch event to notify UI about loaded data
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("contractsLoaded"))
+    }
   } catch (error) {
     console.error("Cloud load failed:", error)
     throw error

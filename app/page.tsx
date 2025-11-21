@@ -19,7 +19,23 @@ export default function Home() {
   const [showTypeSelector, setShowTypeSelector] = useState(false)
 
   useEffect(() => {
+    // Load initial contracts
     setContracts(getFinalizedContracts())
+
+    // Listen for localStorage changes (when cloud data loads)
+    const handleStorageChange = () => {
+      setContracts(getFinalizedContracts())
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+
+    // Also listen for custom event when data loads from cloud
+    window.addEventListener("contractsLoaded", handleStorageChange)
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange)
+      window.removeEventListener("contractsLoaded", handleStorageChange)
+    }
   }, [])
 
   const getContractTypeName = (type: string) => {
