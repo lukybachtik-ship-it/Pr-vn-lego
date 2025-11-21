@@ -15,33 +15,24 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Get the hash from the URL
-        const hashParams = new URLSearchParams(window.location.hash.substring(1))
-        const accessToken = hashParams.get("access_token")
-        const refreshToken = hashParams.get("refresh_token")
-        const type = hashParams.get("type")
+        // Exchange the code from URL for a session
+        const { error } = await supabase.auth.exchangeCodeForSession(window.location.href)
 
-        if (type === "signup" && accessToken) {
-          // Email confirmation successful
-          setStatus("success")
-          setMessage("Email úspěšně ověřen! Nyní se můžeš přihlásit.")
-        } else if (accessToken && refreshToken) {
-          // Set the session
-          await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          })
-          setStatus("success")
-          setMessage("Úspěšně přihlášen!")
-
-          // Redirect to home after 2 seconds
-          setTimeout(() => {
-            router.push("/")
-          }, 2000)
-        } else {
+        if (error) {
+          console.error("Exchange code error:", error)
           setStatus("error")
           setMessage("Neplatný odkaz nebo již vypršel.")
+          return
         }
+
+        // Success - email verified
+        setStatus("success")
+        setMessage("Email úspěšně ověřen! Přesměrovávám...")
+
+        // Redirect to home after 2 seconds
+        setTimeout(() => {
+          router.push("/")
+        }, 2000)
       } catch (error) {
         console.error("Auth callback error:", error)
         setStatus("error")
@@ -49,7 +40,12 @@ export default function AuthCallback() {
       }
     }
 
-    handleCallback()
+    // Small delay to ensure window.location is ready
+    const timer = setTimeout(() => {
+      handleCallback()
+    }, 100)
+
+    return () => clearTimeout(timer)
   }, [router])
 
   return (

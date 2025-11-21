@@ -73,16 +73,33 @@ export function QRInvoicePreview({ invoice, open, onOpenChange }: QRInvoicePrevi
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Faktura s QR platbou</DialogTitle>
-          <DialogDescription>
-            {invoice.type === "income" ? "Faktura pro klienta" : "Výdaj - QR platba není k dispozici"}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #invoice-print-content, #invoice-print-content * {
+            visibility: visible;
+          }
+          #invoice-print-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+        }
+      `}</style>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="print:hidden">
+            <DialogTitle>Faktura s QR platbou</DialogTitle>
+            <DialogDescription>
+              {invoice.type === "income" ? "Faktura pro klienta" : "Výdaj - QR platba není k dispozici"}
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-6" id="invoice-content">
+          <div className="space-y-6" id="invoice-print-content">
           {/* Invoice Header */}
           <Card>
             <CardHeader>
@@ -149,7 +166,7 @@ export function QRInvoicePreview({ invoice, open, onOpenChange }: QRInvoicePrevi
           </Card>
 
           {/* Actions */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 print:hidden">
             <Button onClick={handlePrint} className="flex-1">
               <Printer className="w-4 h-4 mr-2" />
               Tisknout
@@ -166,7 +183,8 @@ export function QRInvoicePreview({ invoice, open, onOpenChange }: QRInvoicePrevi
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

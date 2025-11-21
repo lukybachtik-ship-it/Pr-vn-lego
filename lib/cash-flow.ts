@@ -40,7 +40,12 @@ export interface MonthlyStats {
 async function syncInvoiceToCloud(invoice: Invoice) {
   try {
     const user = await supabase.auth.getUser()
-    if (!user.data.user) return
+    if (!user.data.user) {
+      console.warn("Cannot sync invoice - user not authenticated")
+      return
+    }
+
+    console.log("Syncing invoice to cloud:", invoice.id, invoice.from)
 
     const { error } = await supabase.from("invoices").upsert({
       id: invoice.id,
@@ -58,7 +63,13 @@ async function syncInvoiceToCloud(invoice: Invoice) {
       bank_account_id: invoice.bankAccountId || null,
       created_at: invoice.createdAt,
     } as any)
-    if (error) throw error
+
+    if (error) {
+      console.error("Invoice sync error:", error)
+      throw error
+    }
+
+    console.log("Invoice synced successfully:", invoice.id)
   } catch (error) {
     console.error("Invoice cloud sync failed:", error)
   }
@@ -70,11 +81,26 @@ async function syncInvoiceToCloud(invoice: Invoice) {
 export async function loadInvoicesFromCloud() {
   try {
     const user = await supabase.auth.getUser()
-    if (!user.data.user) return
+    if (!user.data.user) {
+      console.warn("Cannot load invoices - user not authenticated")
+      return
+    }
 
-    const { data } = await supabase.from("invoices").select("*").eq("user_id", user.data.user.id)
+    console.log("Loading invoices from cloud for user:", user.data.user.email)
 
-    if (!data || data.length === 0) return
+    const { data, error } = await supabase.from("invoices").select("*").eq("user_id", user.data.user.id)
+
+    if (error) {
+      console.error("Failed to fetch invoices from Supabase:", error)
+      throw error
+    }
+
+    console.log(`Found ${data?.length || 0} invoices in cloud`)
+
+    if (!data || data.length === 0) {
+      console.log("No invoices found in cloud")
+      return
+    }
 
     const localStr = localStorage.getItem("invoices")
     const local: Record<string, Invoice> = localStr ? JSON.parse(localStr) : {}
@@ -98,8 +124,10 @@ export async function loadInvoicesFromCloud() {
     })
 
     localStorage.setItem("invoices", JSON.stringify(local))
+    console.log(`Loaded ${data.length} invoices to localStorage`)
   } catch (error) {
     console.error("Invoices cloud load failed:", error)
+    throw error
   }
 }
 

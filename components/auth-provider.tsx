@@ -36,16 +36,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const user = await supabase.auth.getUser()
         if (!user.data.user) return
 
+        console.log("Loading user data for:", user.data.user.email)
+
+        // Clear localStorage first to ensure fresh data
+        localStorage.clear()
+
         // Load all data modules dynamically to trigger their cloud sync
-        await Promise.all([
-          import("@/lib/contract-storage").then((m) => m.loadContractsFromCloud?.()),
-          import("@/lib/clients").then((m) => m.loadClientsFromCloud?.()),
-          import("@/lib/cash-flow").then((m) => m.loadInvoicesFromCloud?.()),
-          import("@/lib/time-tracking").then((m) => m.loadTimeEntriesFromCloud?.()),
-          import("@/lib/bank-accounts").then((m) => m.loadBankAccountsFromCloud?.()),
-          import("@/lib/change-requests").then((m) => m.loadChangeRequestsFromCloud?.()),
-          import("@/lib/user-settings").then((m) => m.loadUserSettingsFromCloud?.()),
+        const results = await Promise.allSettled([
+          import("@/lib/contract-storage").then((m) => m.loadContractsFromCloud()),
+          import("@/lib/clients").then((m) => m.loadClientsFromCloud()),
+          import("@/lib/cash-flow").then((m) => m.loadInvoicesFromCloud()),
+          import("@/lib/time-tracking").then((m) => m.loadTimeEntriesFromCloud()),
+          import("@/lib/bank-accounts").then((m) => m.loadBankAccountsFromCloud()),
+          import("@/lib/change-requests").then((m) => m.loadChangeRequestsFromCloud()),
+          import("@/lib/user-settings").then((m) => m.loadUserSettingsFromCloud()),
         ])
+
+        // Log any failures
+        results.forEach((result, index) => {
+          if (result.status === "rejected") {
+            console.error(`Failed to load module ${index}:`, result.reason)
+          }
+        })
+
+        console.log("User data loaded successfully")
       } catch (error) {
         console.error("Failed to load user data:", error)
       }
@@ -61,8 +75,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loadUserData()
       }
 
-      // Redirect to login if not authenticated (except on login page)
-      if (!session && pathname !== "/login") {
+      // Redirect to login if not authenticated (except on login and callback pages)
+      if (!session && pathname !== "/login" && !pathname.startsWith("/auth/callback")) {
         router.push("/login")
       }
     })
@@ -78,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loadUserData()
       }
 
-      if (!session && pathname !== "/login") {
+      if (!session && pathname !== "/login" && !pathname.startsWith("/auth/callback")) {
         router.push("/login")
       } else if (session && pathname === "/login") {
         router.push("/")

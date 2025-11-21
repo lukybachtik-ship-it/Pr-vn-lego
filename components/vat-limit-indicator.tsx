@@ -109,6 +109,15 @@ export function VATLimitIndicator({ refreshTrigger }: VATLimitIndicatorProps) {
               <p className="text-sm font-semibold">{Math.round(status.totalRevenueLast12Months).toLocaleString("cs-CZ")} Kč</p>
               <p className="text-xs text-muted-foreground">z 2M Kč</p>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDismiss}
+              className="ml-2"
+              title="Skrýt panel"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
         </CardContent>
       </Card>

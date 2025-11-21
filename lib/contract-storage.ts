@@ -22,7 +22,12 @@ export interface ContractsStore {
 async function syncToCloud(contract: SavedContract) {
   try {
     const user = await supabase.auth.getUser()
-    if (!user.data.user) return
+    if (!user.data.user) {
+      console.warn("Cannot sync contract - user not authenticated")
+      return
+    }
+
+    console.log("Syncing contract to cloud:", contract.id, contract.name)
 
     const { error } = await supabase.from("contracts").upsert({
       id: contract.id,
@@ -35,7 +40,13 @@ async function syncToCloud(contract: SavedContract) {
       created_at: contract.createdAt,
       updated_at: contract.savedAt,
     } as any)
-    if (error) throw error
+
+    if (error) {
+      console.error("Contract sync error:", error)
+      throw error
+    }
+
+    console.log("Contract synced successfully:", contract.id)
   } catch (error) {
     console.error("Cloud sync failed:", error)
   }
@@ -47,15 +58,30 @@ async function syncToCloud(contract: SavedContract) {
 export async function loadContractsFromCloud() {
   try {
     const user = await supabase.auth.getUser()
-    if (!user.data.user) return
+    if (!user.data.user) {
+      console.warn("Cannot load contracts - user not authenticated")
+      return
+    }
 
-    const { data } = await supabase
+    console.log("Loading contracts from cloud for user:", user.data.user.email)
+
+    const { data, error } = await supabase
       .from("contracts")
       .select("*")
       .eq("user_id", user.data.user.id)
       .eq("finalized", true)
 
-    if (!data || data.length === 0) return
+    if (error) {
+      console.error("Failed to fetch contracts from Supabase:", error)
+      throw error
+    }
+
+    console.log(`Found ${data?.length || 0} contracts in cloud`)
+
+    if (!data || data.length === 0) {
+      console.log("No contracts found in cloud")
+      return
+    }
 
     // Merge with localStorage
     const localStr = localStorage.getItem("contracts")
@@ -75,8 +101,10 @@ export async function loadContractsFromCloud() {
     })
 
     localStorage.setItem("contracts", JSON.stringify(local))
+    console.log(`Loaded ${data.length} contracts to localStorage`)
   } catch (error) {
     console.error("Cloud load failed:", error)
+    throw error
   }
 }
 
