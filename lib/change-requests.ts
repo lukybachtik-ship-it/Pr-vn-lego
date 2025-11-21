@@ -33,14 +33,10 @@ async function syncChangeRequestToCloud(request: ChangeRequest) {
       user_id: user.data.user.id,
       contract_id: request.contractId,
       request_number: request.requestNumber,
-      request_date: request.requestDate,
       description: request.description,
       price_increase: request.priceIncrease,
       deadline_extension_days: request.deadlineExtensionDays,
       status: request.status,
-      approved_at: request.approvedAt || null,
-      rejected_at: request.rejectedAt || null,
-      notes: request.notes || null,
       created_at: request.createdAt,
     } as any)
     if (error) throw error
@@ -65,14 +61,14 @@ export async function loadChangeRequestsFromCloud() {
       id: r.id,
       contractId: r.contract_id,
       requestNumber: r.request_number,
-      requestDate: r.request_date,
+      requestDate: r.created_at, // Use created_at as requestDate fallback
       description: r.description,
       priceIncrease: r.price_increase,
       deadlineExtensionDays: r.deadline_extension_days,
       status: r.status,
-      approvedAt: r.approved_at || undefined,
-      rejectedAt: r.rejected_at || undefined,
-      notes: r.notes || undefined,
+      approvedAt: undefined, // Not stored in DB
+      rejectedAt: undefined, // Not stored in DB
+      notes: undefined, // Not stored in DB
       createdAt: r.created_at,
     }))
 

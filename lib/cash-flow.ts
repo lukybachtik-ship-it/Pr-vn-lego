@@ -51,7 +51,7 @@ async function syncInvoiceToCloud(invoice: Invoice) {
       id: invoice.id,
       user_id: user.data.user.id,
       type: invoice.type,
-      from_name: invoice.from,
+      from: invoice.from,
       client_id: invoice.clientId || null,
       amount: invoice.amount,
       due_date: invoice.dueDate,
@@ -109,7 +109,7 @@ export async function loadInvoicesFromCloud() {
       local[inv.id] = {
         id: inv.id,
         type: inv.type,
-        from: inv.from_name,
+        from: inv.from,
         clientId: inv.client_id || undefined,
         amount: inv.amount,
         dueDate: inv.due_date,
