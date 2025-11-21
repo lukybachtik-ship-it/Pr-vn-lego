@@ -58,9 +58,9 @@ async function syncAllAccountsToCloud(accounts: BankAccount[]) {
 }
 
 /**
- * Load bank accounts from cloud
+ * Load bank accounts from cloud - exported for manual loading in AuthProvider
  */
-async function loadBankAccountsFromCloud() {
+export async function loadBankAccountsFromCloud() {
   try {
     const user = await supabase.auth.getUser()
     if (!user.data.user) return
@@ -86,10 +86,6 @@ async function loadBankAccountsFromCloud() {
   }
 }
 
-// Auto-load on module import
-if (typeof window !== "undefined") {
-  loadBankAccountsFromCloud()
-}
 
 /**
  * Get all bank accounts

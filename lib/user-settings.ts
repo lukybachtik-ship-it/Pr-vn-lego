@@ -28,9 +28,9 @@ async function syncSettingsToCloud(settings: UserSettings) {
 }
 
 /**
- * Load settings from cloud
+ * Load settings from cloud - exported for manual loading in AuthProvider
  */
-async function loadSettingsFromCloud() {
+export async function loadUserSettingsFromCloud() {
   try {
     const user = await supabase.auth.getUser()
     if (!user.data.user) return
@@ -49,10 +49,6 @@ async function loadSettingsFromCloud() {
   }
 }
 
-// Auto-load on module import
-if (typeof window !== "undefined") {
-  loadSettingsFromCloud()
-}
 
 /**
  * Get user settings

@@ -42,9 +42,9 @@ async function syncToCloud(contract: SavedContract) {
 }
 
 /**
- * Load from cloud on startup
+ * Load from cloud - exported for manual loading in AuthProvider
  */
-async function loadFromCloud() {
+export async function loadContractsFromCloud() {
   try {
     const user = await supabase.auth.getUser()
     if (!user.data.user) return
@@ -78,11 +78,6 @@ async function loadFromCloud() {
   } catch (error) {
     console.error("Cloud load failed:", error)
   }
-}
-
-// Auto-load on module import
-if (typeof window !== "undefined") {
-  loadFromCloud()
 }
 
 /**

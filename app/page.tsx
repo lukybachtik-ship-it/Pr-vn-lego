@@ -9,7 +9,6 @@ import { FileText, Plus, Calendar, AlertCircle, CheckCircle, Eye, Wallet, Users,
 import { ContractTypeSelector } from "@/components/contract-type-selector"
 import { getFinalizedContracts } from "@/lib/contract-storage"
 import { extractContractDeadlines } from "@/lib/contract-timeline"
-import { VATLimitIndicator } from "@/components/vat-limit-indicator"
 import { useAuth } from "@/components/auth-provider"
 import type { SavedContract } from "@/lib/contract-storage"
 
@@ -18,13 +17,9 @@ export default function Home() {
   const { user, signOut } = useAuth()
   const [contracts, setContracts] = useState<SavedContract[]>([])
   const [showTypeSelector, setShowTypeSelector] = useState(false)
-  const [vatRefreshTrigger, setVatRefreshTrigger] = useState(0)
 
   useEffect(() => {
     setContracts(getFinalizedContracts())
-
-    // Trigger VAT refresh when returning to home page
-    setVatRefreshTrigger((prev) => prev + 1)
   }, [])
 
   const getContractTypeName = (type: string) => {
@@ -82,11 +77,6 @@ export default function Home() {
           <p className="text-base md:text-lg text-muted-foreground mb-12 max-w-2xl mx-auto">
             Sestavte si právní smlouvu jako stavebnici. Přetáhněte bloky, vyplňte údaje a máte hotovo.
           </p>
-
-          {/* VAT Limit Indicator */}
-          <div className="mb-8 max-w-3xl mx-auto">
-            <VATLimitIndicator refreshTrigger={vatRefreshTrigger} />
-          </div>
 
           <div className="flex flex-col items-center gap-4">
             {/* Hlavní tlačítka */}

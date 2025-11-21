@@ -55,9 +55,9 @@ async function syncTimeEntryToCloud(entry: TimeEntry) {
 }
 
 /**
- * Load time entries from cloud
+ * Load time entries from cloud - exported for manual loading in AuthProvider
  */
-async function loadTimeEntriesFromCloud() {
+export async function loadTimeEntriesFromCloud() {
   try {
     const user = await supabase.auth.getUser()
     if (!user.data.user) return
@@ -84,11 +84,6 @@ async function loadTimeEntriesFromCloud() {
   } catch (error) {
     console.error("Time entries cloud load failed:", error)
   }
-}
-
-// Auto-load on module import
-if (typeof window !== "undefined") {
-  loadTimeEntriesFromCloud()
 }
 
 /**

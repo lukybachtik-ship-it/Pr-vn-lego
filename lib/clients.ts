@@ -64,9 +64,9 @@ async function syncClientToCloud(client: Client) {
 }
 
 /**
- * Load clients from cloud
+ * Load clients from cloud - exported for manual loading in AuthProvider
  */
-async function loadClientsFromCloud() {
+export async function loadClientsFromCloud() {
   try {
     const user = await supabase.auth.getUser()
     if (!user.data.user) return
@@ -99,10 +99,6 @@ async function loadClientsFromCloud() {
   }
 }
 
-// Auto-load on module import
-if (typeof window !== "undefined") {
-  loadClientsFromCloud()
-}
 
 /**
  * Get all clients

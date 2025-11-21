@@ -35,8 +35,23 @@ export function VATLimitIndicator({ refreshTrigger }: VATLimitIndicatorProps) {
     }
   }
 
-  // Don't show if dismissed
-  if (isDismissed) return null
+  const handleUnhide = () => {
+    if (typeof window !== "undefined") {
+      updateUserSettings({ vatLimitDismissed: false })
+      setIsDismissed(false)
+    }
+  }
+
+  // Show small unhide button if dismissed
+  if (isDismissed) {
+    return (
+      <div className="flex justify-center">
+        <Button variant="outline" size="sm" onClick={handleUnhide} className="text-xs">
+          Odkrýt limit pro DPH
+        </Button>
+      </div>
+    )
+  }
 
   if (!status) return null
 
@@ -113,13 +128,13 @@ export function VATLimitIndicator({ refreshTrigger }: VATLimitIndicatorProps) {
             <CardDescription className="text-sm">{message}</CardDescription>
           </div>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={handleDismiss}
-            className="h-8 w-8 p-0 hover:bg-destructive/10"
+            className="hover:bg-destructive/10"
             title="Registroval jsem se k DPH"
           >
-            <X className="h-4 w-4" />
+            Skrýt
           </Button>
         </div>
       </CardHeader>

@@ -65,9 +65,9 @@ async function syncInvoiceToCloud(invoice: Invoice) {
 }
 
 /**
- * Load invoices from cloud
+ * Load invoices from cloud - exported for manual loading in AuthProvider
  */
-async function loadInvoicesFromCloud() {
+export async function loadInvoicesFromCloud() {
   try {
     const user = await supabase.auth.getUser()
     if (!user.data.user) return
@@ -103,10 +103,6 @@ async function loadInvoicesFromCloud() {
   }
 }
 
-// Auto-load on module import
-if (typeof window !== "undefined") {
-  loadInvoicesFromCloud()
-}
 
 /**
  * Create new invoice

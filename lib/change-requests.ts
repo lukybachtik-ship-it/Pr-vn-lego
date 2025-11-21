@@ -50,9 +50,9 @@ async function syncChangeRequestToCloud(request: ChangeRequest) {
 }
 
 /**
- * Load change requests from cloud
+ * Load change requests from cloud - exported for manual loading in AuthProvider
  */
-async function loadChangeRequestsFromCloud() {
+export async function loadChangeRequestsFromCloud() {
   try {
     const user = await supabase.auth.getUser()
     if (!user.data.user) return
@@ -82,10 +82,6 @@ async function loadChangeRequestsFromCloud() {
   }
 }
 
-// Auto-load on module import
-if (typeof window !== "undefined") {
-  loadChangeRequestsFromCloud()
-}
 
 /**
  * Get all change requests
