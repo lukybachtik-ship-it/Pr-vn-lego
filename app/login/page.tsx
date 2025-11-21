@@ -24,21 +24,37 @@ export default function LoginPage() {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
         })
         if (error) throw error
-        alert("Zkontroluj email pro potvrzení registrace!")
+
+        // Check if email confirmation is required
+        if (data?.user && !data.session) {
+          alert("Zkontroluj email pro potvrzení registrace!")
+        } else if (data?.session) {
+          // Auto-confirmed, redirect to home
+          router.push("/")
+        }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
         if (error) throw error
-        router.push("/")
+
+        if (data.session) {
+          router.push("/")
+        } else {
+          setError("Přihlášení se nezdařilo")
+        }
       }
     } catch (error: any) {
+      console.error("Auth error:", error)
       setError(error.message || "Něco se pokazilo")
     } finally {
       setLoading(false)

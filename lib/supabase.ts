@@ -14,7 +14,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Client for browser use (respects RLS)
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+    flowType: "pkce",
+  },
+})
 
 // Helper to get current user
 export async function getCurrentUser() {
