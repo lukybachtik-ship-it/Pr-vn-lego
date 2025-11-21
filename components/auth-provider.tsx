@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useEffect, useState, useRef } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import type { User } from "@supabase/supabase-js"
@@ -26,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const pathname = usePathname()
+  const hasLoadedData = useRef(false)
 
   useEffect(() => {
     // Load all user data from cloud
@@ -98,8 +99,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null)
       setLoading(false)
 
-      // Load user data if authenticated
-      if (session) {
+      // Load user data if authenticated AND not already loaded
+      if (session && !hasLoadedData.current) {
+        hasLoadedData.current = true
         loadUserData()
       }
 
@@ -112,12 +114,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
 
-      // Load user data when user logs in
-      if (session) {
+      // Load user data ONLY on SIGN_IN event, not on every auth state change
+      if (event === "SIGNED_IN" && session && !hasLoadedData.current) {
+        hasLoadedData.current = true
         loadUserData()
+      }
+
+      // Reset flag on sign out
+      if (event === "SIGNED_OUT") {
+        hasLoadedData.current = false
       }
 
       if (!session && pathname !== "/login" && !pathname.startsWith("/auth/callback")) {
@@ -135,6 +143,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Wait a moment to ensure any pending sync operations complete
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
+      // Reset the data loaded flag
+      hasLoadedData.current = false
+
       // Sign out from Supabase
       await supabase.auth.signOut()
 
@@ -148,6 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Sign out error:", error)
       // Even on error, clear localStorage and redirect
+      hasLoadedData.current = false
       if (typeof window !== "undefined") {
         localStorage.clear()
       }
