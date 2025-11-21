@@ -42,7 +42,12 @@ async function syncToCloud(contract: SavedContract) {
     } as any)
 
     if (error) {
-      console.error("Contract sync error:", error)
+      console.error("Contract sync error:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+      })
       throw error
     }
 

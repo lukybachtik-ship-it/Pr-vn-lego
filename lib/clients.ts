@@ -57,7 +57,15 @@ async function syncClientToCloud(client: Client) {
       phone: client.phone || null,
       created_at: client.createdAt,
     } as any)
-    if (error) throw error
+    if (error) {
+      console.error("Client sync error:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+      })
+      throw error
+    }
   } catch (error) {
     console.error("Client cloud sync failed:", error)
   }

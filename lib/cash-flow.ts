@@ -65,7 +65,12 @@ async function syncInvoiceToCloud(invoice: Invoice) {
     } as any)
 
     if (error) {
-      console.error("Invoice sync error:", error)
+      console.error("Invoice sync error:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+      })
       throw error
     }
 
