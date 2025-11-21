@@ -39,38 +39,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         console.log("Loading user data for:", user.data.user.email)
 
-        // Clear only app data, NOT Supabase session keys
-        const keysToKeep = [
-          "sb-imrbnrzbjyesdpjmkfuv-auth-token",
-          "supabase.auth.token",
-        ]
+        // Check if this is a different user - if so, clear app data (but keep Supabase session)
+        const lastUserId = localStorage.getItem("last_user_id")
+        if (lastUserId && lastUserId !== user.data.user.id) {
+          console.log("Different user detected - clearing old user's data")
 
-        const supabaseKeys: string[] = []
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i)
-          if (key && (key.startsWith("sb-") || key.includes("supabase"))) {
-            supabaseKeys.push(key)
+          // Save Supabase session keys
+          const supabaseKeys: string[] = []
+          const savedData: { [key: string]: string } = {}
+
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i)
+            if (key && (key.startsWith("sb-") || key.includes("supabase"))) {
+              supabaseKeys.push(key)
+              const value = localStorage.getItem(key)
+              if (value) savedData[key] = value
+            }
           }
+
+          // Clear everything
+          localStorage.clear()
+
+          // Restore Supabase session
+          Object.entries(savedData).forEach(([key, value]) => {
+            localStorage.setItem(key, value)
+          })
+
+          console.log("Cleared previous user's data, preserved Supabase session")
         }
 
-        // Save Supabase session
-        const savedData: { [key: string]: string } = {}
-        supabaseKeys.forEach((key) => {
-          const value = localStorage.getItem(key)
-          if (value) savedData[key] = value
-        })
+        // Store current user ID
+        localStorage.setItem("last_user_id", user.data.user.id)
 
-        // Clear everything
-        localStorage.clear()
-
-        // Restore Supabase session
-        Object.entries(savedData).forEach(([key, value]) => {
-          localStorage.setItem(key, value)
-        })
-
-        console.log("Preserved Supabase session keys:", supabaseKeys)
-
-        // Load all data modules dynamically to trigger their cloud sync
+        // Load all data modules dynamically - they will merge with existing localStorage
         const results = await Promise.allSettled([
           import("@/lib/contract-storage").then((m) => m.loadContractsFromCloud()),
           import("@/lib/clients").then((m) => m.loadClientsFromCloud()),
