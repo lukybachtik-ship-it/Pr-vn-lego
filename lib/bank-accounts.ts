@@ -4,6 +4,7 @@
  */
 
 import { supabase } from "./supabase"
+import { v4 as uuidv4 } from "uuid"
 
 export interface BankAccount {
   id: string
@@ -116,7 +117,7 @@ export function saveBankAccount(account: Partial<BankAccount>): BankAccount {
   const accountsJson = localStorage.getItem("bankAccounts")
   const accounts: BankAccount[] = accountsJson ? JSON.parse(accountsJson) : []
 
-  const accountId = account.id || `bank-${Date.now()}`
+  const accountId = account.id || uuidv4()
   const now = new Date().toISOString()
 
   // If this is set as default, unset all others

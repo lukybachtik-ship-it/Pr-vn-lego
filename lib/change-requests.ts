@@ -4,6 +4,7 @@
  */
 
 import { supabase } from "./supabase"
+import { v4 as uuidv4 } from "uuid"
 
 export interface ChangeRequest {
   id: string
@@ -119,7 +120,7 @@ export function createChangeRequest(
   const nextNumber = contractRequests.length > 0 ? Math.max(...contractRequests.map((r) => r.requestNumber)) + 1 : 1
 
   const changeRequest: ChangeRequest = {
-    id: `change-${Date.now()}`,
+    id: uuidv4(),
     contractId,
     requestNumber: nextNumber,
     requestDate: new Date().toISOString(),

@@ -4,6 +4,7 @@
  */
 
 import { supabase } from "./supabase"
+import { v4 as uuidv4 } from "uuid"
 
 export interface Client {
   id: string
@@ -151,7 +152,7 @@ export function saveClient(client: Partial<Client>): Client {
   const clientsJson = localStorage.getItem("clients")
   const clients = clientsJson ? JSON.parse(clientsJson) : {}
 
-  const clientId = client.id || `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  const clientId = client.id || uuidv4()
   const now = new Date().toISOString()
 
   const savedClient: Client = {

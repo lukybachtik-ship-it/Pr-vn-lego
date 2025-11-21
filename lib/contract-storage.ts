@@ -1,5 +1,6 @@
 import type { ContractBlock } from "@/types/contract"
 import { supabase } from "./supabase"
+import { v4 as uuidv4 } from "uuid"
 
 export interface SavedContract {
   id: string
@@ -125,7 +126,7 @@ export function finalizeContract(
     throw new Error("Cannot finalize contract on server")
   }
 
-  const id = `contract-${Date.now()}`
+  const id = uuidv4()
   const now = new Date().toISOString()
 
   const contract: SavedContract = {

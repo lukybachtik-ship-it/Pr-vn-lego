@@ -1,4 +1,5 @@
 import { supabase } from "./supabase"
+import { v4 as uuidv4 } from "uuid"
 
 export interface Invoice {
   id: string
@@ -149,7 +150,7 @@ export function createInvoice(
   clientId?: string,
 ): Invoice {
   const invoice: Invoice = {
-    id: `invoice-${Date.now()}`,
+    id: uuidv4(),
     type,
     from,
     clientId,

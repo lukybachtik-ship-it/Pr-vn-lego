@@ -4,6 +4,7 @@
  */
 
 import { supabase } from "./supabase"
+import { v4 as uuidv4 } from "uuid"
 
 export interface TimeEntry {
   id: string
@@ -122,7 +123,7 @@ export function createManualTimeEntry(
   const startTime = new Date(now.getTime() - durationMinutes * 60000) // Zpětné vypočítání času
 
   const entry: TimeEntry = {
-    id: `time-${Date.now()}`,
+    id: uuidv4(),
     clientId,
     contractId,
     description,
@@ -162,7 +163,7 @@ export function startTimeEntry(
   }
 
   const entry: TimeEntry = {
-    id: `time-${Date.now()}`,
+    id: uuidv4(),
     clientId,
     contractId,
     description,
