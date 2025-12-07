@@ -10,6 +10,7 @@ import { formatCurrency } from "@/lib/cash-flow"
 import { getDefaultBankAccount, formatAccountNumber } from "@/lib/bank-accounts"
 import { generateQRCode, generateInvoiceNumber } from "@/lib/qr-payment"
 import type { BankAccount } from "@/lib/bank-accounts"
+import jsPDF from "jspdf"
 
 interface QRInvoicePreviewProps {
   invoice: Invoice
@@ -59,6 +60,106 @@ export function QRInvoicePreview({ invoice, open, onOpenChange }: QRInvoicePrevi
 
   const handlePrint = () => {
     window.print()
+  }
+
+  const handleDownloadPDF = async () => {
+    try {
+      const pdf = new jsPDF()
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      let yPos = 20
+
+      // Title
+      pdf.setFontSize(20)
+      pdf.setFont("helvetica", "bold")
+      pdf.text("FAKTURA", pageWidth / 2, yPos, { align: "center" })
+      yPos += 15
+
+      // Invoice details
+      pdf.setFontSize(10)
+      pdf.setFont("helvetica", "normal")
+      if (invoice.invoiceNumber) {
+        pdf.text(`Číslo faktury: ${invoice.invoiceNumber}`, 20, yPos)
+        yPos += 6
+      }
+      if (invoice.variableSymbol) {
+        pdf.text(`Variabilní symbol: ${invoice.variableSymbol}`, 20, yPos)
+        yPos += 6
+      }
+      pdf.text(`Datum vystavení: ${new Date().toLocaleDateString("cs-CZ")}`, 20, yPos)
+      yPos += 15
+
+      // From/To
+      pdf.setFont("helvetica", "bold")
+      pdf.text("Dodavatel", 20, yPos)
+      pdf.text("Odběratel", 120, yPos)
+      yPos += 6
+
+      pdf.setFont("helvetica", "normal")
+      pdf.text("Vaše firma", 20, yPos)
+      pdf.text(invoice.from, 120, yPos)
+      yPos += 6
+
+      if (bankAccount) {
+        pdf.text(`Účet: ${formatAccountNumber(bankAccount.accountNumber, bankAccount.bankCode)}`, 20, yPos)
+        yPos += 6
+        if (bankAccount.iban) {
+          pdf.text(`IBAN: ${bankAccount.iban}`, 20, yPos)
+          yPos += 6
+        }
+      }
+      yPos += 10
+
+      // Items table
+      pdf.setFont("helvetica", "bold")
+      pdf.text("Popis", 20, yPos)
+      if (invoice.items && invoice.items.length > 0) {
+        pdf.text("Množství", 100, yPos)
+        pdf.text("Cena/jedn.", 130, yPos)
+      }
+      pdf.text("Částka", 170, yPos, { align: "right" })
+      yPos += 8
+
+      pdf.setFont("helvetica", "normal")
+      if (invoice.items && invoice.items.length > 0) {
+        invoice.items.forEach((item) => {
+          const typeLabel = item.type === "service" ? "Služba" : item.type === "material" ? "Materiál" : "Cestovné"
+          pdf.text(`${item.description} (${typeLabel})`, 20, yPos)
+          pdf.text(`${item.quantity} ${item.unit}`, 100, yPos)
+          pdf.text(formatCurrency(item.unitPrice), 130, yPos)
+          pdf.text(formatCurrency(item.total), 170, yPos, { align: "right" })
+          yPos += 6
+        })
+      } else {
+        pdf.text(invoice.description || "Faktura", 20, yPos)
+        pdf.text(formatCurrency(invoice.amount), 170, yPos, { align: "right" })
+        yPos += 6
+      }
+      yPos += 10
+
+      // Total
+      pdf.setFontSize(14)
+      pdf.setFont("helvetica", "bold")
+      pdf.text("Celkem k úhradě:", 20, yPos)
+      pdf.text(formatCurrency(invoice.amount), 170, yPos, { align: "right" })
+      yPos += 8
+
+      pdf.setFontSize(10)
+      pdf.setFont("helvetica", "normal")
+      pdf.text(`Datum splatnosti: ${new Date(invoice.dueDate).toLocaleDateString("cs-CZ")}`, 20, yPos)
+      yPos += 15
+
+      // QR Code
+      if (qrCodeDataUrl && invoice.type === "income") {
+        pdf.text("Zaplaťte snadno naskenováním QR kódu:", pageWidth / 2, yPos, { align: "center" })
+        yPos += 8
+        pdf.addImage(qrCodeDataUrl, "PNG", pageWidth / 2 - 30, yPos, 60, 60)
+      }
+
+      pdf.save(`faktura-${invoice.invoiceNumber || invoice.id}.pdf`)
+    } catch (error) {
+      console.error("Failed to generate PDF:", error)
+      alert("Nepodařilo se vygenerovat PDF")
+    }
   }
 
   const handleDownloadQR = () => {
@@ -219,14 +320,18 @@ export function QRInvoicePreview({ invoice, open, onOpenChange }: QRInvoicePrevi
 
           {/* Actions */}
           <div className="flex gap-2 print:hidden">
-            <Button onClick={handlePrint} className="flex-1">
+            <Button onClick={handleDownloadPDF} className="flex-1">
+              <Download className="w-4 h-4 mr-2" />
+              Stáhnout PDF
+            </Button>
+            <Button onClick={handlePrint} variant="secondary" className="flex-1">
               <Printer className="w-4 h-4 mr-2" />
-              Tisknout / Uložit jako PDF
+              Tisknout
             </Button>
             {qrCodeDataUrl && (
-              <Button onClick={handleDownloadQR} variant="secondary" className="flex-1">
+              <Button onClick={handleDownloadQR} variant="outline">
                 <Download className="w-4 h-4 mr-2" />
-                Stáhnout QR
+                QR kód
               </Button>
             )}
             <Button onClick={() => onOpenChange(false)} variant="outline">

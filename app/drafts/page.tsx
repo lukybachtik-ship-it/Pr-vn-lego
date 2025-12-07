@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Trash2, Play, Copy, Plus } from "lucide-react"
 import { ContractTypeSelector } from "@/components/contract-type-selector"
+import { AppHeader } from "@/components/app-header"
 
 interface Draft {
   id: string
@@ -177,9 +178,11 @@ export default function DraftsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8 flex items-center justify-between">
+    <>
+      <AppHeader title="Koncepty" />
+      <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-4 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold mb-2">Moje koncepty</h1>
             <p className="text-muted-foreground">Všechny vaše uložené a rozpracované smlouvy</p>
@@ -253,6 +256,7 @@ export default function DraftsPage() {
           </div>
         </div>
       )}
-    </main>
+      </main>
+    </>
   )
 }

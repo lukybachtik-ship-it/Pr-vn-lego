@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, Building2, User, Phone, Mail, FileText, Receipt, Home } from "lucide-react"
+import { Search, Plus, Building2, User, Phone, Mail, FileText, Receipt } from "lucide-react"
 import Link from "next/link"
 import { getAllClients, searchClients, getClientHistory, type Client } from "@/lib/clients"
+import { AppHeader } from "@/components/app-header"
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([])
@@ -51,24 +52,24 @@ export default function ClientsPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <p className="text-muted-foreground">Načítání klientů...</p>
+      <>
+        <AppHeader title="Klienti" />
+        <div className="container mx-auto p-6">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <p className="text-muted-foreground">Načítání klientů...</p>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/">
-            <Button variant="ghost" size="icon">
-              <Home className="w-5 h-5" />
-            </Button>
-          </Link>
+    <>
+      <AppHeader title="Klienti" />
+      <div className="container mx-auto p-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold">Klienti</h1>
             <p className="text-muted-foreground mt-1">Adresář všech vašich obchodních kontaktů</p>
@@ -237,6 +238,7 @@ export default function ClientsPage() {
           })}
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }

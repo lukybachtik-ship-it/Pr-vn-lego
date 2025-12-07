@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { AlertCircle } from "lucide-react"
 import type { ContractBlock } from "@/types/contract"
+import { AppHeader } from "@/components/app-header"
 
 function ReviewContent() {
   const router = useRouter()
@@ -30,8 +31,10 @@ function ReviewContent() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-background p-4 md:p-8">
-        <div className="max-w-2xl mx-auto">
+      <>
+        <AppHeader title="Náhled smlouvy" />
+        <main className="min-h-screen bg-background p-4 md:p-8">
+          <div className="max-w-2xl mx-auto">
           <Card className="border-destructive bg-destructive/5 p-6">
             <div className="flex items-start gap-4">
               <AlertCircle className="w-6 h-6 text-destructive flex-shrink-0 mt-1" />
@@ -43,11 +46,17 @@ function ReviewContent() {
             </div>
           </Card>
         </div>
-      </main>
+        </main>
+      </>
     )
   }
 
-  return <ContractReview contractType={type} blocks={blocks} />
+  return (
+    <>
+      <AppHeader title="Náhled smlouvy" />
+      <ContractReview contractType={type} blocks={blocks} />
+    </>
+  )
 }
 
 export default function ReviewPage() {

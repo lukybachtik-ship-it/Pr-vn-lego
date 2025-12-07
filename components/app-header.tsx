@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, Menu, Home, User, LogOut, Settings } from "lucide-react"
+import { ChevronLeft, Menu, Home, User, LogOut, Settings, HelpCircle } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -87,6 +87,11 @@ export function AppHeader({ title, showBack = true, showMenu = true }: AppHeader
                 <DropdownMenuItem onClick={() => router.push("/settings/bank-accounts")}>
                   Bankovní účty
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push("/help")}>
+                  <HelpCircle className="w-4 h-4 mr-2" />
+                  Nápověda
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -110,6 +115,7 @@ export function AppHeader({ title, showBack = true, showMenu = true }: AppHeader
                 Nastavení profilu
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push("/help")}>
+                <HelpCircle className="w-4 h-4 mr-2" />
                 Nápověda
               </DropdownMenuItem>
               <DropdownMenuSeparator />

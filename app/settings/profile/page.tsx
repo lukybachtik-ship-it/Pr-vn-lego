@@ -76,16 +76,24 @@ export default function ProfileSettingsPage() {
 
       // Upload new logo if selected
       if (logoFile) {
+        console.log("Uploading logo file:", logoFile.name, logoFile.size, "bytes")
         const uploadedUrl = await uploadLogo(logoFile)
         if (uploadedUrl) {
+          console.log("Logo uploaded successfully:", uploadedUrl)
           // Delete old logo if exists
           if (profile.logoUrl) {
+            console.log("Deleting old logo:", profile.logoUrl)
             await deleteLogo(profile.logoUrl)
           }
           logoUrl = uploadedUrl
+        } else {
+          console.error("Logo upload returned null")
+          alert("Nepodařilo se nahrát logo. Zkontrolujte, zda máte vytvořený veřejný bucket 'logos' v Supabase Storage.")
+          return
         }
       }
 
+      console.log("Saving profile with logo URL:", logoUrl)
       const savedProfile = await saveUserProfile({
         ...profile,
         logoUrl,
@@ -97,11 +105,11 @@ export default function ProfileSettingsPage() {
         setLogoFile(null)
         alert("Profil byl úspěšně uložen")
       } else {
-        alert("Nepodařilo se uložit profil")
+        alert("Nepodařilo se uložit profil. Zkontrolujte Supabase konfiguraci.")
       }
     } catch (error) {
       console.error("Failed to save profile:", error)
-      alert("Chyba při ukládání profilu")
+      alert(`Chyba při ukládání profilu: ${error instanceof Error ? error.message : "Neznámá chyba"}`)
     } finally {
       setIsSaving(false)
     }

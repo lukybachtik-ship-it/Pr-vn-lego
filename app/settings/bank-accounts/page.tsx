@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Plus, Trash2, Star, CreditCard } from "lucide-react"
+import { Plus, Trash2, Star, CreditCard } from "lucide-react"
 import {
   getAllBankAccounts,
   saveBankAccount,
@@ -16,6 +16,7 @@ import {
   setDefaultBankAccount,
   type BankAccount,
 } from "@/lib/bank-accounts"
+import { AppHeader } from "@/components/app-header"
 
 export default function BankAccountsPage() {
   const router = useRouter()
@@ -77,25 +78,21 @@ export default function BankAccountsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => router.push("/")}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Zpět
-            </Button>
+    <>
+      <AppHeader title="Bankovní účty" />
+      <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">Bankovní účty</h1>
               <p className="text-muted-foreground">Správa účtů pro QR platby</p>
             </div>
+            <Button onClick={() => setShowAddDialog(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Přidat účet
+            </Button>
           </div>
-          <Button onClick={() => setShowAddDialog(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Přidat účet
-          </Button>
-        </div>
 
         {/* Accounts List */}
         <div className="grid gap-4">
@@ -184,10 +181,10 @@ export default function BankAccountsPage() {
             </ul>
           </CardContent>
         </Card>
-      </div>
+        </div>
 
-      {/* Add Account Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        {/* Add Account Dialog */}
+        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Přidat bankovní účet</DialogTitle>
@@ -265,7 +262,8 @@ export default function BankAccountsPage() {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
-    </main>
+        </Dialog>
+      </main>
+    </>
   )
 }
