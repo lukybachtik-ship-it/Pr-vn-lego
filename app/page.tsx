@@ -101,6 +101,10 @@ export default function Home() {
                 <Plus className="w-5 h-5 mr-2" />
                 Nová smlouva
               </Button>
+              <Button size="lg" onClick={() => router.push("/cash-flow")} className="text-lg">
+                <Plus className="w-5 h-5 mr-2" />
+                Nová faktura
+              </Button>
               <Button size="lg" variant="outline" onClick={() => router.push("/drafts")}>
                 <FileText className="w-5 h-5 mr-2" />
                 Moje koncepty
@@ -194,10 +198,20 @@ export default function Home() {
                           </div>
                         )}
 
-                        <Button size="sm" variant="outline" className="w-full mt-2">
-                          <Eye className="w-4 h-4 mr-2" />
-                          Zobrazit detail
-                        </Button>
+                        <div className="flex gap-2 mt-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              router.push(`/contract/${contract.id}`)
+                            }}
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            Detail
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

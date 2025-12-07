@@ -14,6 +14,8 @@ import { getContract, deleteContract } from "@/lib/contract-storage"
 import { ContractTimelineComponent } from "@/components/contract-timeline"
 import { HandoverProtocolGenerator } from "@/components/handover-protocol-generator"
 import { CalendarExportDialog } from "@/components/calendar-export-dialog"
+import { ContractExporter } from "@/components/contract-exporter"
+import { AppHeader } from "@/components/app-header"
 import { extractContractDeadlines } from "@/lib/contract-timeline"
 import { generateInvoiceFromContract } from "@/lib/contract-to-invoice"
 import {
@@ -130,16 +132,21 @@ export default function ContractDetailPage() {
     loadChangeRequests(contract.id)
   }
 
-  const handleDownloadAmendment = (request: ChangeRequest) => {
+  const handleDownloadAmendment = async (request: ChangeRequest) => {
     if (!contract) return
-    const text = generateAmendmentText(request, contract.name)
-    const blob = new Blob([text], { type: "text/plain;charset=utf-8" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = `${contract.name}_Dodatek_${request.requestNumber}.txt`
-    link.click()
-    URL.revokeObjectURL(url)
+    try {
+      const { generateAmendmentDocx } = await import("@/lib/change-requests")
+      const blob = await generateAmendmentDocx(request, contract.name)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `${contract.name}_Dodatek_${request.requestNumber}.docx`
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error("Failed to generate amendment:", error)
+      alert("Nepodařilo se vygenerovat dodatek")
+    }
   }
 
   const getChangeRequestStatusBadge = (status: ChangeRequest["status"]) => {
@@ -311,15 +318,13 @@ export default function ContractDetailPage() {
   const contractText = renderContractText()
 
   return (
-    <main className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <Button variant="ghost" size="sm" onClick={() => router.push("/")} className="mb-4">
-            <ChevronLeft className="w-4 h-4 mr-2" />
-            Zpět na dashboard
-          </Button>
-          <div className="flex items-start justify-between">
+    <>
+      <AppHeader title={contract.name} />
+      <main className="min-h-screen bg-background p-4 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-start justify-between">
             <div>
               <h1 className="text-4xl font-bold mb-2">{contract.name}</h1>
               <p className="text-muted-foreground">
@@ -358,6 +363,13 @@ export default function ContractDetailPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Contract Exporter */}
+            <ContractExporter
+              blocks={contract.blocks}
+              contractText={contractText}
+              contractType={contract.type}
+            />
           </div>
 
           {/* Side Panel */}
@@ -572,6 +584,7 @@ export default function ContractDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </main>
+      </main>
+    </>
   )
 }

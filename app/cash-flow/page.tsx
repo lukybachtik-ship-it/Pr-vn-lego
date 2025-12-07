@@ -34,6 +34,7 @@ import {
   getCurrentMonthInvoices,
   formatCurrency,
   type Invoice,
+  type InvoiceItem,
 } from "@/lib/cash-flow"
 import { getAllClients, type Client } from "@/lib/clients"
 import { ClientSelector } from "@/components/client-selector"
@@ -41,6 +42,8 @@ import { QRInvoicePreview } from "@/components/qr-invoice-preview"
 import { VATLimitIndicator } from "@/components/vat-limit-indicator"
 import { generateInvoiceNumber } from "@/lib/qr-payment"
 import { getDefaultBankAccount } from "@/lib/bank-accounts"
+import { AppHeader } from "@/components/app-header"
+import { InvoiceItemsEditor } from "@/components/invoice-items-editor"
 
 export default function CashFlowPage() {
   const router = useRouter()
@@ -64,6 +67,8 @@ export default function CashFlowPage() {
   const [amount, setAmount] = useState("")
   const [dueDate, setDueDate] = useState(new Date().toISOString().split("T")[0])
   const [description, setDescription] = useState("")
+  const [useLineItems, setUseLineItems] = useState(false)
+  const [lineItems, setLineItems] = useState<InvoiceItem[]>([])
 
   useEffect(() => {
     loadInvoices()
@@ -110,14 +115,23 @@ export default function CashFlowPage() {
   }
 
   const handleAddInvoice = () => {
+    const finalAmount = useLineItems
+      ? lineItems.reduce((sum, item) => sum + item.total, 0)
+      : parseFloat(amount)
+
     const invoice = createInvoice(
       type,
       from,
-      parseFloat(amount),
+      finalAmount,
       dueDate,
       description || undefined,
       selectedClient?.id,
     )
+
+    // Add line items if using itemized billing
+    if (useLineItems && lineItems.length > 0) {
+      invoice.items = lineItems
+    }
 
     // Add invoice number and bank account for QR payments
     if (type === "income") {
@@ -140,6 +154,16 @@ export default function CashFlowPage() {
     setDescription("")
     setDueDate(new Date().toISOString().split("T")[0])
     setType("income")
+    setUseLineItems(false)
+    setLineItems([])
+  }
+
+  const handleLineItemsChange = (items: InvoiceItem[]) => {
+    setLineItems(items)
+  }
+
+  const handleLineItemsTotalChange = (total: number) => {
+    setAmount(total.toString())
   }
 
   const handleShowQR = (invoice: Invoice) => {
@@ -220,15 +244,13 @@ export default function CashFlowPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <Button variant="ghost" size="sm" onClick={() => router.push("/")} className="mb-4">
-            <ChevronLeft className="w-4 h-4 mr-2" />
-            Zpět na domovskou stránku
-          </Button>
-          <div className="flex items-start justify-between">
+    <>
+      <AppHeader title="Palubní Deska Peněz" />
+      <main className="min-h-screen bg-background p-4 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-start justify-between">
             <div>
               <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
                 <Wallet className="w-10 h-10 text-primary" />
@@ -506,15 +528,38 @@ export default function CashFlowPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="amount">Částka (Kč)</Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder="např. 50000"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="useLineItems"
+                  checked={useLineItems}
+                  onChange={(e) => setUseLineItems(e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <Label htmlFor="useLineItems" className="font-normal cursor-pointer">
+                  Použít položkovou fakturu (služby, materiál, cestovné)
+                </Label>
+              </div>
             </div>
+
+            {!useLineItems ? (
+              <div className="space-y-2">
+                <Label htmlFor="amount">Částka (Kč)</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="např. 50000"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
+              </div>
+            ) : (
+              <InvoiceItemsEditor
+                items={lineItems}
+                onChange={handleLineItemsChange}
+                onTotalChange={handleLineItemsTotalChange}
+              />
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="dueDate">Datum splatnosti</Label>
@@ -537,7 +582,10 @@ export default function CashFlowPage() {
             <Button variant="outline" onClick={() => setShowAddDialog(false)}>
               Zrušit
             </Button>
-            <Button onClick={handleAddInvoice} disabled={!from || !amount || parseFloat(amount) <= 0}>
+            <Button
+              onClick={handleAddInvoice}
+              disabled={!from || (!useLineItems && (!amount || parseFloat(amount) <= 0)) || (useLineItems && lineItems.length === 0)}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Přidat
             </Button>
@@ -560,6 +608,7 @@ export default function CashFlowPage() {
           onOpenChange={setShowQRPreview}
         />
       )}
-    </main>
+      </main>
+    </>
   )
 }

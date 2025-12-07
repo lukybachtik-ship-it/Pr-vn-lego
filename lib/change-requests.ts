@@ -191,7 +191,7 @@ export function deleteChangeRequest(requestId: string): void {
 }
 
 /**
- * Generate amendment text
+ * Generate amendment text (kept for backwards compatibility)
  */
 export function generateAmendmentText(request: ChangeRequest, contractName: string): string {
   const date = new Date(request.requestDate).toLocaleDateString("cs-CZ")
@@ -220,6 +220,173 @@ export function generateAmendmentText(request: ChangeRequest, contractName: stri
   text += `Podpis 1. strany              Podpis 2. strany\n`
 
   return text
+}
+
+/**
+ * Generate amendment document as DOCX
+ */
+export async function generateAmendmentDocx(request: ChangeRequest, contractName: string): Promise<Blob> {
+  const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle } = await import("docx")
+
+  const date = new Date(request.requestDate).toLocaleDateString("cs-CZ")
+
+  const doc = new Document({
+    sections: [
+      {
+        children: [
+          // Title
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `DODATEK Č. ${request.requestNumber} KE SMLOUVĚ`,
+                bold: true,
+                size: 32,
+              }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 200 },
+          }),
+
+          // Contract name
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: contractName,
+                bold: true,
+                size: 28,
+              }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 400 },
+          }),
+
+          // Separator
+          new Paragraph({
+            children: [new TextRun({ text: "─".repeat(60) })],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 400 },
+          }),
+
+          // Introduction
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Dne ${date} se smluvní strany dohodly na následujících změnách:`,
+              }),
+            ],
+            spacing: { after: 300 },
+          }),
+
+          // Subject of change
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "PŘEDMĚT ZMĚNY:",
+                bold: true,
+              }),
+            ],
+            spacing: { before: 200, after: 100 },
+          }),
+
+          new Paragraph({
+            children: [new TextRun({ text: request.description })],
+            spacing: { after: 300 },
+          }),
+
+          // Price increase (if any)
+          ...(request.priceIncrease > 0
+            ? [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: "FINANČNÍ DOPAD:",
+                      bold: true,
+                    }),
+                  ],
+                  spacing: { before: 200, after: 100 },
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: `Původní cena se navyšuje o ${request.priceIncrease.toLocaleString("cs-CZ")} Kč`,
+                    }),
+                  ],
+                  spacing: { after: 300 },
+                }),
+              ]
+            : []),
+
+          // Deadline extension (if any)
+          ...(request.deadlineExtensionDays > 0
+            ? [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: "TERMÍN:",
+                      bold: true,
+                    }),
+                  ],
+                  spacing: { before: 200, after: 100 },
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: `Původní termín dokončení se prodlužuje o ${request.deadlineExtensionDays} ${request.deadlineExtensionDays === 1 ? "den" : request.deadlineExtensionDays <= 4 ? "dny" : "dnů"}`,
+                    }),
+                  ],
+                  spacing: { after: 300 },
+                }),
+              ]
+            : []),
+
+          // Separator
+          new Paragraph({
+            children: [new TextRun({ text: "─".repeat(60) })],
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 400, after: 400 },
+          }),
+
+          // Signatures
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "PODPISY STRAN:",
+                bold: true,
+              }),
+            ],
+            spacing: { after: 400 },
+          }),
+
+          new Paragraph({
+            children: [new TextRun({ text: " " })],
+            spacing: { after: 400 },
+          }),
+
+          new Paragraph({
+            children: [new TextRun({ text: " " })],
+            spacing: { after: 400 },
+          }),
+
+          new Paragraph({
+            children: [
+              new TextRun({ text: "________________________        " }),
+              new TextRun({ text: "        ________________________" }),
+            ],
+            spacing: { after: 100 },
+          }),
+
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Podpis 1. strany                " }),
+              new TextRun({ text: "                Podpis 2. strany" }),
+            ],
+          }),
+        ],
+      },
+    ],
+  })
+
+  return await Packer.toBlob(doc)
 }
 
 /**

@@ -253,13 +253,71 @@ export default function ClientDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Notes */}
+          {/* Billing Configuration */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Poznámky</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Receipt className="w-5 h-5" />
+                Fakturace
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground italic">Poznámky nejsou podporovány</p>
+            <CardContent className="space-y-4">
+              {isEditing ? (
+                <>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Výchozí hodinová sazba (Kč/h)</label>
+                    <Input
+                      type="number"
+                      placeholder="např. 1000"
+                      value={editedClient.defaultHourlyRate || ""}
+                      onChange={(e) =>
+                        setEditedClient({
+                          ...editedClient,
+                          defaultHourlyRate: e.target.value ? parseFloat(e.target.value) : undefined,
+                        })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Typ fakturace</label>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={editedClient.billingType || ""}
+                      onChange={(e) =>
+                        setEditedClient({
+                          ...editedClient,
+                          billingType: e.target.value as "hourly" | "flat" | undefined,
+                        })
+                      }
+                    >
+                      <option value="">Nevyplněno</option>
+                      <option value="hourly">Hodinová sazba</option>
+                      <option value="flat">Paušál</option>
+                    </select>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Hodinová sazba</p>
+                    {client.defaultHourlyRate ? (
+                      <p className="text-lg font-semibold">{client.defaultHourlyRate.toLocaleString("cs-CZ")} Kč/h</p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic">Není nastavena</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Typ fakturace</p>
+                    {client.billingType ? (
+                      <Badge variant="outline">
+                        {client.billingType === "hourly" ? "Hodinová sazba" : "Paušál"}
+                      </Badge>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic">Není nastaven</p>
+                    )}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>

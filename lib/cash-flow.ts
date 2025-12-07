@@ -1,11 +1,22 @@
 import { supabase } from "./supabase"
 import { v4 as uuidv4 } from "uuid"
 
+export interface InvoiceItem {
+  id: string
+  type: "service" | "material" | "travel" // Služba (čas), Materiál (ks/m), Cestovné (km)
+  description: string
+  quantity: number
+  unit: string // hod, ks, m, km, etc.
+  unitPrice: number
+  total: number
+}
+
 export interface Invoice {
   id: string
   type: "income" | "expense"
   from: string // Kdo platí / Komu platím
   clientId?: string // ID klienta z databáze klientů
+  contractId?: string // ID smlouvy (pokud je faktura vystavena na základě smlouvy)
   amount: number
   dueDate: string
   isPaid: boolean
@@ -16,6 +27,8 @@ export interface Invoice {
   invoiceNumber?: string // číslo faktury
   variableSymbol?: string // variabilní symbol
   bankAccountId?: string // ID bankovního účtu pro platbu
+  // Line items
+  items?: InvoiceItem[] // Položková fakturace
 }
 
 export interface CashFlowSummary {

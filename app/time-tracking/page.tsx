@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Play, StopCircle, Clock, Trash2, DollarSign, FileText, Plus } from "lucide-react"
+import { ArrowLeft, Play, StopCircle, Clock, Trash2, DollarSign, FileText, Plus, Users, ChevronLeft, ChevronRight } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   getAllTimeEntries,
@@ -25,6 +25,7 @@ import { getFinalizedContracts } from "@/lib/contract-storage"
 import type { TimeEntry } from "@/lib/time-tracking"
 import type { Client } from "@/lib/clients"
 import type { SavedContract } from "@/lib/contract-storage"
+import { AppHeader } from "@/components/app-header"
 
 export default function TimeTrackingPage() {
   const router = useRouter()
@@ -53,6 +54,10 @@ export default function TimeTrackingPage() {
   const [manualHourlyRate, setManualHourlyRate] = useState("1000")
   const [manualClientId, setManualClientId] = useState("")
   const [manualContractId, setManualContractId] = useState("")
+
+  // Client sidebar state
+  const [showClientSidebar, setShowClientSidebar] = useState(true)
+  const [selectedSidebarClientId, setSelectedSidebarClientId] = useState<string | null>(null)
 
   useEffect(() => {
     loadData()
@@ -84,6 +89,16 @@ export default function TimeTrackingPage() {
     setClients(getAllClients())
     setContracts(getFinalizedContracts())
     setStats(getTimeTrackingStats())
+  }
+
+  const handleSidebarClientClick = (clientId: string) => {
+    setSelectedSidebarClientId(clientId)
+    setSelectedClientId(clientId)
+    // Auto-populate hourly rate from client's default
+    const client = clients.find((c) => c.id === clientId)
+    if (client?.defaultHourlyRate) {
+      setHourlyRate(client.defaultHourlyRate.toString())
+    }
   }
 
   const handleStart = () => {
@@ -174,9 +189,35 @@ export default function TimeTrackingPage() {
       return sum + hours * (e.hourlyRate || 0)
     }, 0)
 
-    const description = `Práce za ${unbilled.length} ${unbilled.length === 1 ? "záznam" : unbilled.length <= 4 ? "záznamy" : "záznamů"}`
+    // Create detailed description from unbilled entries
+    const descriptions = unbilled.map(e => e.description).filter(d => d)
+    const uniqueDescriptions = [...new Set(descriptions)]
+    const detailedDescription = uniqueDescriptions.length > 0
+      ? uniqueDescriptions.join(", ")
+      : `Práce za ${unbilled.length} ${unbilled.length === 1 ? "záznam" : unbilled.length <= 4 ? "záznamy" : "záznamů"}`
 
-    router.push(`/cash-flow?prefill=time&amount=${totalAmount}&description=${encodeURIComponent(description)}`)
+    // Get first client ID if all entries are for same client
+    const clientIds = unbilled.map(e => e.clientId).filter(id => id)
+    const uniqueClientIds = [...new Set(clientIds)]
+    const clientId = uniqueClientIds.length === 1 ? uniqueClientIds[0] : undefined
+
+    // Get client name if we have one consistent client
+    const from = clientId ? getClientName(clientId) : ""
+
+    const params = new URLSearchParams({
+      prefill: "time",
+      amount: totalAmount.toString(),
+      description: detailedDescription,
+    })
+
+    if (clientId) {
+      params.append("clientId", clientId)
+    }
+    if (from) {
+      params.append("from", from)
+    }
+
+    router.push(`/cash-flow?${params.toString()}`)
   }
 
   const getClientName = (clientId?: string) => {
@@ -192,25 +233,73 @@ export default function TimeTrackingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => router.push("/")}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Zpět
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Time Tracking</h1>
-              <p className="text-muted-foreground">Evidence práce a vyfakturování hodin</p>
-            </div>
+    <>
+      <AppHeader title="Time Tracking" />
+      <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-6">
+        <div className="max-w-7xl mx-auto flex gap-6">
+          {/* Client Sidebar */}
+          <div className={`transition-all duration-300 ${showClientSidebar ? "w-64" : "w-12"} flex-shrink-0`}>
+            <Card className="sticky top-6 h-fit">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  {showClientSidebar && (
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <Users className="w-4 h-4" />
+                      Klienti
+                    </CardTitle>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowClientSidebar(!showClientSidebar)}
+                    className="h-8 w-8 p-0"
+                  >
+                    {showClientSidebar ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </CardHeader>
+              {showClientSidebar && (
+                <CardContent className="space-y-1 max-h-[calc(100vh-200px)] overflow-y-auto">
+                  <Button
+                    variant={selectedSidebarClientId === null ? "secondary" : "ghost"}
+                    size="sm"
+                    className="w-full justify-start text-xs"
+                    onClick={() => {
+                      setSelectedSidebarClientId(null)
+                      setSelectedClientId("")
+                    }}
+                  >
+                    Všichni
+                  </Button>
+                  {clients.map((client) => (
+                    <Button
+                      key={client.id}
+                      variant={selectedSidebarClientId === client.id ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start text-xs"
+                      onClick={() => handleSidebarClientClick(client.id)}
+                    >
+                      {client.name}
+                    </Button>
+                  ))}
+                </CardContent>
+              )}
+            </Card>
           </div>
-          <Button onClick={() => setShowManualDialog(true)} variant="outline">
-            <Plus className="w-4 h-4 mr-2" />
-            Přidat čas ručně
-          </Button>
-        </div>
+
+          {/* Main Content */}
+          <div className="flex-1 space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold">Time Tracking</h1>
+                <p className="text-muted-foreground">Evidence práce a vyfakturování hodin</p>
+              </div>
+              <Button onClick={() => setShowManualDialog(true)} variant="outline">
+                <Plus className="w-4 h-4 mr-2" />
+                Přidat čas ručně
+              </Button>
+            </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -290,12 +379,23 @@ export default function TimeTrackingPage() {
                       id="client"
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                       value={selectedClientId}
-                      onChange={(e) => setSelectedClientId(e.target.value)}
+                      onChange={(e) => {
+                        const clientId = e.target.value
+                        setSelectedClientId(clientId)
+                        // Auto-populate hourly rate from client's default
+                        if (clientId) {
+                          const client = clients.find((c) => c.id === clientId)
+                          if (client?.defaultHourlyRate) {
+                            setHourlyRate(client.defaultHourlyRate.toString())
+                          }
+                        }
+                      }}
                     >
                       <option value="">Vyberte klienta</option>
                       {clients.map((client) => (
                         <option key={client.id} value={client.id}>
                           {client.name}
+                          {client.defaultHourlyRate && ` (${client.defaultHourlyRate} Kč/h)`}
                         </option>
                       ))}
                     </select>
@@ -421,7 +521,8 @@ export default function TimeTrackingPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+          </div>
+        </div>
 
       {/* Manual Entry Dialog */}
       <Dialog open={showManualDialog} onOpenChange={setShowManualDialog}>
@@ -474,12 +575,23 @@ export default function TimeTrackingPage() {
                 id="manualClient"
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={manualClientId}
-                onChange={(e) => setManualClientId(e.target.value)}
+                onChange={(e) => {
+                  const clientId = e.target.value
+                  setManualClientId(clientId)
+                  // Auto-populate hourly rate from client's default
+                  if (clientId) {
+                    const client = clients.find((c) => c.id === clientId)
+                    if (client?.defaultHourlyRate) {
+                      setManualHourlyRate(client.defaultHourlyRate.toString())
+                    }
+                  }
+                }}
               >
                 <option value="">Vyberte klienta</option>
                 {clients.map((client) => (
                   <option key={client.id} value={client.id}>
                     {client.name}
+                    {client.defaultHourlyRate && ` (${client.defaultHourlyRate} Kč/h)`}
                   </option>
                 ))}
               </select>
@@ -537,6 +649,7 @@ export default function TimeTrackingPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </main>
+      </main>
+    </>
   )
 }

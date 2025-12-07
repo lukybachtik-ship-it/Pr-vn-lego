@@ -16,6 +16,8 @@ export interface Client {
   zip?: string
   phone?: string
   email?: string
+  defaultHourlyRate?: number // Default hourly rate in CZK
+  billingType?: "hourly" | "flat" // Billing type: hourly or flat rate
   createdAt: string
 }
 
@@ -56,6 +58,8 @@ async function syncClientToCloud(client: Client) {
       zip: client.zip || null,
       email: client.email || null,
       phone: client.phone || null,
+      default_hourly_rate: client.defaultHourlyRate || null,
+      billing_type: client.billingType || null,
       created_at: client.createdAt,
     } as any)
     if (error) {
@@ -98,6 +102,8 @@ export async function loadClientsFromCloud() {
         zip: c.zip || undefined,
         email: c.email || undefined,
         phone: c.phone || undefined,
+        defaultHourlyRate: c.default_hourly_rate || undefined,
+        billingType: c.billing_type || undefined,
         createdAt: c.created_at,
       }
     })
