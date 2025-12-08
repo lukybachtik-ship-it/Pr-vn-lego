@@ -10,7 +10,13 @@ import { formatCurrency } from "@/lib/cash-flow"
 import { getDefaultBankAccount, formatAccountNumber } from "@/lib/bank-accounts"
 import { generateQRCode, generateInvoiceNumber } from "@/lib/qr-payment"
 import type { BankAccount } from "@/lib/bank-accounts"
-import jsPDF from "jspdf"
+import pdfMake from "pdfmake/build/pdfmake"
+import * as pdfFonts from "pdfmake/build/vfs_fonts"
+
+// Initialize pdfMake with fonts
+if (typeof window !== "undefined") {
+  ;(pdfMake as any).vfs = (pdfFonts as any).pdfMake?.vfs || {}
+}
 
 interface QRInvoicePreviewProps {
   invoice: Invoice
@@ -60,98 +66,136 @@ export function QRInvoicePreview({ invoice, open, onOpenChange }: QRInvoicePrevi
 
   const handleDownloadPDF = async () => {
     try {
-      const pdf = new jsPDF()
-      const pageWidth = pdf.internal.pageSize.getWidth()
-      let yPos = 20
+      // Prepare table body
+      const tableBody: any[] = []
 
-      // Title
-      pdf.setFontSize(20)
-      pdf.setFont("helvetica", "bold")
-      pdf.text("FAKTURA", pageWidth / 2, yPos, { align: "center" })
-      yPos += 15
-
-      // Invoice details
-      pdf.setFontSize(10)
-      pdf.setFont("helvetica", "normal")
-      if (invoice.invoiceNumber) {
-        pdf.text(`Číslo faktury: ${invoice.invoiceNumber}`, 20, yPos)
-        yPos += 6
-      }
-      if (invoice.variableSymbol) {
-        pdf.text(`Variabilní symbol: ${invoice.variableSymbol}`, 20, yPos)
-        yPos += 6
-      }
-      pdf.text(`Datum vystavení: ${new Date().toLocaleDateString("cs-CZ")}`, 20, yPos)
-      yPos += 15
-
-      // From/To
-      pdf.setFont("helvetica", "bold")
-      pdf.text("Dodavatel", 20, yPos)
-      pdf.text("Odběratel", 120, yPos)
-      yPos += 6
-
-      pdf.setFont("helvetica", "normal")
-      pdf.text("Vaše firma", 20, yPos)
-      pdf.text(invoice.from, 120, yPos)
-      yPos += 6
-
-      if (bankAccount) {
-        pdf.text(`Účet: ${formatAccountNumber(bankAccount.accountNumber, bankAccount.bankCode)}`, 20, yPos)
-        yPos += 6
-        if (bankAccount.iban) {
-          pdf.text(`IBAN: ${bankAccount.iban}`, 20, yPos)
-          yPos += 6
-        }
-      }
-      yPos += 10
-
-      // Items table
-      pdf.setFont("helvetica", "bold")
-      pdf.text("Popis", 20, yPos)
-      if (invoice.items && invoice.items.length > 0) {
-        pdf.text("Množství", 100, yPos)
-        pdf.text("Cena/jedn.", 130, yPos)
-      }
-      pdf.text("Částka", 170, yPos, { align: "right" })
-      yPos += 8
-
-      pdf.setFont("helvetica", "normal")
       if (invoice.items && invoice.items.length > 0) {
         invoice.items.forEach((item) => {
           const typeLabel = item.type === "service" ? "Služba" : item.type === "material" ? "Materiál" : "Cestovné"
-          pdf.text(`${item.description} (${typeLabel})`, 20, yPos)
-          pdf.text(`${item.quantity} ${item.unit}`, 100, yPos)
-          pdf.text(formatCurrency(item.unitPrice), 130, yPos)
-          pdf.text(formatCurrency(item.total), 170, yPos, { align: "right" })
-          yPos += 6
+          tableBody.push([
+            `${item.description} (${typeLabel})`,
+            `${item.quantity} ${item.unit}`,
+            formatCurrency(item.unitPrice),
+            { text: formatCurrency(item.total), bold: true }
+          ])
         })
       } else {
-        pdf.text(invoice.description || "Faktura", 20, yPos)
-        pdf.text(formatCurrency(invoice.amount), 170, yPos, { align: "right" })
-        yPos += 6
-      }
-      yPos += 10
-
-      // Total
-      pdf.setFontSize(14)
-      pdf.setFont("helvetica", "bold")
-      pdf.text("Celkem k úhradě:", 20, yPos)
-      pdf.text(formatCurrency(invoice.amount), 170, yPos, { align: "right" })
-      yPos += 8
-
-      pdf.setFontSize(10)
-      pdf.setFont("helvetica", "normal")
-      pdf.text(`Datum splatnosti: ${new Date(invoice.dueDate).toLocaleDateString("cs-CZ")}`, 20, yPos)
-      yPos += 15
-
-      // QR Code
-      if (qrCodeDataUrl && invoice.type === "income") {
-        pdf.text("Zaplaťte snadno naskenováním QR kódu:", pageWidth / 2, yPos, { align: "center" })
-        yPos += 8
-        pdf.addImage(qrCodeDataUrl, "PNG", pageWidth / 2 - 30, yPos, 60, 60)
+        tableBody.push([
+          { text: invoice.description || "Faktura", colSpan: 3 },
+          {},
+          {},
+          formatCurrency(invoice.amount)
+        ])
       }
 
-      pdf.save(`faktura-${invoice.invoiceNumber || invoice.id}.pdf`)
+      // Build document definition
+      const docDefinition: any = {
+        content: [
+          { text: "FAKTURA", style: "header", alignment: "center" },
+          { text: " ", margin: [0, 10] },
+
+          // Invoice details
+          invoice.invoiceNumber ? { text: `Číslo faktury: ${invoice.invoiceNumber}`, style: "detail" } : {},
+          invoice.variableSymbol ? { text: `Variabilní symbol: ${invoice.variableSymbol}`, style: "detail" } : {},
+          { text: `Datum vystavení: ${new Date().toLocaleDateString("cs-CZ")}`, style: "detail" },
+          { text: " ", margin: [0, 10] },
+
+          // Supplier and Customer
+          {
+            columns: [
+              {
+                width: "*",
+                stack: [
+                  { text: "Dodavatel", style: "subheader" },
+                  { text: "Vaše firma" },
+                  bankAccount ? { text: `Účet: ${formatAccountNumber(bankAccount.accountNumber, bankAccount.bankCode)}`, fontSize: 9 } : {},
+                  bankAccount?.iban ? { text: `IBAN: ${bankAccount.iban}`, fontSize: 9 } : {}
+                ]
+              },
+              {
+                width: "*",
+                stack: [
+                  { text: "Odběratel", style: "subheader" },
+                  { text: invoice.from }
+                ]
+              }
+            ]
+          },
+          { text: " ", margin: [0, 15] },
+
+          // Items table
+          {
+            table: {
+              headerRows: 1,
+              widths: invoice.items && invoice.items.length > 0 ? ["*", "auto", "auto", "auto"] : ["*", "auto"],
+              body: [
+                invoice.items && invoice.items.length > 0
+                  ? [
+                      { text: "Popis", style: "tableHeader" },
+                      { text: "Množství", style: "tableHeader", alignment: "center" },
+                      { text: "Cena/jedn.", style: "tableHeader", alignment: "right" },
+                      { text: "Částka", style: "tableHeader", alignment: "right" }
+                    ]
+                  : [
+                      { text: "Popis", style: "tableHeader" },
+                      { text: "Částka", style: "tableHeader", alignment: "right" }
+                    ],
+                ...tableBody
+              ]
+            },
+            layout: "lightHorizontalLines"
+          },
+          { text: " ", margin: [0, 10] },
+
+          // Total
+          {
+            columns: [
+              { text: "Celkem k úhradě:", style: "total", width: "*" },
+              { text: formatCurrency(invoice.amount), style: "totalAmount", width: "auto", alignment: "right" }
+            ]
+          },
+          { text: `Datum splatnosti: ${new Date(invoice.dueDate).toLocaleDateString("cs-CZ")}`, style: "detail", margin: [0, 5] },
+
+          // QR Code
+          qrCodeDataUrl && invoice.type === "income" ? { text: " ", margin: [0, 15] } : {},
+          qrCodeDataUrl && invoice.type === "income" ? { text: "Zaplaťte snadno naskenováním QR kódu:", alignment: "center" } : {},
+          qrCodeDataUrl && invoice.type === "income" ? { image: qrCodeDataUrl, width: 150, alignment: "center", margin: [0, 10] } : {}
+        ],
+        styles: {
+          header: {
+            fontSize: 20,
+            bold: true,
+            margin: [0, 0, 0, 10]
+          },
+          subheader: {
+            fontSize: 11,
+            bold: true,
+            margin: [0, 0, 0, 5]
+          },
+          detail: {
+            fontSize: 10,
+            margin: [0, 2]
+          },
+          tableHeader: {
+            bold: true,
+            fontSize: 10,
+            fillColor: "#f0f0f0"
+          },
+          total: {
+            fontSize: 14,
+            bold: true
+          },
+          totalAmount: {
+            fontSize: 16,
+            bold: true
+          }
+        },
+        defaultStyle: {
+          font: "Roboto"
+        }
+      }
+
+      pdfMake.createPdf(docDefinition).download(`faktura-${invoice.invoiceNumber || invoice.id}.pdf`)
     } catch (error) {
       console.error("Failed to generate PDF:", error)
       alert("Nepodařilo se vygenerovat PDF")
