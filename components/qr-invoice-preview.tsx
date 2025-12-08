@@ -10,6 +10,7 @@ import { formatCurrency } from "@/lib/cash-flow"
 import { getDefaultBankAccount, formatAccountNumber } from "@/lib/bank-accounts"
 import { generateQRCode, generateInvoiceNumber } from "@/lib/qr-payment"
 import type { BankAccount } from "@/lib/bank-accounts"
+import { getUserProfile } from "@/lib/user-profile"
 import pdfMake from "pdfmake/build/pdfmake"
 import * as pdfFonts from "pdfmake/build/vfs_fonts"
 
@@ -28,12 +29,32 @@ export function QRInvoicePreview({ invoice, open, onOpenChange }: QRInvoicePrevi
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null)
   const [bankAccount, setBankAccount] = useState<BankAccount | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (open && invoice.type === "income") {
       generateQR()
+      loadLogo()
     }
   }, [open, invoice])
+
+  const loadLogo = async () => {
+    try {
+      const profile = await getUserProfile()
+      if (profile?.logoUrl) {
+        // Convert logo URL to data URL for PDF embedding
+        const response = await fetch(profile.logoUrl)
+        const blob = await response.blob()
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setLogoDataUrl(reader.result as string)
+        }
+        reader.readAsDataURL(blob)
+      }
+    } catch (error) {
+      console.error("Failed to load logo:", error)
+    }
+  }
 
   const generateQR = async () => {
     setIsGenerating(true)
@@ -66,10 +87,79 @@ export function QRInvoicePreview({ invoice, open, onOpenChange }: QRInvoicePrevi
 
   const handleDownloadPDF = async () => {
     try {
-      // Prepare table body
-      const tableBody: any[] = []
+      // Prepare content array
+      const content: any[] = []
 
+      // Add logo if available
+      if (logoDataUrl) {
+        content.push({
+          image: logoDataUrl,
+          width: 100,
+          alignment: "left",
+          margin: [0, 0, 0, 20]
+        })
+      }
+
+      // Add header
+      content.push(
+        { text: "FAKTURA", style: "header", alignment: "center" },
+        { text: " ", margin: [0, 10] }
+      )
+
+      // Invoice details
+      if (invoice.invoiceNumber) {
+        content.push({ text: `Číslo faktury: ${invoice.invoiceNumber}`, style: "detail" })
+      }
+      if (invoice.variableSymbol) {
+        content.push({ text: `Variabilní symbol: ${invoice.variableSymbol}`, style: "detail" })
+      }
+      content.push(
+        { text: `Datum vystavení: ${new Date().toLocaleDateString("cs-CZ")}`, style: "detail" },
+        { text: " ", margin: [0, 10] }
+      )
+
+      // Supplier and Customer
+      const supplierStack: any[] = [
+        { text: "Dodavatel", style: "subheader" },
+        { text: "Vaše firma" }
+      ]
+      if (bankAccount) {
+        supplierStack.push({ text: `Účet: ${formatAccountNumber(bankAccount.accountNumber, bankAccount.bankCode)}`, fontSize: 9 })
+        if (bankAccount.iban) {
+          supplierStack.push({ text: `IBAN: ${bankAccount.iban}`, fontSize: 9 })
+        }
+      }
+
+      content.push(
+        {
+          columns: [
+            {
+              width: "*",
+              stack: supplierStack
+            },
+            {
+              width: "*",
+              stack: [
+                { text: "Odběratel", style: "subheader" },
+                { text: invoice.from }
+              ]
+            }
+          ]
+        },
+        { text: " ", margin: [0, 15] }
+      )
+
+      // Prepare table - different structure for items vs simple invoice
       if (invoice.items && invoice.items.length > 0) {
+        const tableBody: any[] = [
+          [
+            { text: "Popis", style: "tableHeader" },
+            { text: "Množství", style: "tableHeader", alignment: "center" },
+            { text: "Cena/jedn.", style: "tableHeader", alignment: "right" },
+            { text: "Částka", style: "tableHeader", alignment: "right" }
+          ]
+        ]
+
         invoice.items.forEach((item) => {
           const typeLabel = item.type === "service" ? "Služba" : item.type === "material" ? "Materiál" : "Cestovné"
           tableBody.push([
@@ -79,88 +169,61 @@ export function QRInvoicePreview({ invoice, open, onOpenChange }: QRInvoicePrevi
             { text: formatCurrency(item.total), bold: true }
           ])
         })
+
+        content.push({
+          table: {
+            headerRows: 1,
+            widths: ["*", "auto", "auto", "auto"],
+            body: tableBody
+          },
+          layout: "lightHorizontalLines"
+        })
       } else {
-        tableBody.push([
-          { text: invoice.description || "Faktura", colSpan: 3 },
-          {},
-          {},
-          formatCurrency(invoice.amount)
-        ])
+        // Simple table for invoice without items
+        content.push({
+          table: {
+            headerRows: 1,
+            widths: ["*", "auto"],
+            body: [
+              [
+                { text: "Popis", style: "tableHeader" },
+                { text: "Částka", style: "tableHeader", alignment: "right" }
+              ],
+              [
+                invoice.description || "Faktura",
+                formatCurrency(invoice.amount)
+              ]
+            ]
+          },
+          layout: "lightHorizontalLines"
+        })
+      }
+
+      content.push({ text: " ", margin: [0, 10] })
+
+      // Total
+      content.push(
+        {
+          columns: [
+            { text: "Celkem k úhradě:", style: "total", width: "*" },
+            { text: formatCurrency(invoice.amount), style: "totalAmount", width: "auto", alignment: "right" }
+          ]
+        },
+        { text: `Datum splatnosti: ${new Date(invoice.dueDate).toLocaleDateString("cs-CZ")}`, style: "detail", margin: [0, 5] }
+      )
+
+      // QR Code
+      if (qrCodeDataUrl && invoice.type === "income") {
+        content.push(
+          { text: " ", margin: [0, 15] },
+          { text: "Zaplaťte snadno naskenováním QR kódu:", alignment: "center" },
+          { image: qrCodeDataUrl, width: 150, alignment: "center", margin: [0, 10] }
+        )
       }
 
       // Build document definition
       const docDefinition: any = {
-        content: [
-          { text: "FAKTURA", style: "header", alignment: "center" },
-          { text: " ", margin: [0, 10] },
-
-          // Invoice details
-          invoice.invoiceNumber ? { text: `Číslo faktury: ${invoice.invoiceNumber}`, style: "detail" } : {},
-          invoice.variableSymbol ? { text: `Variabilní symbol: ${invoice.variableSymbol}`, style: "detail" } : {},
-          { text: `Datum vystavení: ${new Date().toLocaleDateString("cs-CZ")}`, style: "detail" },
-          { text: " ", margin: [0, 10] },
-
-          // Supplier and Customer
-          {
-            columns: [
-              {
-                width: "*",
-                stack: [
-                  { text: "Dodavatel", style: "subheader" },
-                  { text: "Vaše firma" },
-                  bankAccount ? { text: `Účet: ${formatAccountNumber(bankAccount.accountNumber, bankAccount.bankCode)}`, fontSize: 9 } : {},
-                  bankAccount?.iban ? { text: `IBAN: ${bankAccount.iban}`, fontSize: 9 } : {}
-                ]
-              },
-              {
-                width: "*",
-                stack: [
-                  { text: "Odběratel", style: "subheader" },
-                  { text: invoice.from }
-                ]
-              }
-            ]
-          },
-          { text: " ", margin: [0, 15] },
-
-          // Items table
-          {
-            table: {
-              headerRows: 1,
-              widths: invoice.items && invoice.items.length > 0 ? ["*", "auto", "auto", "auto"] : ["*", "auto"],
-              body: [
-                invoice.items && invoice.items.length > 0
-                  ? [
-                      { text: "Popis", style: "tableHeader" },
-                      { text: "Množství", style: "tableHeader", alignment: "center" },
-                      { text: "Cena/jedn.", style: "tableHeader", alignment: "right" },
-                      { text: "Částka", style: "tableHeader", alignment: "right" }
-                    ]
-                  : [
-                      { text: "Popis", style: "tableHeader" },
-                      { text: "Částka", style: "tableHeader", alignment: "right" }
-                    ],
-                ...tableBody
-              ]
-            },
-            layout: "lightHorizontalLines"
-          },
-          { text: " ", margin: [0, 10] },
-
-          // Total
-          {
-            columns: [
-              { text: "Celkem k úhradě:", style: "total", width: "*" },
-              { text: formatCurrency(invoice.amount), style: "totalAmount", width: "auto", alignment: "right" }
-            ]
-          },
-          { text: `Datum splatnosti: ${new Date(invoice.dueDate).toLocaleDateString("cs-CZ")}`, style: "detail", margin: [0, 5] },
-
-          // QR Code
-          qrCodeDataUrl && invoice.type === "income" ? { text: " ", margin: [0, 15] } : {},
-          qrCodeDataUrl && invoice.type === "income" ? { text: "Zaplaťte snadno naskenováním QR kódu:", alignment: "center" } : {},
-          qrCodeDataUrl && invoice.type === "income" ? { image: qrCodeDataUrl, width: 150, alignment: "center", margin: [0, 10] } : {}
-        ],
+        content,
         styles: {
           header: {
             fontSize: 20,

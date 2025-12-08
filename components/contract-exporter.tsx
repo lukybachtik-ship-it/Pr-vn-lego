@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Download, FileText, AlertCircle, File } from "lucide-react"
 import type { ContractBlock } from "@/types/contract"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { getUserProfile } from "@/lib/user-profile"
 
 interface ContractExporterProps {
   blocks: ContractBlock[]
@@ -17,6 +18,29 @@ interface ContractExporterProps {
 export function ContractExporter({ blocks, contractText, contractType }: ContractExporterProps) {
   const [isExporting, setIsExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
+  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    loadLogo()
+  }, [])
+
+  const loadLogo = async () => {
+    try {
+      const profile = await getUserProfile()
+      if (profile?.logoUrl) {
+        // Convert logo URL to data URL for PDF/DOCX embedding
+        const response = await fetch(profile.logoUrl)
+        const blob = await response.blob()
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setLogoDataUrl(reader.result as string)
+        }
+        reader.readAsDataURL(blob)
+      }
+    } catch (error) {
+      console.error("Failed to load logo:", error)
+    }
+  }
 
   const getContractTitle = () => {
     switch (contractType) {
@@ -119,6 +143,16 @@ export function ContractExporter({ blocks, contractText, contractType }: Contrac
 
       const lines = contractText.split("\n")
       const content: any[] = []
+
+      // Add logo if available
+      if (logoDataUrl) {
+        content.push({
+          image: logoDataUrl,
+          width: 100,
+          alignment: "left",
+          margin: [0, 0, 0, 20],
+        })
+      }
 
       // Title
       content.push({
