@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { X, Download, Printer } from "lucide-react"
+import { X, Download } from "lucide-react"
 import { useEffect, useState } from "react"
 import type { Invoice } from "@/lib/cash-flow"
 import { formatCurrency } from "@/lib/cash-flow"
@@ -56,10 +56,6 @@ export function QRInvoicePreview({ invoice, open, onOpenChange }: QRInvoicePrevi
     } finally {
       setIsGenerating(false)
     }
-  }
-
-  const handlePrint = () => {
-    window.print()
   }
 
   const handleDownloadPDF = async () => {
@@ -323,10 +319,6 @@ export function QRInvoicePreview({ invoice, open, onOpenChange }: QRInvoicePrevi
             <Button onClick={handleDownloadPDF} className="flex-1">
               <Download className="w-4 h-4 mr-2" />
               Stáhnout PDF
-            </Button>
-            <Button onClick={handlePrint} variant="secondary" className="flex-1">
-              <Printer className="w-4 h-4 mr-2" />
-              Tisknout
             </Button>
             {qrCodeDataUrl && (
               <Button onClick={handleDownloadQR} variant="outline">

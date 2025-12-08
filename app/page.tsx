@@ -5,12 +5,13 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { FileText, Plus, Calendar, AlertCircle, CheckCircle, Eye, Wallet, Users, Clock, Settings, LogOut, Database } from "lucide-react"
+import { FileText, Plus, Calendar, AlertCircle, CheckCircle, Eye, Wallet, Users, Clock, CreditCard } from "lucide-react"
 import { ContractTypeSelector } from "@/components/contract-type-selector"
 import { getFinalizedContracts } from "@/lib/contract-storage"
 import { extractContractDeadlines } from "@/lib/contract-timeline"
 import { useAuth } from "@/components/auth-provider"
 import type { SavedContract } from "@/lib/contract-storage"
+import { AppHeader } from "@/components/app-header"
 
 export default function Home() {
   const router = useRouter()
@@ -71,19 +72,10 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
-      {/* User Menu */}
-      {user && (
-        <div className="absolute top-4 right-4 flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">{user.email}</span>
-          <Button variant="ghost" size="sm" onClick={signOut}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Odhlásit
-          </Button>
-        </div>
-      )}
-
-      {/* Hero Section */}
+    <>
+      <AppHeader title="Dashboard" showBack={false} />
+      <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
+        {/* Hero Section */}
       <section className="py-12 md:py-20 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-4">
@@ -126,7 +118,7 @@ export default function Home() {
                 Time Tracking
               </Button>
               <Button size="sm" variant="ghost" onClick={() => router.push("/settings/bank-accounts")}>
-                <Settings className="w-4 h-4 mr-2" />
+                <CreditCard className="w-4 h-4 mr-2" />
                 Bankovní účty
               </Button>
             </div>
@@ -246,6 +238,7 @@ export default function Home() {
           </div>
         </div>
       )}
-    </main>
+      </main>
+    </>
   )
 }
