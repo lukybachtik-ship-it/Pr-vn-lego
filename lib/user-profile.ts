@@ -67,17 +67,23 @@ export async function saveUserProfile(profile: Partial<UserProfile>): Promise<Us
     const user = await supabase.auth.getUser()
     if (!user.data.user) return null
 
-    const { data, error } = await supabase
+    const { data, error} = await supabase
       .from("user_profiles")
-      .upsert({
-        user_id: user.data.user.id,
-        logo_url: profile.logoUrl || null,
-        company_name: profile.companyName || null,
-        company_address: profile.companyAddress || null,
-        company_ico: profile.companyIco || null,
-        company_dic: profile.companyDic || null,
-        updated_at: new Date().toISOString(),
-      } as any)
+      .upsert(
+        {
+          user_id: user.data.user.id,
+          logo_url: profile.logoUrl || null,
+          company_name: profile.companyName || null,
+          company_address: profile.companyAddress || null,
+          company_ico: profile.companyIco || null,
+          company_dic: profile.companyDic || null,
+          updated_at: new Date().toISOString(),
+        } as any,
+        {
+          onConflict: "user_id",
+          ignoreDuplicates: false,
+        }
+      )
       .select()
       .single()
 
