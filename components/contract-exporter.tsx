@@ -28,14 +28,31 @@ export function ContractExporter({ blocks, contractText, contractType }: Contrac
     try {
       const profile = await getUserProfile()
       if (profile?.logoUrl) {
-        // Convert logo URL to data URL for PDF/DOCX embedding
-        const response = await fetch(profile.logoUrl)
-        const blob = await response.blob()
-        const reader = new FileReader()
-        reader.onloadend = () => {
-          setLogoDataUrl(reader.result as string)
+        // Convert logo URL to data URL for PDF/DOCX embedding using Image API
+        const img = new Image()
+        img.crossOrigin = "anonymous"
+
+        img.onload = () => {
+          try {
+            const canvas = document.createElement("canvas")
+            canvas.width = img.width
+            canvas.height = img.height
+            const ctx = canvas.getContext("2d")
+            if (ctx) {
+              ctx.drawImage(img, 0, 0)
+              const dataUrl = canvas.toDataURL("image/png")
+              setLogoDataUrl(dataUrl)
+            }
+          } catch (err) {
+            console.error("Failed to convert logo to data URL:", err)
+          }
         }
-        reader.readAsDataURL(blob)
+
+        img.onerror = (err) => {
+          console.error("Failed to load logo image:", err)
+        }
+
+        img.src = profile.logoUrl
       }
     } catch (error) {
       console.error("Failed to load logo:", error)
