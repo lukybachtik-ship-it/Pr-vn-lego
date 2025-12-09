@@ -11,6 +11,7 @@ import { getDefaultBankAccount, formatAccountNumber } from "@/lib/bank-accounts"
 import { generateQRCode, generateInvoiceNumber } from "@/lib/qr-payment"
 import type { BankAccount } from "@/lib/bank-accounts"
 import { getUserProfile } from "@/lib/user-profile"
+import { supabase } from "@/lib/supabase"
 import pdfMake from "pdfmake/build/pdfmake"
 import * as pdfFonts from "pdfmake/build/vfs_fonts"
 
@@ -42,31 +43,41 @@ export function QRInvoicePreview({ invoice, open, onOpenChange }: QRInvoicePrevi
     try {
       const profile = await getUserProfile()
       if (profile?.logoUrl) {
-        // Convert logo URL to data URL for PDF embedding using Image API
-        const img = new Image()
-        img.crossOrigin = "anonymous"
+        // Extract path from URL and download via Supabase API (bypasses CORS)
+        try {
+          const url = new URL(profile.logoUrl)
+          const pathMatch = url.pathname.match(/\/logos\/(.+)/)
 
-        img.onload = () => {
-          try {
-            const canvas = document.createElement("canvas")
-            canvas.width = img.width
-            canvas.height = img.height
-            const ctx = canvas.getContext("2d")
-            if (ctx) {
-              ctx.drawImage(img, 0, 0)
-              const dataUrl = canvas.toDataURL("image/png")
-              setLogoDataUrl(dataUrl)
+          if (pathMatch && pathMatch[1]) {
+            const path = pathMatch[1]
+            console.log("Downloading logo from path:", path)
+
+            const { data, error } = await supabase.storage
+              .from("logos")
+              .download(path)
+
+            if (error) {
+              console.error("Error downloading logo:", error)
+              return
             }
-          } catch (err) {
-            console.error("Failed to convert logo to data URL:", err)
+
+            if (data) {
+              // Convert blob to data URL
+              const reader = new FileReader()
+              reader.onloadend = () => {
+                const dataUrl = reader.result as string
+                console.log("Logo converted to data URL successfully")
+                setLogoDataUrl(dataUrl)
+              }
+              reader.onerror = (err) => {
+                console.error("Failed to read logo blob:", err)
+              }
+              reader.readAsDataURL(data)
+            }
           }
+        } catch (err) {
+          console.error("Failed to parse logo URL or download:", err)
         }
-
-        img.onerror = (err) => {
-          console.error("Failed to load logo image:", err)
-        }
-
-        img.src = profile.logoUrl
       }
     } catch (error) {
       console.error("Failed to load logo:", error)
