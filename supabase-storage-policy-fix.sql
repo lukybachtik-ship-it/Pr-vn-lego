@@ -1,10 +1,13 @@
 -- Fix RLS policies for logo storage bucket
 -- Run this in your Supabase SQL Editor
 
--- First, make sure the bucket exists and is public
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('logos', 'logos', true)
-ON CONFLICT (id) DO UPDATE SET public = true;
+-- First, make sure the bucket exists and is public with CORS enabled
+INSERT INTO storage.buckets (id, name, public, allowed_mime_types, file_size_limit)
+VALUES ('logos', 'logos', true, ARRAY['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp'], 5242880)
+ON CONFLICT (id) DO UPDATE SET
+  public = true,
+  allowed_mime_types = ARRAY['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp'],
+  file_size_limit = 5242880;
 
 -- Drop existing policies if they exist
 DROP POLICY IF EXISTS "Users can upload their own logos" ON storage.objects;

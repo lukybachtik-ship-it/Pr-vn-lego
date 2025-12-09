@@ -161,8 +161,8 @@ export function ContractExporter({ blocks, contractText, contractType }: Contrac
       const lines = contractText.split("\n")
       const content: any[] = []
 
-      // Add logo if available
-      if (logoDataUrl) {
+      // Add logo if available (only if it's a valid data URL)
+      if (logoDataUrl && logoDataUrl.startsWith("data:")) {
         content.push({
           image: logoDataUrl,
           width: 100,
