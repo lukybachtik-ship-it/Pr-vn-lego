@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -43,7 +43,7 @@ const TAX_EVENTS_2026: TaxEvent[] = [
     id: "pausalni-prihlaseni",
     date: "2026-01-12",
     title: "Paušální daň - přihlášení/odhlášení",
-    description: "Termín pro přihlášení nebo odhlášení z paušálního režimu pro rok 2026",
+    description: "Termín pro přihlášení nebo odhlášení z paušálního režimu pro rok 2026. Kdo chce vstoupit do režimu paušální daně, musí podat přihlášku do tohoto data.",
     type: "pausalni",
     important: true,
   },
@@ -59,11 +59,35 @@ const TAX_EVENTS_2026: TaxEvent[] = [
     id: "dph-q4-2025",
     date: "2026-01-26",
     title: "DPH - přiznání za Q4 2025",
-    description: "Podání přiznání k DPH za 4. čtvrtletí 2025 a úhrada daně",
+    description: "Podání přiznání k DPH za 4. čtvrtletí 2025 a úhrada daně. Také kontrolní hlášení a souhrnné hlášení.",
     type: "dph",
     important: true,
   },
+  {
+    id: "socialni-zaloha-01",
+    date: "2026-01-31",
+    title: "Záloha sociální pojištění",
+    description: "Splatnost zálohy na sociální pojištění OSVČ za leden 2026",
+    type: "socialni",
+    important: false,
+  },
+  {
+    id: "zdravotni-zaloha-01",
+    date: "2026-01-31",
+    title: "Záloha zdravotní pojištění",
+    description: "Splatnost zálohy na zdravotní pojištění OSVČ za leden 2026",
+    type: "zdravotni",
+    important: false,
+  },
   // Únor
+  {
+    id: "silnicni-dan-2025",
+    date: "2026-02-02",
+    title: "Silniční daň - přiznání za 2025",
+    description: "Podání daňového přiznání k silniční dani za rok 2025 a úhrada daně",
+    type: "general",
+    important: false,
+  },
   {
     id: "pausalni-platba-02",
     date: "2026-02-20",
@@ -72,7 +96,31 @@ const TAX_EVENTS_2026: TaxEvent[] = [
     type: "pausalni",
     important: false,
   },
+  {
+    id: "socialni-zaloha-02",
+    date: "2026-02-28",
+    title: "Záloha sociální pojištění",
+    description: "Splatnost zálohy na sociální pojištění OSVČ za únor 2026",
+    type: "socialni",
+    important: false,
+  },
+  {
+    id: "zdravotni-zaloha-02",
+    date: "2026-02-28",
+    title: "Záloha zdravotní pojištění",
+    description: "Splatnost zálohy na zdravotní pojištění OSVČ za únor 2026",
+    type: "zdravotni",
+    important: false,
+  },
   // Březen
+  {
+    id: "zaloha-dan-q1",
+    date: "2026-03-16",
+    title: "Záloha na daň z příjmů Q1",
+    description: "Čtvrtletní záloha na daň z příjmů pro poplatníky s poslední známou daňovou povinností nad 150 000 Kč",
+    type: "dan_prijmu",
+    important: false,
+  },
   {
     id: "pausalni-platba-03",
     date: "2026-03-20",
@@ -81,13 +129,45 @@ const TAX_EVENTS_2026: TaxEvent[] = [
     type: "pausalni",
     important: false,
   },
+  {
+    id: "socialni-zaloha-03",
+    date: "2026-03-31",
+    title: "Záloha sociální pojištění",
+    description: "Splatnost zálohy na sociální pojištění OSVČ za březen 2026",
+    type: "socialni",
+    important: false,
+  },
+  {
+    id: "zdravotni-zaloha-03",
+    date: "2026-03-31",
+    title: "Záloha zdravotní pojištění",
+    description: "Splatnost zálohy na zdravotní pojištění OSVČ za březen 2026",
+    type: "zdravotni",
+    important: false,
+  },
   // Duben
   {
     id: "dan-prijmu-2025",
     date: "2026-04-01",
     title: "Daň z příjmů - přiznání za 2025",
-    description: "Podání daňového přiznání za rok 2025 a úhrada daně (bez daňového poradce)",
+    description: "Podání daňového přiznání za rok 2025 a úhrada daně (papírová forma). Elektronicky je termín 2. května 2026.",
     type: "dan_prijmu",
+    important: true,
+  },
+  {
+    id: "prehled-cssz-2025-zakladni",
+    date: "2026-04-30",
+    title: "Přehled ČSSZ za 2025 (základní termín)",
+    description: "Podání přehledu o příjmech a výdajích OSVČ pro ČSSZ za rok 2025, pokud nepoužíváte daňového poradce",
+    type: "socialni",
+    important: true,
+  },
+  {
+    id: "prehled-zp-2025-zakladni",
+    date: "2026-04-30",
+    title: "Přehled zdravotní pojišťovně za 2025",
+    description: "Podání přehledu o příjmech a výdajích OSVČ pro zdravotní pojišťovnu za rok 2025",
+    type: "zdravotni",
     important: true,
   },
   {
@@ -100,13 +180,37 @@ const TAX_EVENTS_2026: TaxEvent[] = [
   },
   {
     id: "dph-q1-2026",
-    date: "2026-04-25",
+    date: "2026-04-27",
     title: "DPH - přiznání za Q1 2026",
-    description: "Podání přiznání k DPH za 1. čtvrtletí 2026 a úhrada daně",
+    description: "Podání přiznání k DPH za 1. čtvrtletí 2026 a úhrada daně. Také kontrolní hlášení.",
     type: "dph",
     important: true,
   },
+  {
+    id: "socialni-zaloha-04",
+    date: "2026-04-30",
+    title: "Záloha sociální pojištění",
+    description: "Splatnost zálohy na sociální pojištění OSVČ za duben 2026",
+    type: "socialni",
+    important: false,
+  },
+  {
+    id: "zdravotni-zaloha-04",
+    date: "2026-04-30",
+    title: "Záloha zdravotní pojištění",
+    description: "Splatnost zálohy na zdravotní pojištění OSVČ za duben 2026",
+    type: "zdravotni",
+    important: false,
+  },
   // Květen
+  {
+    id: "dan-prijmu-2025-elektronicky",
+    date: "2026-05-04",
+    title: "Daň z příjmů - elektronické podání",
+    description: "Podání daňového přiznání za rok 2025 elektronicky (datová schránka, EPO) a úhrada daně",
+    type: "dan_prijmu",
+    important: true,
+  },
   {
     id: "pausalni-platba-05",
     date: "2026-05-20",
@@ -115,7 +219,39 @@ const TAX_EVENTS_2026: TaxEvent[] = [
     type: "pausalni",
     important: false,
   },
+  {
+    id: "socialni-zaloha-05",
+    date: "2026-05-31",
+    title: "Záloha sociální pojištění",
+    description: "Splatnost zálohy na sociální pojištění OSVČ za květen 2026",
+    type: "socialni",
+    important: false,
+  },
+  {
+    id: "zdravotni-zaloha-05",
+    date: "2026-05-31",
+    title: "Záloha zdravotní pojištění",
+    description: "Splatnost zálohy na zdravotní pojištění OSVČ za květen 2026",
+    type: "zdravotni",
+    important: false,
+  },
   // Červen
+  {
+    id: "dan-nemovitosti-1",
+    date: "2026-06-01",
+    title: "Daň z nemovitostí - 1. splátka",
+    description: "Splatnost 1. splátky daně z nemovitých věcí (nebo celé daně do 5000 Kč)",
+    type: "general",
+    important: false,
+  },
+  {
+    id: "zaloha-dan-q2",
+    date: "2026-06-15",
+    title: "Záloha na daň z příjmů Q2",
+    description: "Čtvrtletní nebo pololetní záloha na daň z příjmů",
+    type: "dan_prijmu",
+    important: false,
+  },
   {
     id: "pausalni-platba-06",
     date: "2026-06-20",
@@ -124,29 +260,37 @@ const TAX_EVENTS_2026: TaxEvent[] = [
     type: "pausalni",
     important: false,
   },
+  {
+    id: "socialni-zaloha-06",
+    date: "2026-06-30",
+    title: "Záloha sociální pojištění",
+    description: "Splatnost zálohy na sociální pojištění OSVČ za červen 2026",
+    type: "socialni",
+    important: false,
+  },
+  {
+    id: "zdravotni-zaloha-06",
+    date: "2026-06-30",
+    title: "Záloha zdravotní pojištění",
+    description: "Splatnost zálohy na zdravotní pojištění OSVČ za červen 2026",
+    type: "zdravotni",
+    important: false,
+  },
   // Červenec
   {
     id: "dan-prijmu-2025-poradce",
     date: "2026-07-01",
     title: "Daň z příjmů - přiznání s poradcem",
-    description: "Podání daňového přiznání za rok 2025 při zpracování daňovým poradcem",
+    description: "Podání daňového přiznání za rok 2025 při zpracování daňovým poradcem a úhrada daně",
     type: "dan_prijmu",
     important: true,
   },
   {
-    id: "prehled-cssz-2025",
-    date: "2026-07-01",
-    title: "Přehled ČSSZ za 2025",
-    description: "Podání přehledu o příjmech a výdajích OSVČ pro ČSSZ za rok 2025",
+    id: "prehled-cssz-2025-poradce",
+    date: "2026-08-03",
+    title: "Přehled ČSSZ za 2025 (s poradcem)",
+    description: "Podání přehledu o příjmech a výdajích OSVČ pro ČSSZ za rok 2025 při použití daňového poradce",
     type: "socialni",
-    important: true,
-  },
-  {
-    id: "prehled-zp-2025",
-    date: "2026-07-01",
-    title: "Přehled zdravotní pojišťovně za 2025",
-    description: "Podání přehledu o příjmech a výdajích OSVČ pro zdravotní pojišťovnu za rok 2025",
-    type: "zdravotni",
     important: true,
   },
   {
@@ -159,11 +303,27 @@ const TAX_EVENTS_2026: TaxEvent[] = [
   },
   {
     id: "dph-q2-2026",
-    date: "2026-07-25",
+    date: "2026-07-27",
     title: "DPH - přiznání za Q2 2026",
-    description: "Podání přiznání k DPH za 2. čtvrtletí 2026 a úhrada daně",
+    description: "Podání přiznání k DPH za 2. čtvrtletí 2026 a úhrada daně. Také kontrolní hlášení.",
     type: "dph",
     important: true,
+  },
+  {
+    id: "socialni-zaloha-07",
+    date: "2026-07-31",
+    title: "Záloha sociální pojištění",
+    description: "Splatnost zálohy na sociální pojištění OSVČ za červenec 2026",
+    type: "socialni",
+    important: false,
+  },
+  {
+    id: "zdravotni-zaloha-07",
+    date: "2026-07-31",
+    title: "Záloha zdravotní pojištění",
+    description: "Splatnost zálohy na zdravotní pojištění OSVČ za červenec 2026",
+    type: "zdravotni",
+    important: false,
   },
   // Srpen
   {
@@ -174,13 +334,61 @@ const TAX_EVENTS_2026: TaxEvent[] = [
     type: "pausalni",
     important: false,
   },
+  {
+    id: "dan-nemovitosti-2",
+    date: "2026-08-31",
+    title: "Daň z nemovitostí - 2. splátka",
+    description: "Splatnost 2. splátky daně z nemovitých věcí",
+    type: "general",
+    important: false,
+  },
+  {
+    id: "socialni-zaloha-08",
+    date: "2026-08-31",
+    title: "Záloha sociální pojištění",
+    description: "Splatnost zálohy na sociální pojištění OSVČ za srpen 2026",
+    type: "socialni",
+    important: false,
+  },
+  {
+    id: "zdravotni-zaloha-08",
+    date: "2026-08-31",
+    title: "Záloha zdravotní pojištění",
+    description: "Splatnost zálohy na zdravotní pojištění OSVČ za srpen 2026",
+    type: "zdravotni",
+    important: false,
+  },
   // Září
   {
+    id: "zaloha-dan-q3",
+    date: "2026-09-15",
+    title: "Záloha na daň z příjmů Q3",
+    description: "Čtvrtletní záloha na daň z příjmů",
+    type: "dan_prijmu",
+    important: false,
+  },
+  {
     id: "pausalni-platba-09",
-    date: "2026-09-20",
+    date: "2026-09-21",
     title: "Paušální daň - platba",
-    description: "Splatnost měsíční zálohy paušální daně za září 2026",
+    description: "Splatnost měsíční zálohy paušální daně za září 2026 (20. připadá na neděli)",
     type: "pausalni",
+    important: false,
+  },
+  {
+    id: "socialni-zaloha-09",
+    date: "2026-09-30",
+    title: "Záloha sociální pojištění",
+    description: "Splatnost zálohy na sociální pojištění OSVČ za září 2026",
+    type: "socialni",
+    important: false,
+  },
+  {
+    id: "zdravotni-zaloha-09",
+    date: "2026-09-30",
+    title: "Záloha zdravotní pojištění",
+    description: "Splatnost zálohy na zdravotní pojištění OSVČ za září 2026",
+    type: "zdravotni",
     important: false,
   },
   // Říjen
@@ -196,11 +404,35 @@ const TAX_EVENTS_2026: TaxEvent[] = [
     id: "dph-q3-2026",
     date: "2026-10-27",
     title: "DPH - přiznání za Q3 2026",
-    description: "Podání přiznání k DPH za 3. čtvrtletí 2026 a úhrada daně",
+    description: "Podání přiznání k DPH za 3. čtvrtletí 2026 a úhrada daně. Také kontrolní hlášení.",
     type: "dph",
     important: true,
   },
+  {
+    id: "socialni-zaloha-10",
+    date: "2026-10-31",
+    title: "Záloha sociální pojištění",
+    description: "Splatnost zálohy na sociální pojištění OSVČ za říjen 2026",
+    type: "socialni",
+    important: false,
+  },
+  {
+    id: "zdravotni-zaloha-10",
+    date: "2026-10-31",
+    title: "Záloha zdravotní pojištění",
+    description: "Splatnost zálohy na zdravotní pojištění OSVČ za říjen 2026",
+    type: "zdravotni",
+    important: false,
+  },
   // Listopad
+  {
+    id: "dan-nemovitosti-3",
+    date: "2026-11-30",
+    title: "Daň z nemovitostí - 3. splátka",
+    description: "Splatnost 3. splátky daně z nemovitých věcí (pro poplatníky provozující zemědělskou výrobu)",
+    type: "general",
+    important: false,
+  },
   {
     id: "pausalni-platba-11",
     date: "2026-11-20",
@@ -209,13 +441,53 @@ const TAX_EVENTS_2026: TaxEvent[] = [
     type: "pausalni",
     important: false,
   },
+  {
+    id: "socialni-zaloha-11",
+    date: "2026-11-30",
+    title: "Záloha sociální pojištění",
+    description: "Splatnost zálohy na sociální pojištění OSVČ za listopad 2026",
+    type: "socialni",
+    important: false,
+  },
+  {
+    id: "zdravotni-zaloha-11",
+    date: "2026-11-30",
+    title: "Záloha zdravotní pojištění",
+    description: "Splatnost zálohy na zdravotní pojištění OSVČ za listopad 2026",
+    type: "zdravotni",
+    important: false,
+  },
   // Prosinec
   {
+    id: "zaloha-dan-q4",
+    date: "2026-12-15",
+    title: "Záloha na daň z příjmů Q4",
+    description: "Čtvrtletní nebo pololetní záloha na daň z příjmů",
+    type: "dan_prijmu",
+    important: false,
+  },
+  {
     id: "pausalni-platba-12",
-    date: "2026-12-20",
+    date: "2026-12-21",
     title: "Paušální daň - platba",
-    description: "Splatnost měsíční zálohy paušální daně za prosinec 2026",
+    description: "Splatnost měsíční zálohy paušální daně za prosinec 2026 (20. připadá na neděli)",
     type: "pausalni",
+    important: false,
+  },
+  {
+    id: "socialni-zaloha-12",
+    date: "2026-12-31",
+    title: "Záloha sociální pojištění",
+    description: "Splatnost zálohy na sociální pojištění OSVČ za prosinec 2026",
+    type: "socialni",
+    important: false,
+  },
+  {
+    id: "zdravotni-zaloha-12",
+    date: "2026-12-31",
+    title: "Záloha zdravotní pojištění",
+    description: "Splatnost zálohy na zdravotní pojištění OSVČ za prosinec 2026",
+    type: "zdravotni",
     important: false,
   },
 ]
@@ -244,6 +516,15 @@ export default function TaxCalendarPage() {
   const [reminderDays, setReminderDays] = useState("3")
   const [isAddingReminder, setIsAddingReminder] = useState(false)
   const [reminderResult, setReminderResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Check for stored access token
+    const stored = localStorage.getItem("google_calendar_token")
+    if (stored) {
+      setAccessToken(stored)
+    }
+  }, [])
 
   const currentYear = currentDate.getFullYear()
   const currentMonth = currentDate.getMonth()
@@ -280,22 +561,24 @@ export default function TaxCalendarPage() {
     setSelectedEvent(event)
   }
 
+  const handleAuth = () => {
+    // Store current URL to return after OAuth
+    localStorage.setItem("calendar_return_url", window.location.pathname)
+    window.location.href = "/api/calendar/auth"
+  }
+
   const handleAddReminder = async () => {
     if (!selectedEvent) return
+
+    if (!accessToken) {
+      handleAuth()
+      return
+    }
 
     setIsAddingReminder(true)
     setReminderResult(null)
 
     try {
-      // Check if Google Calendar is authorized
-      const authResponse = await fetch("/api/calendar/auth")
-      const authData = await authResponse.json()
-
-      if (!authData.isAuthorized) {
-        window.location.href = `/api/calendar/auth?returnUrl=${encodeURIComponent(window.location.pathname)}`
-        return
-      }
-
       // Calculate reminder date
       const eventDate = new Date(selectedEvent.date)
       eventDate.setDate(eventDate.getDate() - parseInt(reminderDays))
@@ -305,12 +588,12 @@ export default function TaxCalendarPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          accessToken,
           events: [
             {
-              summary: `📅 ${selectedEvent.title}`,
+              title: `📅 ${selectedEvent.title}`,
               description: selectedEvent.description,
               date: eventDate.toISOString().split("T")[0],
-              isReminder: true,
             },
           ],
         }),
@@ -318,13 +601,23 @@ export default function TaxCalendarPage() {
 
       const data = await response.json()
 
-      if (data.success) {
+      if (data.success && data.successCount > 0) {
         setReminderResult({
           success: true,
           message: `Připomenutí bylo přidáno do kalendáře na ${eventDate.toLocaleDateString("cs-CZ")}`,
         })
       } else {
-        throw new Error(data.error || "Nepodařilo se přidat událost")
+        // Token may have expired
+        if (data.results?.[0]?.error?.includes("Invalid Credentials") || data.results?.[0]?.error?.includes("401")) {
+          localStorage.removeItem("google_calendar_token")
+          setAccessToken(null)
+          setReminderResult({
+            success: false,
+            message: "Platnost přihlášení vypršela. Přihlaste se znovu.",
+          })
+        } else {
+          throw new Error(data.results?.[0]?.error || data.error || "Nepodařilo se přidat událost")
+        }
       }
     } catch (error) {
       console.error("Calendar error:", error)
@@ -699,7 +992,7 @@ export default function TaxCalendarPage() {
                 ) : (
                   <Calendar className="w-4 h-4 mr-2" />
                 )}
-                Přidat do Google Calendar
+                {accessToken ? "Přidat do Google Calendar" : "Přihlásit se ke Google Calendar"}
               </Button>
             </DialogFooter>
           </DialogContent>

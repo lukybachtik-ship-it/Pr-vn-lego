@@ -25,6 +25,7 @@ import {
   Eye,
   Bell,
   CalendarDays,
+  BarChart3,
 } from "lucide-react"
 import {
   getAllInvoices,
@@ -281,6 +282,10 @@ export default function CashFlowPage() {
               <p className="text-muted-foreground">Sledujte své příjmy a výdaje na jednom místě</p>
             </div>
             <div className="flex gap-2">
+              <Button variant="outline" onClick={() => router.push("/cash-flow/monthly-overview")}>
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Měsíční přehled
+              </Button>
               <Button variant="outline" onClick={() => router.push("/cash-flow/tax-calendar")}>
                 <CalendarDays className="w-4 h-4 mr-2" />
                 Daňový kalendář

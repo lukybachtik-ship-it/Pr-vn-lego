@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -31,6 +31,15 @@ export function InvoiceReminderDialog({
   const [reminderDays, setReminderDays] = useState("3")
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Check for stored access token
+    const stored = localStorage.getItem("google_calendar_token")
+    if (stored) {
+      setAccessToken(stored)
+    }
+  }, [open])
 
   if (!invoice) return null
 
@@ -40,21 +49,22 @@ export function InvoiceReminderDialog({
 
   const isOverdue = dueDate < new Date()
 
+  const handleAuth = () => {
+    // Store current URL to return after OAuth
+    localStorage.setItem("calendar_return_url", window.location.pathname)
+    window.location.href = "/api/calendar/auth"
+  }
+
   const handleAddToCalendar = async () => {
+    if (!accessToken) {
+      handleAuth()
+      return
+    }
+
     setIsLoading(true)
     setResult(null)
 
     try {
-      // Check if Google Calendar is authorized
-      const authResponse = await fetch("/api/calendar/auth")
-      const authData = await authResponse.json()
-
-      if (!authData.isAuthorized) {
-        // Open Google Calendar authorization
-        window.location.href = `/api/calendar/auth?returnUrl=${encodeURIComponent(window.location.pathname)}`
-        return
-      }
-
       // Calculate reminder date
       const eventDate = new Date(dueDate)
       eventDate.setDate(eventDate.getDate() - parseInt(reminderDays))
@@ -64,12 +74,12 @@ export function InvoiceReminderDialog({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          accessToken,
           events: [
             {
-              summary: `💰 Splatnost faktury: ${invoice.from}`,
+              title: `💰 Splatnost faktury: ${invoice.from}`,
               description: `Faktura: ${invoice.from}\nČástka: ${formatCurrency(invoice.amount)}\nSplatnost: ${dueDate.toLocaleDateString("cs-CZ")}\n${invoice.description || ""}`,
               date: eventDate.toISOString().split("T")[0],
-              isReminder: true,
             },
           ],
         }),
@@ -77,13 +87,23 @@ export function InvoiceReminderDialog({
 
       const data = await response.json()
 
-      if (data.success) {
+      if (data.success && data.successCount > 0) {
         setResult({
           success: true,
           message: `Připomenutí bylo přidáno do kalendáře na ${eventDate.toLocaleDateString("cs-CZ")}`,
         })
       } else {
-        throw new Error(data.error || "Nepodařilo se přidat událost")
+        // Token may have expired
+        if (data.results?.[0]?.error?.includes("Invalid Credentials") || data.results?.[0]?.error?.includes("401")) {
+          localStorage.removeItem("google_calendar_token")
+          setAccessToken(null)
+          setResult({
+            success: false,
+            message: "Platnost přihlášení vypršela. Přihlaste se znovu.",
+          })
+        } else {
+          throw new Error(data.results?.[0]?.error || data.error || "Nepodařilo se přidat událost")
+        }
       }
     } catch (error) {
       console.error("Calendar error:", error)
@@ -213,7 +233,11 @@ export function InvoiceReminderDialog({
             ) : (
               <Calendar className="w-4 h-4 mr-2" />
             )}
-            {isOverdue ? "Faktura je po splatnosti" : "Přidat do Google Calendar"}
+            {isOverdue
+              ? "Faktura je po splatnosti"
+              : accessToken
+                ? "Přidat do Google Calendar"
+                : "Přihlásit se ke Google Calendar"}
           </Button>
         </DialogFooter>
       </DialogContent>
