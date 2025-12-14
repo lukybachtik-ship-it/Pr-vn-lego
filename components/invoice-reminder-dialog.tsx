@@ -187,20 +187,20 @@ export function InvoiceReminderDialog({
                     <Label htmlFor="r7" className="font-normal cursor-pointer">7 dní</Label>
                   </div>
                 </div>
+                <div className="flex items-center space-x-2 mt-2">
+                  <RadioGroupItem value="custom" id="rcustom" />
+                  <Label htmlFor="rcustom" className="font-normal cursor-pointer">Vlastní:</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="30"
+                    className="w-20 h-8"
+                    value={reminderDays}
+                    onChange={(e) => setReminderDays(e.target.value)}
+                  />
+                  <span className="text-sm text-muted-foreground">dní</span>
+                </div>
               </RadioGroup>
-              <div className="flex items-center space-x-2 mt-2">
-                <RadioGroupItem value="custom" id="rcustom" />
-                <Label htmlFor="rcustom" className="font-normal cursor-pointer">Vlastní:</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="30"
-                  className="w-20 h-8"
-                  value={reminderDays}
-                  onChange={(e) => setReminderDays(e.target.value)}
-                />
-                <span className="text-sm text-muted-foreground">dní</span>
-              </div>
             </div>
 
             <div className="p-3 bg-blue-50 rounded-lg text-sm">

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { FileText, Plus, Calendar, AlertCircle, CheckCircle, Eye, Wallet, Users, Clock, CreditCard } from "lucide-react"
+import { FileText, Plus, Calendar, AlertCircle, CheckCircle, Eye, Wallet, Users, Clock, CreditCard, ExternalLink } from "lucide-react"
 import { ContractTypeSelector } from "@/components/contract-type-selector"
 import { getFinalizedContracts } from "@/lib/contract-storage"
 import { extractContractDeadlines } from "@/lib/contract-timeline"
@@ -121,6 +121,37 @@ export default function Home() {
                 <CreditCard className="w-4 h-4 mr-2" />
                 Bankovní účty
               </Button>
+            </div>
+
+            {/* Užitečné odkazy */}
+            <div className="mt-6 pt-4 border-t border-muted">
+              <p className="text-sm text-muted-foreground mb-3">Užitečné odkazy pro živnostníky</p>
+              <div className="flex flex-col md:flex-row gap-2 justify-center flex-wrap">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => window.open("https://financnisprava.gov.cz/cs/kontakty", "_blank")}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Finanční úřady
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => window.open("https://rzp.gov.cz/adresar-uradu/cs/urady/vyber-uradu", "_blank")}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Živnostenské úřady
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => window.open("https://eformulare.justice.cz/msp-financni-zdravi/form/uvod", "_blank")}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Finanční zdraví
+                </Button>
+              </div>
             </div>
           </div>
         </div>
