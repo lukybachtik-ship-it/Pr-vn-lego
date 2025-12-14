@@ -23,6 +23,8 @@ import {
   Users,
   QrCode,
   Eye,
+  Bell,
+  CalendarDays,
 } from "lucide-react"
 import {
   getAllInvoices,
@@ -44,6 +46,8 @@ import { generateInvoiceNumber } from "@/lib/qr-payment"
 import { getDefaultBankAccount } from "@/lib/bank-accounts"
 import { AppHeader } from "@/components/app-header"
 import { InvoiceItemsEditor } from "@/components/invoice-items-editor"
+import { MonthlyDetailPopup } from "@/components/monthly-detail-popup"
+import { InvoiceReminderDialog } from "@/components/invoice-reminder-dialog"
 
 export default function CashFlowPage() {
   const router = useRouter()
@@ -69,6 +73,14 @@ export default function CashFlowPage() {
   const [description, setDescription] = useState("")
   const [useLineItems, setUseLineItems] = useState(false)
   const [lineItems, setLineItems] = useState<InvoiceItem[]>([])
+
+  // Monthly detail popup state
+  const [showMonthlyDetail, setShowMonthlyDetail] = useState(false)
+  const [monthlyDetailType, setMonthlyDetailType] = useState<"income" | "expense">("income")
+
+  // Reminder dialog state
+  const [showReminderDialog, setShowReminderDialog] = useState(false)
+  const [selectedInvoiceForReminder, setSelectedInvoiceForReminder] = useState<Invoice | null>(null)
 
   useEffect(() => {
     loadInvoices()
@@ -176,6 +188,16 @@ export default function CashFlowPage() {
     loadInvoices()
   }
 
+  const handleShowMonthlyDetail = (detailType: "income" | "expense") => {
+    setMonthlyDetailType(detailType)
+    setShowMonthlyDetail(true)
+  }
+
+  const handleAddReminder = (invoice: Invoice) => {
+    setSelectedInvoiceForReminder(invoice)
+    setShowReminderDialog(true)
+  }
+
   const handleDelete = (invoiceId: string) => {
     if (confirm("Opravdu chcete smazat tuto fakturu?")) {
       deleteInvoice(invoiceId)
@@ -258,10 +280,16 @@ export default function CashFlowPage() {
               </h1>
               <p className="text-muted-foreground">Sledujte své příjmy a výdaje na jednom místě</p>
             </div>
-            <Button onClick={() => setShowAddDialog(true)} size="lg">
-              <Plus className="w-4 h-4 mr-2" />
-              Přidat fakturu
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => router.push("/cash-flow/tax-calendar")}>
+                <CalendarDays className="w-4 h-4 mr-2" />
+                Daňový kalendář
+              </Button>
+              <Button onClick={() => setShowAddDialog(true)} size="lg">
+                <Plus className="w-4 h-4 mr-2" />
+                Přidat fakturu
+              </Button>
+            </div>
           </div>
 
           {/* VAT Limit Indicator */}
@@ -304,7 +332,10 @@ export default function CashFlowPage() {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Total Income */}
-          <Card className="border-green-500">
+          <Card
+            className="border-green-500 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => handleShowMonthlyDetail("income")}
+          >
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-green-600" />
@@ -318,11 +349,17 @@ export default function CashFlowPage() {
                   Po splatnosti: {formatCurrency(summary.overdueIncome)}
                 </p>
               )}
+              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                <Eye className="w-3 h-3" /> Klikněte pro detail
+              </p>
             </CardContent>
           </Card>
 
           {/* Total Expenses */}
-          <Card className="border-red-500">
+          <Card
+            className="border-red-500 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => handleShowMonthlyDetail("expense")}
+          >
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <TrendingDown className="w-4 h-4 text-red-600" />
@@ -336,6 +373,9 @@ export default function CashFlowPage() {
                   Po splatnosti: {formatCurrency(summary.overdueExpenses)}
                 </p>
               )}
+              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                <Eye className="w-3 h-3" /> Klikněte pro detail
+              </p>
             </CardContent>
           </Card>
 
@@ -445,10 +485,20 @@ export default function CashFlowPage() {
                         </Button>
                       )}
                       {!invoice.isPaid && (
-                        <Button size="sm" variant="outline" className="bg-green-50" onClick={() => handleMarkAsPaid(invoice.id)}>
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Zaplaceno
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleAddReminder(invoice)}
+                            title="Nastavit připomenutí"
+                          >
+                            <Bell className="w-3 h-3" />
+                          </Button>
+                          <Button size="sm" variant="outline" className="bg-green-50" onClick={() => handleMarkAsPaid(invoice.id)}>
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Zaplaceno
+                          </Button>
+                        </>
                       )}
                       {invoice.isPaid && (
                         <Button size="sm" variant="ghost" onClick={() => handleShowQR(invoice)}>
@@ -608,6 +658,24 @@ export default function CashFlowPage() {
           onOpenChange={setShowQRPreview}
         />
       )}
+
+      {/* Monthly Detail Popup */}
+      <MonthlyDetailPopup
+        open={showMonthlyDetail}
+        onOpenChange={setShowMonthlyDetail}
+        type={monthlyDetailType}
+        invoices={filteredInvoices}
+        monthLabel={new Date(selectedMonth + "-01").toLocaleDateString("cs-CZ", { month: "long", year: "numeric" })}
+        onMarkAsPaid={handleMarkAsPaid}
+        onAddReminder={handleAddReminder}
+      />
+
+      {/* Invoice Reminder Dialog */}
+      <InvoiceReminderDialog
+        open={showReminderDialog}
+        onOpenChange={setShowReminderDialog}
+        invoice={selectedInvoiceForReminder}
+      />
       </main>
     </>
   )

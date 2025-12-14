@@ -360,6 +360,13 @@ export function LegoBuilder({ contractType: propType }: LegoBuilderProps) {
     addBlock(blockId, blockTemplate)
   }
 
+  const handleBlockClick = (blockId: string) => {
+    const blockTemplate = availableBlocks.find((b) => b.id === blockId)
+    if (!blockTemplate) return
+
+    addBlock(blockId, blockTemplate)
+  }
+
   const requiredBlocks = availableBlocks.filter((b) => b.category === "required")
   const completedRequired = requiredBlocks.filter((r) => blocks.some((b) => b.templateId === r.id && b.isComplete))
 
@@ -393,7 +400,13 @@ export function LegoBuilder({ contractType: propType }: LegoBuilderProps) {
     <div className="flex flex-col lg:flex-row gap-6 h-screen bg-background p-2 md:p-4">
       {/* Left Panel - Block Library */}
       <div className="hidden lg:block w-64">
-        <BlockLibrary blocks={availableBlocks} onDragStart={handleDragStart} draggedBlock={null} />
+        <BlockLibrary
+          blocks={availableBlocks}
+          onDragStart={handleDragStart}
+          onBlockClick={handleBlockClick}
+          draggedBlock={null}
+          addedBlocks={blocks.map((b) => b.id)}
+        />
       </div>
 
       {/* Center Panel - Builder */}

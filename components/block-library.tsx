@@ -4,7 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
+import { Search, Plus, GripVertical } from "lucide-react"
 
 interface Block {
   id: string
@@ -17,10 +17,12 @@ interface Block {
 interface BlockLibraryProps {
   blocks: Block[]
   onDragStart: (e: React.DragEvent, blockId: string) => void
+  onBlockClick?: (blockId: string) => void
   draggedBlock: string | null
+  addedBlocks?: string[]
 }
 
-export function BlockLibrary({ blocks, onDragStart, draggedBlock }: BlockLibraryProps) {
+export function BlockLibrary({ blocks, onDragStart, onBlockClick, draggedBlock, addedBlocks = [] }: BlockLibraryProps) {
   const [searchTerm, setSearchTerm] = useState("")
 
   const filteredBlocks = blocks.filter(
@@ -32,6 +34,16 @@ export function BlockLibrary({ blocks, onDragStart, draggedBlock }: BlockLibrary
   const requiredBlocks = filteredBlocks.filter((b) => b.category === "required")
   const optionalBlocks = filteredBlocks.filter((b) => b.category === "optional")
 
+  const handleBlockClick = (blockId: string) => {
+    if (onBlockClick) {
+      onBlockClick(blockId)
+    }
+  }
+
+  const isBlockAdded = (blockId: string) => {
+    return addedBlocks.some((id) => id.startsWith(blockId))
+  }
+
   const renderBlockGroup = (title: string, groupBlocks: Block[]) => (
     <div key={title} className="mb-6">
       <h3 className="text-sm font-bold text-muted-foreground mb-3 px-4">
@@ -41,24 +53,41 @@ export function BlockLibrary({ blocks, onDragStart, draggedBlock }: BlockLibrary
         {groupBlocks.length === 0 ? (
           <p className="text-xs text-muted-foreground px-4">Žádné bloky nenalezeny</p>
         ) : (
-          groupBlocks.map((block) => (
-            <Card
-              key={block.id}
-              draggable
-              onDragStart={(e) => onDragStart(e, block.id)}
-              className={`p-4 cursor-move hover:shadow-md transition-all ${
-                draggedBlock === block.id ? "opacity-50" : ""
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">{block.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm">{block.name}</p>
-                  <p className="text-xs text-muted-foreground">{block.description}</p>
+          groupBlocks.map((block) => {
+            const added = isBlockAdded(block.id)
+            return (
+              <Card
+                key={block.id}
+                draggable
+                onDragStart={(e) => onDragStart(e, block.id)}
+                onClick={() => handleBlockClick(block.id)}
+                className={`p-4 cursor-pointer hover:shadow-md hover:border-primary/50 transition-all group ${
+                  draggedBlock === block.id ? "opacity-50" : ""
+                } ${added ? "border-green-500 bg-green-50/30" : ""}`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-2xl">{block.icon}</span>
+                    <GripVertical className="w-3 h-3 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-sm">{block.name}</p>
+                      {added && (
+                        <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
+                          Přidáno
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{block.description}</p>
+                  </div>
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Plus className="w-5 h-5 text-primary" />
+                  </div>
                 </div>
-              </div>
-            </Card>
-          ))
+              </Card>
+            )
+          })
         )}
       </div>
     </div>
