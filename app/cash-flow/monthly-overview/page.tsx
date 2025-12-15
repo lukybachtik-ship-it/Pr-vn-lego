@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { AppHeader } from "@/components/app-header"
+import { AppLayout } from "@/components/app-layout"
 import {
   ChevronLeft,
   ChevronRight,
@@ -135,21 +135,19 @@ export default function MonthlyOverviewPage() {
 
   if (isLoading) {
     return (
-      <>
-        <AppHeader title="Měsíční přehled" />
-        <main className="min-h-screen bg-background p-4 md:p-8">
+      <AppLayout title="Měsíční přehled" showBack>
+        <main className="p-4 md:p-8">
           <div className="max-w-6xl mx-auto flex items-center justify-center">
             <p className="text-muted-foreground">Načítám...</p>
           </div>
         </main>
-      </>
+      </AppLayout>
     )
   }
 
   return (
-    <>
-      <AppHeader title="Měsíční přehled" />
-      <main className="min-h-screen bg-background p-4 md:p-8">
+    <AppLayout title="Měsíční přehled" showBack>
+      <main className="p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -393,6 +391,6 @@ export default function MonthlyOverviewPage() {
           </div>
         </div>
       </main>
-    </>
+    </AppLayout>
   )
 }

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Search, Plus, Building2, User, Phone, Mail, FileText, Receipt } from "lucide-react"
 import Link from "next/link"
 import { getAllClients, searchClients, getClientHistory, type Client } from "@/lib/clients"
-import { AppHeader } from "@/components/app-header"
+import { AppLayout } from "@/components/app-layout"
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([])
@@ -52,20 +52,18 @@ export default function ClientsPage() {
 
   if (isLoading) {
     return (
-      <>
-        <AppHeader title="Klienti" />
+      <AppLayout title="Klienti" showBack>
         <div className="container mx-auto p-6">
           <div className="flex items-center justify-center min-h-[400px]">
             <p className="text-muted-foreground">Načítání klientů...</p>
           </div>
         </div>
-      </>
+      </AppLayout>
     )
   }
 
   return (
-    <>
-      <AppHeader title="Klienti" />
+    <AppLayout title="Klienti" showBack>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -239,6 +237,6 @@ export default function ClientsPage() {
         </div>
       )}
       </div>
-    </>
+    </AppLayout>
   )
 }

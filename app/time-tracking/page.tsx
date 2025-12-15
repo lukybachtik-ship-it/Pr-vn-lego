@@ -25,7 +25,7 @@ import { getFinalizedContracts } from "@/lib/contract-storage"
 import type { TimeEntry } from "@/lib/time-tracking"
 import type { Client } from "@/lib/clients"
 import type { SavedContract } from "@/lib/contract-storage"
-import { AppHeader } from "@/components/app-header"
+import { AppLayout } from "@/components/app-layout"
 
 export default function TimeTrackingPage() {
   const router = useRouter()
@@ -233,9 +233,8 @@ export default function TimeTrackingPage() {
   }
 
   return (
-    <>
-      <AppHeader title="Time Tracking" />
-      <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-6">
+    <AppLayout title="Time Tracking" showBack>
+      <main className="p-6">
         <div className="max-w-7xl mx-auto flex gap-6">
           {/* Client Sidebar */}
           <div className={`transition-all duration-300 ${showClientSidebar ? "w-64" : "w-12"} flex-shrink-0`}>
@@ -650,6 +649,6 @@ export default function TimeTrackingPage() {
         </DialogContent>
       </Dialog>
       </main>
-    </>
+    </AppLayout>
   )
 }

@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { AppHeader } from "@/components/app-header"
+import { AppLayout } from "@/components/app-layout"
 import {
   Calculator,
   Plus,
@@ -141,23 +141,21 @@ export default function CalculatorPage() {
 
   if (isLoading) {
     return (
-      <>
-        <AppHeader title="Kalkulačka zisku" showBack />
-        <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-4">
+      <AppLayout title="Kalkulačka zisku" showBack>
+        <main className="p-4">
           <div className="max-w-4xl mx-auto flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
         </main>
-      </>
+      </AppLayout>
     )
   }
 
   // Show settings prompt if not configured
   if (!hasSettings) {
     return (
-      <>
-        <AppHeader title="Kalkulačka zisku" showBack />
-        <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-4">
+      <AppLayout title="Kalkulačka zisku" showBack>
+        <main className="p-4">
           <div className="max-w-lg mx-auto py-20">
             <Card>
               <CardHeader className="text-center">
@@ -179,16 +177,15 @@ export default function CalculatorPage() {
             </Card>
           </div>
         </main>
-      </>
+      </AppLayout>
     )
   }
 
   const taxSettings = getTaxSettings()
 
   return (
-    <>
-      <AppHeader title="Kalkulačka zisku" showBack />
-      <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-4">
+    <AppLayout title="Kalkulačka zisku" showBack>
+      <main className="p-4">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -690,6 +687,6 @@ export default function CalculatorPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </AppLayout>
   )
 }

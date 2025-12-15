@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { AppHeader } from "@/components/app-header"
+import { AppLayout } from "@/components/app-layout"
 import {
   ChevronLeft,
   ChevronRight,
@@ -658,9 +658,8 @@ export default function TaxCalendarPage() {
   }
 
   return (
-    <>
-      <AppHeader title="Daňový kalendář 2026" />
-      <main className="min-h-screen bg-background p-4 md:p-8">
+    <AppLayout title="Daňový kalendář" showBack>
+      <main className="p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -998,6 +997,6 @@ export default function TaxCalendarPage() {
           </DialogContent>
         </Dialog>
       </main>
-    </>
+    </AppLayout>
   )
 }

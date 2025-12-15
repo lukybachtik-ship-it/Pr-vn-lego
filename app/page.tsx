@@ -5,27 +5,43 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { FileText, Plus, Calendar, AlertCircle, CheckCircle, Eye, Wallet, Users, Clock, CreditCard, ExternalLink, Calculator, Zap } from "lucide-react"
+import {
+  FileText,
+  Plus,
+  Calendar,
+  AlertCircle,
+  CheckCircle,
+  Eye,
+  Wallet,
+  TrendingUp,
+  TrendingDown,
+  Zap,
+} from "lucide-react"
 import { ContractTypeSelector } from "@/components/contract-type-selector"
 import { getFinalizedContracts } from "@/lib/contract-storage"
 import { extractContractDeadlines } from "@/lib/contract-timeline"
+import { getAllInvoices, calculateCashFlowSummary, formatCurrency, type Invoice } from "@/lib/cash-flow"
 import { useAuth } from "@/components/auth-provider"
 import type { SavedContract } from "@/lib/contract-storage"
-import { AppHeader } from "@/components/app-header"
+import { AppLayout } from "@/components/app-layout"
 
 export default function Home() {
   const router = useRouter()
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const [contracts, setContracts] = useState<SavedContract[]>([])
+  const [invoices, setInvoices] = useState<Invoice[]>([])
   const [showTypeSelector, setShowTypeSelector] = useState(false)
 
   useEffect(() => {
     // Load initial contracts
     setContracts(getFinalizedContracts())
+    // Load invoices for financial summary
+    setInvoices(getAllInvoices())
 
     // Listen for localStorage changes (when cloud data loads)
     const handleStorageChange = () => {
       setContracts(getFinalizedContracts())
+      setInvoices(getAllInvoices())
     }
 
     window.addEventListener("storage", handleStorageChange)
@@ -71,112 +87,192 @@ export default function Home() {
     router.push(`/builder?type=${type}`)
   }
 
+  // Calculate financial summary
+  const summary = calculateCashFlowSummary(invoices)
+
+  // Calculate total income/expenses including paid
+  const totalIncome = invoices
+    .filter((inv) => inv.type === "income")
+    .reduce((sum, inv) => sum + inv.amount, 0)
+  const totalExpenses = invoices
+    .filter((inv) => inv.type === "expense")
+    .reduce((sum, inv) => sum + inv.amount, 0)
+  const paidIncome = invoices
+    .filter((inv) => inv.type === "income" && inv.isPaid)
+    .reduce((sum, inv) => sum + inv.amount, 0)
+
   return (
-    <>
-      <AppHeader title="Dashboard" showBack={false} />
-      <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
+    <AppLayout>
+      <div className="p-6 lg:p-8">
         {/* Hero Section */}
-      <section className="py-12 md:py-20 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4">
-            Právní <span className="text-primary">LEGO</span>
-          </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground mb-8">Tvoř smlouvy bez právníka</p>
-          <p className="text-base md:text-lg text-muted-foreground mb-12 max-w-2xl mx-auto">
-            Sestavte si právní smlouvu jako stavebnici. Přetáhněte bloky, vyplňte údaje a máte hotovo.
-          </p>
-
-          <div className="flex flex-col items-center gap-4">
-            {/* Hlavní tlačítka */}
-            <div className="flex flex-col md:flex-row gap-4 justify-center flex-wrap">
-              <Button size="lg" onClick={() => setShowTypeSelector(true)} className="text-lg">
-                <Plus className="w-5 h-5 mr-2" />
-                Nová smlouva
-              </Button>
-              <Button size="lg" onClick={() => router.push("/cash-flow")} className="text-lg">
-                <Plus className="w-5 h-5 mr-2" />
-                Nová faktura
-              </Button>
-              <Button size="lg" variant="outline" onClick={() => router.push("/drafts")}>
-                <FileText className="w-5 h-5 mr-2" />
-                Moje koncepty
-              </Button>
-              <Button size="lg" variant="outline" onClick={() => router.push("/clients")}>
-                <Users className="w-5 h-5 mr-2" />
-                Klienti
-              </Button>
-              <Button size="lg" variant="outline" onClick={() => router.push("/cash-flow")}>
-                <Wallet className="w-5 h-5 mr-2" />
-                Peníze
-              </Button>
-            </div>
-
-            {/* Rychlá zakázka - zvýrazněné */}
-            <Button size="lg" onClick={() => router.push("/quick-orders")} className="text-lg bg-amber-500 hover:bg-amber-600">
-              <Zap className="w-5 h-5 mr-2" />
-              Rychlá zakázka
-            </Button>
-
-            {/* Vedlejší tlačítka - menší */}
-            <div className="flex flex-col md:flex-row gap-2 justify-center flex-wrap">
-              <Button size="sm" variant="ghost" onClick={() => router.push("/calculator")}>
-                <Calculator className="w-4 h-4 mr-2" />
-                Kalkulačka zisku
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => router.push("/time-tracking")}>
-                <Clock className="w-4 h-4 mr-2" />
-                Time Tracking
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => router.push("/settings/bank-accounts")}>
-                <CreditCard className="w-4 h-4 mr-2" />
-                Bankovní účty
-              </Button>
-            </div>
-
-            {/* Užitečné odkazy */}
-            <div className="mt-6 pt-4 border-t border-muted">
-              <p className="text-sm text-muted-foreground mb-3">Užitečné odkazy pro živnostníky</p>
-              <div className="flex flex-col md:flex-row gap-2 justify-center flex-wrap">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => window.open("https://financnisprava.gov.cz/cs/kontakty", "_blank")}
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Finanční úřady
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => window.open("https://rzp.gov.cz/adresar-uradu/cs/urady/vyber-uradu", "_blank")}
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Živnostenské úřady
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => window.open("https://eformulare.justice.cz/msp-financni-zdravi/form/uvod", "_blank")}
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Finanční zdraví
-                </Button>
-              </div>
-            </div>
+        <section className="mb-10">
+          <div className="text-center lg:text-left mb-8">
+            <h1 className="text-3xl lg:text-4xl font-bold mb-2">
+              Vítejte v <span className="text-primary">BusinessHub</span>
+            </h1>
+            <p className="text-muted-foreground">
+              Spravujte své smlouvy, faktury a finance na jednom místě
+            </p>
           </div>
-        </div>
-      </section>
 
-      {/* Active Contracts Section */}
-      {contracts.length > 0 && (
-        <section className="py-12 px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl md:text-3xl font-bold">Aktivní smlouvy</h2>
-              <Badge variant="secondary">{contracts.length}</Badge>
+          {/* Main Action Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            {/* Nová smlouva */}
+            <Card
+              className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 border-transparent hover:border-primary/20"
+              onClick={() => setShowTypeSelector(true)}
+            >
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                  <FileText className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold mb-1">Nová smlouva</h3>
+                <p className="text-sm text-muted-foreground">
+                  Vytvořte smlouvu jako stavebnici
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Nová faktura */}
+            <Card
+              className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 border-transparent hover:border-primary/20"
+              onClick={() => router.push("/cash-flow")}
+            >
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                  <Plus className="w-8 h-8 text-green-600" />
+                </div>
+                <h3 className="text-lg font-semibold mb-1">Nová faktura</h3>
+                <p className="text-sm text-muted-foreground">
+                  Vystavte nebo evidujte fakturu
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Rychlá zakázka */}
+            <Card
+              className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 border-transparent hover:border-accent/50 bg-accent/5"
+              onClick={() => router.push("/quick-orders")}
+            >
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mb-4">
+                  <Zap className="w-8 h-8 text-accent-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold mb-1">Rychlá zakázka</h3>
+                <p className="text-sm text-muted-foreground">
+                  Rychlý záznam bez smlouvy
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Financial Overview Section */}
+        <section className="mb-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Finanční přehled</h2>
+            <Button variant="outline" size="sm" onClick={() => router.push("/cash-flow")}>
+              <Eye className="w-4 h-4 mr-2" />
+              Zobrazit vše
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Příjmy */}
+            <Card className="border-l-4 border-l-green-500">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Příjmy celkem</p>
+                    <p className="text-2xl font-bold text-green-600">{formatCurrency(totalIncome)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Zaplaceno: {formatCurrency(paidIncome)}
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-green-600" />
+                  </div>
+                </div>
+                {summary.overdueIncome > 0 && (
+                  <div className="mt-3 pt-3 border-t">
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      Po splatnosti: {formatCurrency(summary.overdueIncome)}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Výdaje */}
+            <Card className="border-l-4 border-l-red-500">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Výdaje celkem</p>
+                    <p className="text-2xl font-bold text-red-600">{formatCurrency(totalExpenses)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Nezaplaceno: {formatCurrency(summary.totalExpenses)}
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                    <TrendingDown className="w-5 h-5 text-red-600" />
+                  </div>
+                </div>
+                {summary.overdueExpenses > 0 && (
+                  <div className="mt-3 pt-3 border-t">
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      Po splatnosti: {formatCurrency(summary.overdueExpenses)}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Zůstatek */}
+            <Card className={`border-l-4 ${summary.netCashFlow >= 0 ? "border-l-blue-500" : "border-l-orange-500"}`}>
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Očekávaný zůstatek</p>
+                    <p className={`text-2xl font-bold ${summary.netCashFlow >= 0 ? "text-blue-600" : "text-orange-600"}`}>
+                      {formatCurrency(summary.netCashFlow)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Nezaplacené pohledávky
+                    </p>
+                  </div>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${summary.netCashFlow >= 0 ? "bg-blue-100" : "bg-orange-100"}`}>
+                    <Wallet className={`w-5 h-5 ${summary.netCashFlow >= 0 ? "text-blue-600" : "text-orange-600"}`} />
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t">
+                  <p className="text-xs text-muted-foreground">
+                    {summary.netCashFlow >= 0 ? "Dobrá finanční situace" : "Pozor na cash-flow"}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Active Contracts Section */}
+        {contracts.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-semibold">Aktivní smlouvy</h2>
+                <Badge variant="secondary">{contracts.length}</Badge>
+              </div>
+              {contracts.length > 6 && (
+                <Button variant="outline" size="sm" onClick={() => router.push("/contracts")}>
+                  Zobrazit všechny
+                </Button>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {contracts.slice(0, 6).map((contract) => {
                 const status = getUpcomingStatus(contract)
                 const nextDeadline = getNextDeadline(contract)
@@ -187,20 +283,25 @@ export default function Home() {
                     className="hover:shadow-lg transition-shadow cursor-pointer"
                     onClick={() => router.push(`/contract/${contract.id}`)}
                   >
-                    <CardHeader>
+                    <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-lg line-clamp-1">{contract.name}</CardTitle>
-                          <CardDescription>{getContractTypeName(contract.type)}</CardDescription>
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-base line-clamp-1">{contract.name}</CardTitle>
+                          <CardDescription className="text-sm">
+                            {getContractTypeName(contract.type)}
+                          </CardDescription>
                         </div>
                         {status && (
-                          <Badge variant={status.type === "overdue" ? "destructive" : "default"} className="ml-2">
+                          <Badge
+                            variant={status.type === "overdue" ? "destructive" : "default"}
+                            className="ml-2 shrink-0"
+                          >
                             {status.count}
                           </Badge>
                         )}
                       </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-0">
                       <div className="space-y-2 text-sm">
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Calendar className="w-4 h-4" />
@@ -212,7 +313,11 @@ export default function Home() {
                         {nextDeadline && (
                           <div
                             className={`flex items-center gap-2 ${
-                              nextDeadline.isPast ? "text-destructive" : nextDeadline.isUpcoming ? "text-yellow-600" : ""
+                              nextDeadline.isPast
+                                ? "text-destructive"
+                                : nextDeadline.isUpcoming
+                                  ? "text-yellow-600"
+                                  : "text-muted-foreground"
                             }`}
                           >
                             {nextDeadline.isPast ? (
@@ -224,62 +329,53 @@ export default function Home() {
                               {nextDeadline.title} -{" "}
                               {nextDeadline.isPast
                                 ? `Po termínu (${Math.abs(nextDeadline.daysUntil)} dnů)`
-                                : nextDeadline.isUpcoming
-                                  ? `Za ${nextDeadline.daysUntil} dnů`
-                                  : `Za ${nextDeadline.daysUntil} dnů`}
+                                : `Za ${nextDeadline.daysUntil} dnů`}
                             </span>
                           </div>
                         )}
-
-                        <div className="flex gap-2 mt-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              router.push(`/contract/${contract.id}`)
-                            }}
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            Detail
-                          </Button>
-                        </div>
                       </div>
                     </CardContent>
                   </Card>
                 )
               })}
             </div>
+          </section>
+        )}
 
-            {contracts.length > 6 && (
-              <div className="mt-6 text-center">
-                <Button variant="outline" onClick={() => router.push("/contracts")}>
-                  Zobrazit všechny smlouvy ({contracts.length})
-                </Button>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
+        {/* Empty state if no contracts */}
+        {contracts.length === 0 && (
+          <section className="text-center py-12">
+            <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <FileText className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Zatím nemáte žádné smlouvy</h3>
+            <p className="text-muted-foreground mb-4">
+              Začněte vytvořením první smlouvy nebo rychlé zakázky
+            </p>
+            <Button onClick={() => setShowTypeSelector(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Vytvořit první smlouvu
+            </Button>
+          </section>
+        )}
 
-      {/* Type Selector Dialog */}
-      {showTypeSelector && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-background rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold">Vyber typ smlouvy</h2>
-                <Button variant="ghost" size="sm" onClick={() => setShowTypeSelector(false)}>
-                  ✕
-                </Button>
+        {/* Type Selector Dialog */}
+        {showTypeSelector && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-background rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold">Vyber typ smlouvy</h2>
+                  <Button variant="ghost" size="sm" onClick={() => setShowTypeSelector(false)}>
+                    ✕
+                  </Button>
+                </div>
+                <ContractTypeSelector onSelect={handleSelectType} />
               </div>
-              <ContractTypeSelector onSelect={handleSelectType} />
             </div>
           </div>
-        </div>
-      )}
-      </main>
-    </>
+        )}
+      </div>
+    </AppLayout>
   )
 }

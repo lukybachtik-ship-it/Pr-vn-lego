@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { AppHeader } from "@/components/app-header"
+import { AppLayout } from "@/components/app-layout"
 import {
   Zap,
   Plus,
@@ -206,21 +206,19 @@ export default function QuickOrdersPage() {
 
   if (isLoading) {
     return (
-      <>
-        <AppHeader title="Rychlé zakázky" showBack />
-        <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-4">
+      <AppLayout title="Rychlé zakázky" showBack>
+        <main className="p-4">
           <div className="max-w-4xl mx-auto flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
         </main>
-      </>
+      </AppLayout>
     )
   }
 
   return (
-    <>
-      <AppHeader title="Rychlé zakázky" showBack />
-      <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-4">
+    <AppLayout title="Rychlé zakázky" showBack>
+      <main className="p-4">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -548,6 +546,6 @@ export default function QuickOrdersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </AppLayout>
   )
 }

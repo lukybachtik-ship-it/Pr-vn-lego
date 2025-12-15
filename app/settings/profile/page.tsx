@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { AppHeader } from "@/components/app-header"
+import { AppLayout } from "@/components/app-layout"
 import { User, Building2, Upload, Trash2, Save } from "lucide-react"
 import { getUserProfile, saveUserProfile, uploadLogo, deleteLogo, type UserProfile } from "@/lib/user-profile"
 import { supabase } from "@/lib/supabase"
@@ -136,21 +136,19 @@ export default function ProfileSettingsPage() {
 
   if (isLoading) {
     return (
-      <>
-        <AppHeader title="Nastavení profilu" />
-        <main className="min-h-screen bg-background p-4 md:p-8">
+      <AppLayout title="Nastavení profilu" showBack>
+        <main className="p-4 md:p-8">
           <div className="max-w-4xl mx-auto flex items-center justify-center">
             <p className="text-muted-foreground">Načítám...</p>
           </div>
         </main>
-      </>
+      </AppLayout>
     )
   }
 
   return (
-    <>
-      <AppHeader title="Nastavení profilu" />
-      <main className="min-h-screen bg-background p-4 md:p-8">
+    <AppLayout title="Nastavení profilu" showBack>
+      <main className="p-4 md:p-8">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Header */}
           <div>
@@ -285,6 +283,6 @@ export default function ProfileSettingsPage() {
           </div>
         </div>
       </main>
-    </>
+    </AppLayout>
   )
 }

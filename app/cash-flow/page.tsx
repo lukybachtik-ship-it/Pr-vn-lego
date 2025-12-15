@@ -45,7 +45,7 @@ import { QRInvoicePreview } from "@/components/qr-invoice-preview"
 import { VATLimitIndicator } from "@/components/vat-limit-indicator"
 import { generateInvoiceNumber } from "@/lib/qr-payment"
 import { getDefaultBankAccount } from "@/lib/bank-accounts"
-import { AppHeader } from "@/components/app-header"
+import { AppLayout } from "@/components/app-layout"
 import { InvoiceItemsEditor } from "@/components/invoice-items-editor"
 import { MonthlyDetailPopup } from "@/components/monthly-detail-popup"
 import { InvoiceReminderDialog } from "@/components/invoice-reminder-dialog"
@@ -267,9 +267,8 @@ export default function CashFlowPage() {
   }
 
   return (
-    <>
-      <AppHeader title="Palubní Deska Peněz" />
-      <main className="min-h-screen bg-background p-4 md:p-8">
+    <AppLayout title="Palubní Deska Peněz" showBack>
+      <main className="p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -682,6 +681,6 @@ export default function CashFlowPage() {
         invoice={selectedInvoiceForReminder}
       />
       </main>
-    </>
+    </AppLayout>
   )
 }

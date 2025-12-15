@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { AlertCircle } from "lucide-react"
 import type { ContractBlock } from "@/types/contract"
-import { AppHeader } from "@/components/app-header"
+import { AppLayout } from "@/components/app-layout"
 
 function ReviewContent() {
   const router = useRouter()
@@ -31,9 +31,8 @@ function ReviewContent() {
 
   if (error) {
     return (
-      <>
-        <AppHeader title="Náhled smlouvy" />
-        <main className="min-h-screen bg-background p-4 md:p-8">
+      <AppLayout title="Náhled smlouvy" showBack>
+        <main className="p-4 md:p-8">
           <div className="max-w-2xl mx-auto">
           <Card className="border-destructive bg-destructive/5 p-6">
             <div className="flex items-start gap-4">
@@ -47,15 +46,14 @@ function ReviewContent() {
           </Card>
         </div>
         </main>
-      </>
+      </AppLayout>
     )
   }
 
   return (
-    <>
-      <AppHeader title="Náhled smlouvy" />
+    <AppLayout title="Náhled smlouvy" showBack>
       <ContractReview contractType={type} blocks={blocks} />
-    </>
+    </AppLayout>
   )
 }
 

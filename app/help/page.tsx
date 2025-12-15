@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { AppHeader } from "@/components/app-header"
+import { AppLayout } from "@/components/app-layout"
 import {
   FileText,
   Users,
@@ -19,11 +19,11 @@ export default function HelpPage() {
   const handleDownloadGuide = () => {
     // Create a simple text guide
     const guideContent = `
-PRÁVNÍ LEGO - UŽIVATELSKÁ PŘÍRUČKA
+BUSINESSHUB - UŽIVATELSKÁ PŘÍRUČKA
 =====================================
 
 ## 1. ÚVOD
-Právní LEGO je aplikace pro správu právních dokumentů, klientů, faktur a časové evidence práce.
+BusinessHub je aplikace pro správu právních dokumentů, klientů, faktur a časové evidence práce.
 
 ## 2. PŘEHLED FUNKCÍ
 
@@ -160,9 +160,8 @@ Datum: ${new Date().toLocaleDateString("cs-CZ")}
   ]
 
   return (
-    <>
-      <AppHeader title="Nápověda" />
-      <main className="min-h-screen bg-background p-4 md:p-8">
+    <AppLayout title="Nápověda" showBack>
+      <main className="p-4 md:p-8">
         <div className="max-w-6xl mx-auto space-y-8">
           {/* Header */}
           <div className="flex items-start justify-between">
@@ -171,7 +170,7 @@ Datum: ${new Date().toLocaleDateString("cs-CZ")}
                 <HelpCircle className="w-10 h-10 text-primary" />
                 Nápověda a dokumentace
               </h1>
-              <p className="text-muted-foreground">Vše, co potřebujete vědět o použití aplikace Právní LEGO</p>
+              <p className="text-muted-foreground">Vše, co potřebujete vědět o použití aplikace BusinessHub</p>
             </div>
             <Button onClick={handleDownloadGuide} variant="outline">
               <Download className="w-4 h-4 mr-2" />
@@ -286,6 +285,6 @@ Datum: ${new Date().toLocaleDateString("cs-CZ")}
           </Card>
         </div>
       </main>
-    </>
+    </AppLayout>
   )
 }

@@ -10,8 +10,8 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Právní LEGO - Tvoř smlouvy bez právníka",
-  description: "Moderní aplikace pro vytváření právních smluv pomocí drag-and-drop systému",
+  title: "BusinessHub - Vše pro živnostníky",
+  description: "Komplexní aplikace pro správu smluv, faktur, klientů a financí pro živnostníky a podnikatele",
   generator: "v0.app",
 }
 

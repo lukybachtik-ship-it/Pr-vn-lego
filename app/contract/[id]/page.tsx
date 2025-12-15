@@ -15,7 +15,7 @@ import { ContractTimelineComponent } from "@/components/contract-timeline"
 import { HandoverProtocolGenerator } from "@/components/handover-protocol-generator"
 import { CalendarExportDialog } from "@/components/calendar-export-dialog"
 import { ContractExporter } from "@/components/contract-exporter"
-import { AppHeader } from "@/components/app-header"
+import { AppLayout } from "@/components/app-layout"
 import { extractContractDeadlines } from "@/lib/contract-timeline"
 import { generateInvoiceFromContract } from "@/lib/contract-to-invoice"
 import {
@@ -318,9 +318,8 @@ export default function ContractDetailPage() {
   const contractText = renderContractText()
 
   return (
-    <>
-      <AppHeader title={contract.name} />
-      <main className="min-h-screen bg-background p-4 md:p-8">
+    <AppLayout title={contract.name} showBack>
+      <main className="p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -585,6 +584,6 @@ export default function ContractDetailPage() {
         </DialogContent>
       </Dialog>
       </main>
-    </>
+    </AppLayout>
   )
 }

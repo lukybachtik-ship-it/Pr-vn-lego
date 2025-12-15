@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { AppHeader } from "@/components/app-header"
+import { AppLayout } from "@/components/app-layout"
 import { Calculator, Receipt, Percent, AlertCircle, CheckCircle, Loader2 } from "lucide-react"
 import {
   getUserSettings,
@@ -65,21 +65,19 @@ export default function TaxSettingsPage() {
 
   if (isLoading) {
     return (
-      <>
-        <AppHeader title="Daňové nastavení" showBack />
-        <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-4">
+      <AppLayout title="Daňové nastavení" showBack>
+        <main className="p-4">
           <div className="max-w-2xl mx-auto flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
         </main>
-      </>
+      </AppLayout>
     )
   }
 
   return (
-    <>
-      <AppHeader title="Daňové nastavení" showBack />
-      <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-4">
+    <AppLayout title="Daňové nastavení" showBack>
+      <main className="p-4">
         <div className="max-w-2xl mx-auto space-y-6">
           {/* Header */}
           <div className="text-center py-6">
@@ -283,6 +281,6 @@ export default function TaxSettingsPage() {
           </Card>
         </div>
       </main>
-    </>
+    </AppLayout>
   )
 }

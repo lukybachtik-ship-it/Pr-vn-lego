@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Trash2, Play, Copy, Plus } from "lucide-react"
 import { ContractTypeSelector } from "@/components/contract-type-selector"
-import { AppHeader } from "@/components/app-header"
+import { AppLayout } from "@/components/app-layout"
 
 interface Draft {
   id: string
@@ -178,9 +178,8 @@ export default function DraftsPage() {
   }
 
   return (
-    <>
-      <AppHeader title="Koncepty" />
-      <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-4 md:p-8">
+    <AppLayout title="Moje koncepty" showBack>
+      <main className="p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8 flex items-center justify-between">
           <div>
@@ -257,6 +256,6 @@ export default function DraftsPage() {
         </div>
       )}
       </main>
-    </>
+    </AppLayout>
   )
 }
