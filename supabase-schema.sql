@@ -95,6 +95,37 @@ CREATE TABLE change_requests (
 CREATE TABLE user_settings (
   user_id UUID PRIMARY KEY REFERENCES auth.users,
   vat_limit_dismissed BOOLEAN DEFAULT FALSE,
+  tax_settings JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Quick orders table (for simplified job tracking)
+CREATE TABLE quick_orders (
+  user_id UUID PRIMARY KEY REFERENCES auth.users,
+  orders JSONB NOT NULL DEFAULT '[]'::jsonb,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Profit calculations table (for calculator history)
+CREATE TABLE profit_calculations (
+  user_id UUID PRIMARY KEY REFERENCES auth.users,
+  calculations JSONB NOT NULL DEFAULT '[]'::jsonb,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- User profiles table (for business details)
+CREATE TABLE user_profiles (
+  user_id UUID PRIMARY KEY REFERENCES auth.users,
+  company_name TEXT,
+  ico TEXT,
+  dic TEXT,
+  street TEXT,
+  city TEXT,
+  zip TEXT,
+  phone TEXT,
+  email TEXT,
+  logo_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -107,6 +138,9 @@ ALTER TABLE time_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bank_accounts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE change_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE quick_orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE profit_calculations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 
 -- Contracts policies
 CREATE POLICY "Users can view own contracts" ON contracts FOR SELECT USING (auth.uid() = user_id);
@@ -148,6 +182,21 @@ CREATE POLICY "Users can delete own change requests" ON change_requests FOR DELE
 CREATE POLICY "Users can view own settings" ON user_settings FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own settings" ON user_settings FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own settings" ON user_settings FOR UPDATE USING (auth.uid() = user_id);
+
+-- Quick orders policies
+CREATE POLICY "Users can view own quick orders" ON quick_orders FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own quick orders" ON quick_orders FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own quick orders" ON quick_orders FOR UPDATE USING (auth.uid() = user_id);
+
+-- Profit calculations policies
+CREATE POLICY "Users can view own calculations" ON profit_calculations FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own calculations" ON profit_calculations FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own calculations" ON profit_calculations FOR UPDATE USING (auth.uid() = user_id);
+
+-- User profiles policies
+CREATE POLICY "Users can view own profile" ON user_profiles FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own profile" ON user_profiles FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own profile" ON user_profiles FOR UPDATE USING (auth.uid() = user_id);
 
 -- Indexes for performance
 CREATE INDEX idx_contracts_user_id ON contracts(user_id);

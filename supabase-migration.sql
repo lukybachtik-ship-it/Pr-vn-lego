@@ -84,6 +84,57 @@ COMMENT ON TABLE user_profiles IS 'User profile settings including company logo 
 COMMENT ON COLUMN clients.default_hourly_rate IS 'Default hourly rate in CZK for this client';
 COMMENT ON COLUMN clients.billing_type IS 'Billing type: hourly or flat rate';
 
+-- 8. Add tax_settings column to user_settings table
+ALTER TABLE user_settings
+ADD COLUMN IF NOT EXISTS tax_settings JSONB;
+
+-- 9. Create quick_orders table for simplified job tracking
+CREATE TABLE IF NOT EXISTS quick_orders (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  orders JSONB NOT NULL DEFAULT '[]'::jsonb,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE quick_orders ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own quick orders"
+  ON quick_orders FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own quick orders"
+  ON quick_orders FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own quick orders"
+  ON quick_orders FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- 10. Create profit_calculations table for calculator history
+CREATE TABLE IF NOT EXISTS profit_calculations (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  calculations JSONB NOT NULL DEFAULT '[]'::jsonb,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE profit_calculations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own calculations"
+  ON profit_calculations FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own calculations"
+  ON profit_calculations FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own calculations"
+  ON profit_calculations FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Comments for new tables
+COMMENT ON TABLE quick_orders IS 'Quick orders for simplified job tracking without formal contracts';
+COMMENT ON TABLE profit_calculations IS 'Saved profit calculations from the calculator';
+COMMENT ON COLUMN user_settings.tax_settings IS 'Tax configuration settings (JSON: expenseType, pausalniSazba, vatStatus, minHourlyRate)';
+
 -- Migration complete!
 -- Note: This SQL creates tables and adds columns in a non-destructive way.
 -- Existing data will not be affected.
