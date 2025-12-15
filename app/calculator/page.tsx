@@ -142,7 +142,7 @@ export default function CalculatorPage() {
   if (isLoading) {
     return (
       <>
-        <AppHeader title="Kalkulacka zisku" showBack />
+        <AppHeader title="Kalkulačka zisku" showBack />
         <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-4">
           <div className="max-w-4xl mx-auto flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -156,7 +156,7 @@ export default function CalculatorPage() {
   if (!hasSettings) {
     return (
       <>
-        <AppHeader title="Kalkulacka zisku" showBack />
+        <AppHeader title="Kalkulačka zisku" showBack />
         <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-4">
           <div className="max-w-lg mx-auto py-20">
             <Card>
@@ -164,16 +164,16 @@ export default function CalculatorPage() {
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-100 mx-auto mb-4">
                   <Settings className="w-8 h-8 text-amber-600" />
                 </div>
-                <CardTitle>Nejdrive nastavte dane</CardTitle>
+                <CardTitle>Nejdříve nastavte daně</CardTitle>
                 <CardDescription>
-                  Pro presny vypocet cisteho zisku potrebujeme vedet, jak uplatnujete vydaje a jestli
-                  jste platce DPH.
+                  Pro přesný výpočet čistého zisku potřebujeme vědět, jak uplatňujete výdaje a jestli
+                  jste plátce DPH.
                 </CardDescription>
               </CardHeader>
               <CardContent className="text-center">
                 <Button onClick={() => router.push("/settings/tax")} size="lg">
                   <Settings className="w-4 h-4 mr-2" />
-                  Prejit do nastaveni
+                  Přejít do nastavení
                 </Button>
               </CardContent>
             </Card>
@@ -187,7 +187,7 @@ export default function CalculatorPage() {
 
   return (
     <>
-      <AppHeader title="Kalkulacka zisku" showBack />
+      <AppHeader title="Kalkulačka zisku" showBack />
       <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-4">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Header */}
@@ -195,10 +195,10 @@ export default function CalculatorPage() {
             <div>
               <h1 className="text-3xl font-bold flex items-center gap-3">
                 <Calculator className="w-8 h-8 text-primary" />
-                Kalkulacka cisteho zisku
+                Kalkulačka čistého zisku
               </h1>
               <p className="text-muted-foreground mt-1">
-                Zjistete, kolik vam skutecne zustane z zakazky
+                Zjistěte, kolik vám skutečně zůstane ze zakázky
               </p>
             </div>
             <div className="flex gap-2">
@@ -208,7 +208,7 @@ export default function CalculatorPage() {
               </Button>
               <Button variant="outline" onClick={() => router.push("/settings/tax")}>
                 <Settings className="w-4 h-4 mr-2" />
-                Nastaveni
+                Nastavení
               </Button>
             </div>
           </div>
@@ -217,13 +217,13 @@ export default function CalculatorPage() {
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline" className="text-sm">
               {taxSettings.expenseType === "pausalni"
-                ? `Pausal ${taxSettings.pausalniSazba}%`
-                : "Skutecne vydaje"}
+                ? `Paušál ${taxSettings.pausalniSazba}%`
+                : "Skutečné výdaje"}
             </Badge>
             <Badge variant="outline" className="text-sm">
               {taxSettings.vatStatus === "none"
-                ? "Neplatce DPH"
-                : `Platce DPH ${taxSettings.vatStatus}%`}
+                ? "Neplátce DPH"
+                : `Plátce DPH ${taxSettings.vatStatus}%`}
             </Badge>
           </div>
 
@@ -233,11 +233,11 @@ export default function CalculatorPage() {
               {/* Project Name */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Nazev zakazky</CardTitle>
+                  <CardTitle className="text-lg">Název zakázky</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Input
-                    placeholder="Napr. Web pro klienta XY"
+                    placeholder="Např. Web pro klienta XY"
                     value={projectName}
                     onChange={(e) => setProjectName(e.target.value)}
                   />
@@ -249,15 +249,15 @@ export default function CalculatorPage() {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Receipt className="w-5 h-5" />
-                    Naklady
+                    Náklady
                   </CardTitle>
-                  <CardDescription>Zadejte vase naklady na zakazku</CardDescription>
+                  <CardDescription>Zadejte vaše náklady na zakázku</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {costs.map((cost) => (
                     <div key={cost.id} className="flex items-center gap-2">
                       <Input
-                        placeholder="Nazev polozky"
+                        placeholder="Název položky"
                         value={cost.name}
                         onChange={(e) => updateCostItem(cost.id, "name", e.target.value)}
                         className="flex-1"
@@ -269,7 +269,7 @@ export default function CalculatorPage() {
                         onChange={(e) => updateCostItem(cost.id, "amount", e.target.value)}
                         className="w-32"
                       />
-                      <span className="text-muted-foreground text-sm">Kc</span>
+                      <span className="text-muted-foreground text-sm">Kč</span>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -282,11 +282,11 @@ export default function CalculatorPage() {
                   ))}
                   <Button variant="outline" onClick={addCostItem} className="w-full">
                     <Plus className="w-4 h-4 mr-2" />
-                    Pridat polozku
+                    Přidat položku
                   </Button>
 
                   <div className="pt-3 border-t flex justify-between items-center">
-                    <span className="font-medium">Celkove naklady:</span>
+                    <span className="font-medium">Celkové náklady:</span>
                     <span className="text-lg font-bold">
                       {formatCurrency(costs.reduce((sum, c) => sum + c.amount, 0))}
                     </span>
@@ -299,7 +299,7 @@ export default function CalculatorPage() {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Clock className="w-5 h-5" />
-                    Cas na zakazku
+                    Čas na zakázku
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -316,22 +316,94 @@ export default function CalculatorPage() {
                 </CardContent>
               </Card>
 
+              {/* Target Price - NEW */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Banknote className="w-5 h-5" />
+                    Cílová cena
+                  </CardTitle>
+                  <CardDescription>
+                    Zadejte požadovanou koncovou cenu nebo hodinovou sazbu
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm text-muted-foreground">Koncová cena</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={grossRevenue || ""}
+                          onChange={(e) => {
+                            const price = Number(e.target.value)
+                            setGrossRevenue(price)
+                            // Vypočítat marži zpětně
+                            const totalCosts = costs.reduce((sum, c) => sum + c.amount, 0)
+                            if (totalCosts > 0) {
+                              const newMargin = Math.round(((price / totalCosts) - 1) * 100)
+                              if (newMargin >= 0 && newMargin <= 500) {
+                                setMarginPercent(newMargin)
+                              }
+                            }
+                          }}
+                          className="flex-1"
+                        />
+                        <span className="text-muted-foreground text-sm">Kč</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm text-muted-foreground">Hodinová sazba</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={hours > 0 && grossRevenue > 0 ? Math.round(grossRevenue / hours) : ""}
+                          onChange={(e) => {
+                            if (hours > 0) {
+                              const targetHourly = Number(e.target.value)
+                              const newPrice = targetHourly * hours
+                              setGrossRevenue(newPrice)
+                              // Vypočítat marži zpětně
+                              const totalCosts = costs.reduce((sum, c) => sum + c.amount, 0)
+                              if (totalCosts > 0) {
+                                const newMargin = Math.round(((newPrice / totalCosts) - 1) * 100)
+                                if (newMargin >= 0 && newMargin <= 500) {
+                                  setMarginPercent(newMargin)
+                                }
+                              }
+                            }
+                          }}
+                          className="flex-1"
+                          disabled={hours === 0}
+                        />
+                        <span className="text-muted-foreground text-sm">Kč/h</span>
+                      </div>
+                      {hours === 0 && (
+                        <p className="text-xs text-muted-foreground">Zadejte nejdříve hodiny</p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Margin Slider */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <TrendingUp className="w-5 h-5" />
-                    Marze
+                    Marže
                   </CardTitle>
                   <CardDescription>
-                    Navyseni nad naklady pro vasi odmenu
+                    Navýšení nad náklady pro vaši odměnu
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-4xl font-bold text-primary">{marginPercent}%</span>
                     <span className="text-muted-foreground">
-                      Koncova cena:{" "}
+                      Koncová cena:{" "}
                       <span className="font-bold text-foreground">
                         {formatCurrency(
                           costs.reduce((sum, c) => sum + c.amount, 0) * (1 + marginPercent / 100)
@@ -341,18 +413,24 @@ export default function CalculatorPage() {
                   </div>
                   <Slider
                     value={[marginPercent]}
-                    onValueChange={([value]) => setMarginPercent(value)}
+                    onValueChange={([value]) => {
+                      setMarginPercent(value)
+                      // Aktualizovat grossRevenue podle marže
+                      const totalCosts = costs.reduce((sum, c) => sum + c.amount, 0)
+                      setGrossRevenue(Math.round(totalCosts * (1 + value / 100)))
+                    }}
                     min={0}
-                    max={200}
+                    max={500}
                     step={5}
                     className="w-full"
                   />
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>0%</span>
-                    <span>50%</span>
                     <span>100%</span>
-                    <span>150%</span>
                     <span>200%</span>
+                    <span>300%</span>
+                    <span>400%</span>
+                    <span>500%</span>
                   </div>
                 </CardContent>
               </Card>
@@ -378,11 +456,11 @@ export default function CalculatorPage() {
                           ) : (
                             <CheckCircle className="w-6 h-6 text-green-600" />
                           )}
-                          Cisty zisk
+                          Čistý zisk
                         </span>
                         <Button variant="outline" size="sm" onClick={() => setShowSaveDialog(true)}>
                           <Save className="w-4 h-4 mr-2" />
-                          Ulozit
+                          Uložit
                         </Button>
                       </CardTitle>
                     </CardHeader>
@@ -396,7 +474,7 @@ export default function CalculatorPage() {
                           {formatCurrency(result.netProfit)}
                         </div>
                         <div className="text-muted-foreground mt-2">
-                          z koncove ceny {formatCurrency(result.finalPrice)}
+                          z koncové ceny {formatCurrency(result.finalPrice)}
                         </div>
                       </div>
 
@@ -407,7 +485,7 @@ export default function CalculatorPage() {
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-medium">Hodinova sazba:</span>
+                          <span className="font-medium">Hodinová sazba:</span>
                           <span
                             className={`text-2xl font-bold ${
                               result.isBelowMinimum ? "text-destructive" : "text-green-700"
@@ -418,8 +496,8 @@ export default function CalculatorPage() {
                         </div>
                         {result.isBelowMinimum && (
                           <p className="text-sm text-destructive mt-2">
-                            Varovani: Hodinova sazba je pod minimem {formatCurrency(result.minimumHourlyRate)}
-                            /h. Tato zakazka se vam nevyplati!
+                            Varování: Hodinová sazba je pod minimem {formatCurrency(result.minimumHourlyRate)}
+                            /h. Tato zakázka se vám nevyplatí!
                           </p>
                         )}
                       </div>
@@ -429,7 +507,7 @@ export default function CalculatorPage() {
                   {/* Breakdown Chart */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">Rozdeleni ceny</CardTitle>
+                      <CardTitle className="text-lg">Rozdělení ceny</CardTitle>
                     </CardHeader>
                     <CardContent>
                       {/* Visual Bar */}
@@ -459,21 +537,21 @@ export default function CalculatorPage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-blue-500" />
-                            <span>Material a naklady</span>
+                            <span>Materiál a náklady</span>
                           </div>
                           <span className="font-medium">{formatCurrency(result.totalCosts)}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-red-500" />
-                            <span>Odvody statu</span>
+                            <span>Odvody státu</span>
                           </div>
                           <span className="font-medium">{formatCurrency(result.totalTaxes)}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-green-500" />
-                            <span>Cisty zisk</span>
+                            <span>Čistý zisk</span>
                           </div>
                           <span className="font-medium">{formatCurrency(result.netProfit)}</span>
                         </div>
@@ -484,27 +562,27 @@ export default function CalculatorPage() {
                   {/* Tax Breakdown */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">Detail odvodu</CardTitle>
+                      <CardTitle className="text-lg">Detail odvodů</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                         <div className="flex items-center gap-2">
                           <Building2 className="w-4 h-4 text-orange-600" />
-                          <span>Socialni pojisteni</span>
+                          <span>Sociální pojištění</span>
                         </div>
                         <span className="font-medium">{formatCurrency(result.socialInsurance)}</span>
                       </div>
                       <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                         <div className="flex items-center gap-2">
                           <Heart className="w-4 h-4 text-red-600" />
-                          <span>Zdravotni pojisteni</span>
+                          <span>Zdravotní pojištění</span>
                         </div>
                         <span className="font-medium">{formatCurrency(result.healthInsurance)}</span>
                       </div>
                       <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                         <div className="flex items-center gap-2">
                           <Banknote className="w-4 h-4 text-purple-600" />
-                          <span>Dan z prijmu</span>
+                          <span>Daň z příjmu</span>
                         </div>
                         <span className="font-medium">{formatCurrency(result.incomeTax)}</span>
                       </div>
@@ -515,8 +593,8 @@ export default function CalculatorPage() {
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        * Vypocet je orientacni a zalozi na vasich danoveych nastavenich. Skutecne
-                        odvody se mohou lisit podle vasich celkovych rocnich prijmu.
+                        * Výpočet je orientační a závisí na vašich daňových nastaveních. Skutečné
+                        odvody se mohou lišit podle vašich celkových ročních příjmů.
                       </p>
                     </CardContent>
                   </Card>
@@ -531,27 +609,27 @@ export default function CalculatorPage() {
       <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Ulozit kalkulaci</DialogTitle>
+            <DialogTitle>Uložit kalkulaci</DialogTitle>
             <DialogDescription>
-              Kalkulace bude ulozena do historie pro pozdejsi referenci.
+              Kalkulace bude uložena do historie pro pozdější referenci.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label>Nazev zakazky</Label>
+            <Label>Název zakázky</Label>
             <Input
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
-              placeholder="Zadejte nazev"
+              placeholder="Zadejte název"
               className="mt-2"
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowSaveDialog(false)}>
-              Zrusit
+              Zrušit
             </Button>
             <Button onClick={handleSave}>
               <Save className="w-4 h-4 mr-2" />
-              Ulozit
+              Uložit
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -561,15 +639,15 @@ export default function CalculatorPage() {
       <Dialog open={showHistory} onOpenChange={setShowHistory}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Historie kalkulaci</DialogTitle>
+            <DialogTitle>Historie kalkulací</DialogTitle>
             <DialogDescription>
-              Vase ulozene kalkulace ({savedCalculations.length})
+              Vaše uložené kalkulace ({savedCalculations.length})
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-4">
             {savedCalculations.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                Zatim nemame zadne ulozene kalkulace.
+                Zatím nemáte žádné uložené kalkulace.
               </p>
             ) : (
               savedCalculations.map((calc) => (
@@ -595,7 +673,7 @@ export default function CalculatorPage() {
                   </div>
                   <div className="flex gap-2 mt-3">
                     <Button variant="outline" size="sm" onClick={() => loadCalculation(calc)}>
-                      Nacist
+                      Načíst
                     </Button>
                     <Button
                       variant="ghost"

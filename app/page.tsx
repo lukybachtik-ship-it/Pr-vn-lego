@@ -93,10 +93,6 @@ export default function Home() {
                 <Plus className="w-5 h-5 mr-2" />
                 Nová smlouva
               </Button>
-              <Button size="lg" onClick={() => router.push("/quick-orders")} className="text-lg bg-amber-500 hover:bg-amber-600">
-                <Zap className="w-5 h-5 mr-2" />
-                Rychlá zakázka
-              </Button>
               <Button size="lg" onClick={() => router.push("/cash-flow")} className="text-lg">
                 <Plus className="w-5 h-5 mr-2" />
                 Nová faktura
@@ -114,6 +110,12 @@ export default function Home() {
                 Peníze
               </Button>
             </div>
+
+            {/* Rychlá zakázka - zvýrazněné */}
+            <Button size="lg" onClick={() => router.push("/quick-orders")} className="text-lg bg-amber-500 hover:bg-amber-600">
+              <Zap className="w-5 h-5 mr-2" />
+              Rychlá zakázka
+            </Button>
 
             {/* Vedlejší tlačítka - menší */}
             <div className="flex flex-col md:flex-row gap-2 justify-center flex-wrap">
