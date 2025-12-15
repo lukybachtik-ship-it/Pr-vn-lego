@@ -80,6 +80,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           import("@/lib/bank-accounts").then((m) => m.loadBankAccountsFromCloud()),
           import("@/lib/change-requests").then((m) => m.loadChangeRequestsFromCloud()),
           import("@/lib/user-settings").then((m) => m.loadUserSettingsFromCloud()),
+          import("@/lib/profit-calculator").then((m) => m.loadCalculationsFromCloud()),
+          import("@/lib/quick-orders").then((m) => m.loadQuickOrdersFromCloud()),
         ])
 
         // Log any failures

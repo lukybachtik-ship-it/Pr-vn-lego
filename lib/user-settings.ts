@@ -5,8 +5,30 @@
 
 import { supabase } from "./supabase"
 
+// Typ uplatňování výdajů
+export type ExpenseType = "pausalni" | "skutecne"
+
+// Paušální sazby
+export type PausalniSazba = 80 | 60 | 40
+
+// DPH status
+export type VatStatus = "none" | "15" | "21"
+
+export interface TaxSettings {
+  // Typ uplatňování výdajů
+  expenseType: ExpenseType
+  // Paušální sazba (pokud expenseType === "pausalni")
+  pausalniSazba: PausalniSazba
+  // DPH status
+  vatStatus: VatStatus
+  // Minimální hodinová sazba pro varování (Kč/h)
+  minHourlyRate: number
+}
+
 export interface UserSettings {
   vatLimitDismissed: boolean
+  // Daňová nastavení pro kalkulačku
+  taxSettings?: TaxSettings
 }
 
 /**
@@ -20,6 +42,7 @@ async function syncSettingsToCloud(settings: UserSettings) {
     const { error } = await supabase.from("user_settings").upsert({
       user_id: user.data.user.id,
       vat_limit_dismissed: settings.vatLimitDismissed,
+      tax_settings: settings.taxSettings ? JSON.stringify(settings.taxSettings) : null,
     } as any)
     if (error) throw error
   } catch (error) {
@@ -39,8 +62,19 @@ export async function loadUserSettingsFromCloud() {
 
     if (!data) return
 
+    const taxSettingsRaw = (data as any).tax_settings
+    let taxSettings: TaxSettings | undefined
+    if (taxSettingsRaw) {
+      try {
+        taxSettings = typeof taxSettingsRaw === "string" ? JSON.parse(taxSettingsRaw) : taxSettingsRaw
+      } catch {
+        taxSettings = undefined
+      }
+    }
+
     const settings: UserSettings = {
       vatLimitDismissed: (data as any).vat_limit_dismissed,
+      taxSettings,
     }
 
     localStorage.setItem("userSettings", JSON.stringify(settings))
@@ -49,6 +83,16 @@ export async function loadUserSettingsFromCloud() {
   }
 }
 
+
+/**
+ * Default tax settings
+ */
+export const DEFAULT_TAX_SETTINGS: TaxSettings = {
+  expenseType: "pausalni",
+  pausalniSazba: 60,
+  vatStatus: "none",
+  minHourlyRate: 190,
+}
 
 /**
  * Get user settings
@@ -64,6 +108,22 @@ export function getUserSettings(): UserSettings {
   }
 
   return JSON.parse(settingsJson)
+}
+
+/**
+ * Get tax settings with defaults
+ */
+export function getTaxSettings(): TaxSettings {
+  const settings = getUserSettings()
+  return settings.taxSettings || DEFAULT_TAX_SETTINGS
+}
+
+/**
+ * Check if tax settings are configured
+ */
+export function hasTaxSettingsConfigured(): boolean {
+  const settings = getUserSettings()
+  return settings.taxSettings !== undefined
 }
 
 /**

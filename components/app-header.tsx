@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, Menu, Home, User, LogOut, Settings, HelpCircle } from "lucide-react"
+import { ChevronLeft, Menu, Home, User, LogOut, Settings, HelpCircle, Calculator, Zap } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -81,6 +81,14 @@ export function AppHeader({ title, showBack = true, showMenu = true }: AppHeader
                 <DropdownMenuItem onClick={() => router.push("/cash-flow")}>
                   Peníze
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/quick-orders")}>
+                  <Zap className="w-4 h-4 mr-2" />
+                  Rychlé zakázky
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/calculator")}>
+                  <Calculator className="w-4 h-4 mr-2" />
+                  Kalkulačka zisku
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push("/time-tracking")}>
                   Time Tracking
                 </DropdownMenuItem>
@@ -113,6 +121,10 @@ export function AppHeader({ title, showBack = true, showMenu = true }: AppHeader
               <DropdownMenuItem onClick={() => router.push("/settings/profile")}>
                 <Settings className="w-4 h-4 mr-2" />
                 Nastavení profilu
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/settings/tax")}>
+                <Calculator className="w-4 h-4 mr-2" />
+                Daňové nastavení
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push("/help")}>
                 <HelpCircle className="w-4 h-4 mr-2" />
