@@ -23,7 +23,12 @@ export interface BankAccount {
 async function syncBankAccountToCloud(account: BankAccount) {
   try {
     const user = await supabase.auth.getUser()
-    if (!user.data.user) return
+    if (!user.data.user) {
+      console.log("Bank account sync: No user found")
+      return
+    }
+
+    console.log("Syncing bank account to cloud:", account.label, account.accountNumber)
 
     const { error } = await supabase.from("bank_accounts").upsert({
       id: account.id,
@@ -36,7 +41,13 @@ async function syncBankAccountToCloud(account: BankAccount) {
       is_default: account.isDefault,
       created_at: account.createdAt,
     } as any)
-    if (error) throw error
+
+    if (error) {
+      console.error("Bank account sync error:", error)
+      throw error
+    }
+
+    console.log("Bank account synced successfully:", account.id)
   } catch (error) {
     console.error("Bank account cloud sync failed:", error)
   }
@@ -64,11 +75,26 @@ async function syncAllAccountsToCloud(accounts: BankAccount[]) {
 export async function loadBankAccountsFromCloud() {
   try {
     const user = await supabase.auth.getUser()
-    if (!user.data.user) return
+    if (!user.data.user) {
+      console.log("Bank accounts: No user found, skipping load")
+      return
+    }
 
-    const { data } = await supabase.from("bank_accounts").select("*").eq("user_id", user.data.user.id)
+    console.log("Loading bank accounts from cloud for user:", user.data.user.email)
 
-    if (!data || data.length === 0) return
+    const { data, error } = await supabase.from("bank_accounts").select("*").eq("user_id", user.data.user.id)
+
+    if (error) {
+      console.error("Bank accounts query error:", error)
+      return
+    }
+
+    console.log("Bank accounts found:", data?.length || 0)
+
+    if (!data || data.length === 0) {
+      console.log("No bank accounts in cloud")
+      return
+    }
 
     const accounts: BankAccount[] = data.map((acc: any) => ({
       id: acc.id,
@@ -82,6 +108,7 @@ export async function loadBankAccountsFromCloud() {
     }))
 
     localStorage.setItem("bankAccounts", JSON.stringify(accounts))
+    console.log("Bank accounts loaded to localStorage:", accounts.length)
   } catch (error) {
     console.error("Bank accounts cloud load failed:", error)
   }

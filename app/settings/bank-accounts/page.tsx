@@ -32,6 +32,13 @@ export default function BankAccountsPage() {
 
   useEffect(() => {
     loadAccounts()
+
+    // Reload after a short delay to catch data loaded by AuthProvider
+    const reloadTimer = setTimeout(() => {
+      loadAccounts()
+    }, 500)
+
+    return () => clearTimeout(reloadTimer)
   }, [])
 
   const loadAccounts = () => {

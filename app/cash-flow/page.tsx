@@ -47,7 +47,6 @@ import { generateInvoiceNumber } from "@/lib/qr-payment"
 import { getDefaultBankAccount } from "@/lib/bank-accounts"
 import { AppLayout } from "@/components/app-layout"
 import { InvoiceItemsEditor } from "@/components/invoice-items-editor"
-import { MonthlyDetailPopup } from "@/components/monthly-detail-popup"
 import { InvoiceReminderDialog } from "@/components/invoice-reminder-dialog"
 
 export default function CashFlowPage() {
@@ -74,10 +73,6 @@ export default function CashFlowPage() {
   const [description, setDescription] = useState("")
   const [useLineItems, setUseLineItems] = useState(false)
   const [lineItems, setLineItems] = useState<InvoiceItem[]>([])
-
-  // Monthly detail popup state
-  const [showMonthlyDetail, setShowMonthlyDetail] = useState(false)
-  const [monthlyDetailType, setMonthlyDetailType] = useState<"income" | "expense">("income")
 
   // Reminder dialog state
   const [showReminderDialog, setShowReminderDialog] = useState(false)
@@ -194,11 +189,6 @@ export default function CashFlowPage() {
   const handleMarkAsPaid = (invoiceId: string) => {
     markInvoiceAsPaid(invoiceId)
     loadInvoices()
-  }
-
-  const handleShowMonthlyDetail = (detailType: "income" | "expense") => {
-    setMonthlyDetailType(detailType)
-    setShowMonthlyDetail(true)
   }
 
   const handleAddReminder = (invoice: Invoice) => {
@@ -343,10 +333,7 @@ export default function CashFlowPage() {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Total Income */}
-          <Card
-            className="border-green-500 cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => handleShowMonthlyDetail("income")}
-          >
+          <Card className="border-green-500">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-green-600" />
@@ -360,17 +347,11 @@ export default function CashFlowPage() {
                   Po splatnosti: {formatCurrency(summary.overdueIncome)}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                <Eye className="w-3 h-3" /> Klikněte pro detail
-              </p>
             </CardContent>
           </Card>
 
           {/* Total Expenses */}
-          <Card
-            className="border-red-500 cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => handleShowMonthlyDetail("expense")}
-          >
+          <Card className="border-red-500">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <TrendingDown className="w-4 h-4 text-red-600" />
@@ -384,9 +365,6 @@ export default function CashFlowPage() {
                   Po splatnosti: {formatCurrency(summary.overdueExpenses)}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                <Eye className="w-3 h-3" /> Klikněte pro detail
-              </p>
             </CardContent>
           </Card>
 
@@ -669,17 +647,6 @@ export default function CashFlowPage() {
           onOpenChange={setShowQRPreview}
         />
       )}
-
-      {/* Monthly Detail Popup */}
-      <MonthlyDetailPopup
-        open={showMonthlyDetail}
-        onOpenChange={setShowMonthlyDetail}
-        type={monthlyDetailType}
-        invoices={filteredInvoices}
-        monthLabel={new Date(selectedMonth + "-01").toLocaleDateString("cs-CZ", { month: "long", year: "numeric" })}
-        onMarkAsPaid={handleMarkAsPaid}
-        onAddReminder={handleAddReminder}
-      />
 
       {/* Invoice Reminder Dialog */}
       <InvoiceReminderDialog
