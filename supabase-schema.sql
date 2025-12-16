@@ -72,8 +72,9 @@ CREATE TABLE bank_accounts (
   user_id UUID REFERENCES auth.users NOT NULL,
   account_number TEXT NOT NULL,
   bank_code TEXT NOT NULL,
-  iban TEXT NOT NULL,
+  iban TEXT,
   currency TEXT DEFAULT 'CZK',
+  label TEXT DEFAULT 'Bankovní účet',
   is_default BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );

@@ -331,22 +331,31 @@ export default function CashFlowPage() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Total Income */}
           <Card className="border-green-500">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-green-600" />
-                Příjmy (nezaplacené)
+                Příjmy celkem
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600">{formatCurrency(summary.totalIncome)}</div>
-              {summary.overdueIncome > 0 && (
-                <p className="text-xs text-destructive mt-2">
-                  Po splatnosti: {formatCurrency(summary.overdueIncome)}
+              <div className="text-3xl font-bold text-green-600">
+                {formatCurrency(filteredInvoices.filter((inv) => inv.type === "income").reduce((sum, inv) => sum + inv.amount, 0))}
+              </div>
+              <div className="mt-3 pt-3 border-t space-y-1">
+                <p className="text-sm text-muted-foreground flex justify-between">
+                  <span>Nezaplaceno:</span>
+                  <span className="font-medium text-amber-600">{formatCurrency(summary.totalIncome)}</span>
                 </p>
-              )}
+                {summary.overdueIncome > 0 && (
+                  <p className="text-sm text-destructive flex justify-between">
+                    <span>Po splatnosti:</span>
+                    <span className="font-medium">{formatCurrency(summary.overdueIncome)}</span>
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -355,34 +364,25 @@ export default function CashFlowPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <TrendingDown className="w-4 h-4 text-red-600" />
-                Výdaje (nezaplacené)
+                Výdaje celkem
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-red-600">{formatCurrency(summary.totalExpenses)}</div>
-              {summary.overdueExpenses > 0 && (
-                <p className="text-xs text-destructive mt-2">
-                  Po splatnosti: {formatCurrency(summary.overdueExpenses)}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Net Cash Flow */}
-          <Card className={summary.netCashFlow >= 0 ? "border-blue-500" : "border-orange-500"}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Wallet className="w-4 h-4" />
-                Očekávaný zůstatek
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className={`text-3xl font-bold ${summary.netCashFlow >= 0 ? "text-blue-600" : "text-orange-600"}`}>
-                {formatCurrency(summary.netCashFlow)}
+              <div className="text-3xl font-bold text-red-600">
+                {formatCurrency(filteredInvoices.filter((inv) => inv.type === "expense").reduce((sum, inv) => sum + inv.amount, 0))}
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                {summary.netCashFlow >= 0 ? "Máte dobrou rezervu" : "Pozor na cash-flow"}
-              </p>
+              <div className="mt-3 pt-3 border-t space-y-1">
+                <p className="text-sm text-muted-foreground flex justify-between">
+                  <span>Nezaplaceno:</span>
+                  <span className="font-medium text-amber-600">{formatCurrency(summary.totalExpenses)}</span>
+                </p>
+                {summary.overdueExpenses > 0 && (
+                  <p className="text-sm text-destructive flex justify-between">
+                    <span>Po splatnosti:</span>
+                    <span className="font-medium">{formatCurrency(summary.overdueExpenses)}</span>
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>

@@ -148,7 +148,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
         )}
 
         {/* Main Navigation */}
-        <nav className="flex-1 overflow-y-auto p-4">
+        <nav className="flex-1 overflow-y-auto p-4 sidebar-scroll">
           <div className="space-y-1">
             {mainNavItems.map((item) => (
               <button
