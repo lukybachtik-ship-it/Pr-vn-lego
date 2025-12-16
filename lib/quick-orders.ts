@@ -147,6 +147,22 @@ export function createInvoiceFromQuickOrder(order: QuickOrder): Invoice {
 }
 
 /**
+ * Označí zakázku jako zaplacenou (volá se když je zaplacena faktura)
+ */
+export function markQuickOrderAsPaid(invoiceId: string): void {
+  const orders = getQuickOrders()
+  const order = orders.find((o) => o.invoiceId === invoiceId)
+
+  if (order && order.status === "invoiced") {
+    updateQuickOrder(order.id, {
+      status: "completed",
+      completedAt: new Date().toISOString(),
+    })
+    console.log("Quick order marked as paid:", order.id)
+  }
+}
+
+/**
  * Formátování měny
  */
 export function formatCurrency(amount: number): string {

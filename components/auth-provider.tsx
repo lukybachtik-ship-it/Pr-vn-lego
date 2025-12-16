@@ -82,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           import("@/lib/user-settings").then((m) => m.loadUserSettingsFromCloud()),
           import("@/lib/profit-calculator").then((m) => m.loadCalculationsFromCloud()),
           import("@/lib/quick-orders").then((m) => m.loadQuickOrdersFromCloud()),
+          import("@/lib/user-profile").then((m) => m.loadUserProfileFromCloud()),
         ])
 
         // Log any failures

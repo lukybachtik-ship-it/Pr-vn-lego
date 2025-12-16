@@ -86,6 +86,11 @@ export default function CashFlowPage() {
   useEffect(() => {
     loadInvoices()
 
+    // Reload after a short delay to catch data loaded by AuthProvider
+    const reloadTimer = setTimeout(() => {
+      loadInvoices()
+    }, 500)
+
     // Handle prefilled data from URL parameters
     const prefill = searchParams.get("prefill")
     if (prefill === "contract" || prefill === "time") {
@@ -112,6 +117,8 @@ export default function CashFlowPage() {
 
       setShowAddDialog(true)
     }
+
+    return () => clearTimeout(reloadTimer)
   }, [searchParams])
 
   const loadInvoices = () => {

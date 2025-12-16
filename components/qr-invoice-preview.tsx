@@ -10,7 +10,7 @@ import { formatCurrency } from "@/lib/cash-flow"
 import { getDefaultBankAccount, formatAccountNumber } from "@/lib/bank-accounts"
 import { generateQRCode, generateInvoiceNumber } from "@/lib/qr-payment"
 import type { BankAccount } from "@/lib/bank-accounts"
-import { getUserProfile } from "@/lib/user-profile"
+import { getUserProfile, type UserProfile } from "@/lib/user-profile"
 import { supabase } from "@/lib/supabase"
 import pdfMake from "pdfmake/build/pdfmake"
 import * as pdfFonts from "pdfmake/build/vfs_fonts"
@@ -31,17 +31,19 @@ export function QRInvoicePreview({ invoice, open, onOpenChange }: QRInvoicePrevi
   const [bankAccount, setBankAccount] = useState<BankAccount | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
 
   useEffect(() => {
     if (open && invoice.type === "income") {
       generateQR()
-      loadLogo()
+      loadProfileAndLogo()
     }
   }, [open, invoice])
 
-  const loadLogo = async () => {
+  const loadProfileAndLogo = async () => {
     try {
       const profile = await getUserProfile()
+      setUserProfile(profile)
       if (profile?.logoUrl) {
         // Extract path from URL and download via Supabase API (bypasses CORS)
         try {
@@ -147,10 +149,17 @@ export function QRInvoicePreview({ invoice, open, onOpenChange }: QRInvoicePrevi
       )
 
       // Supplier and Customer
+      const companyName = userProfile?.companyName || "Vaše firma"
       const supplierStack: any[] = [
         { text: "Dodavatel", style: "subheader" },
-        { text: "Vaše firma" }
+        { text: companyName }
       ]
+      if (userProfile?.companyIco) {
+        supplierStack.push({ text: `IČO: ${userProfile.companyIco}`, fontSize: 9 })
+      }
+      if (userProfile?.companyAddress) {
+        supplierStack.push({ text: userProfile.companyAddress, fontSize: 9 })
+      }
       if (bankAccount) {
         supplierStack.push({ text: `Účet: ${formatAccountNumber(bankAccount.accountNumber, bankAccount.bankCode)}`, fontSize: 9 })
         if (bankAccount.iban) {
@@ -351,7 +360,9 @@ export function QRInvoicePreview({ invoice, open, onOpenChange }: QRInvoicePrevi
               <div className="grid grid-cols-2 gap-8 mb-6">
                 <div>
                   <p className="text-sm font-semibold text-gray-600 mb-1">Dodavatel</p>
-                  <p className="font-medium">Vaše firma</p>
+                  <p className="font-medium">{userProfile?.companyName || "Vaše firma"}</p>
+                  {userProfile?.companyIco && <p className="text-sm">IČO: {userProfile.companyIco}</p>}
+                  {userProfile?.companyAddress && <p className="text-sm">{userProfile.companyAddress}</p>}
                   {bankAccount && (
                     <>
                       <p className="text-sm mt-2">

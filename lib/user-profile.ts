@@ -147,6 +147,37 @@ export async function uploadLogo(file: File): Promise<string | null> {
 }
 
 /**
+ * Load user profile from cloud to localStorage - for AuthProvider
+ */
+export async function loadUserProfileFromCloud(): Promise<void> {
+  try {
+    const profile = await getUserProfile()
+    if (profile) {
+      localStorage.setItem("userProfile", JSON.stringify(profile))
+      console.log("User profile loaded to localStorage")
+    }
+  } catch (error) {
+    console.error("Failed to load user profile from cloud:", error)
+  }
+}
+
+/**
+ * Get cached user profile from localStorage (sync)
+ */
+export function getCachedUserProfile(): UserProfile | null {
+  if (typeof window === "undefined") return null
+
+  const cached = localStorage.getItem("userProfile")
+  if (!cached) return null
+
+  try {
+    return JSON.parse(cached)
+  } catch {
+    return null
+  }
+}
+
+/**
  * Delete logo from Supabase Storage
  */
 export async function deleteLogo(logoUrl: string): Promise<boolean> {

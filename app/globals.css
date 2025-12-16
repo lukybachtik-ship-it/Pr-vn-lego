@@ -132,3 +132,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Prevent flash on page navigation */
+@keyframes fadeIn {
+  from {
+    opacity: 0.85;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+main {
+  animation: fadeIn 0.1s ease-out;
+}

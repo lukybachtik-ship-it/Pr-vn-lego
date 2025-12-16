@@ -223,6 +223,13 @@ export function markInvoiceAsPaid(invoiceId: string): void {
 
     // Sync to cloud
     syncInvoiceToCloud(invoices[invoiceId])
+
+    // Sync payment status back to quick order (if exists)
+    import("@/lib/quick-orders").then(({ markQuickOrderAsPaid }) => {
+      markQuickOrderAsPaid(invoiceId)
+    }).catch(() => {
+      // Quick orders module not available - ignore
+    })
   }
 }
 
