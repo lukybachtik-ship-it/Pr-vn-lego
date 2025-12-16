@@ -330,63 +330,6 @@ export default function CashFlowPage() {
           )}
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Total Income */}
-          <Card className="border-green-500">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-green-600" />
-                Příjmy celkem
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-600">
-                {formatCurrency(filteredInvoices.filter((inv) => inv.type === "income").reduce((sum, inv) => sum + inv.amount, 0))}
-              </div>
-              <div className="mt-3 pt-3 border-t space-y-1">
-                <p className="text-sm text-muted-foreground flex justify-between">
-                  <span>Nezaplaceno:</span>
-                  <span className="font-medium text-amber-600">{formatCurrency(summary.totalIncome)}</span>
-                </p>
-                {summary.overdueIncome > 0 && (
-                  <p className="text-sm text-destructive flex justify-between">
-                    <span>Po splatnosti:</span>
-                    <span className="font-medium">{formatCurrency(summary.overdueIncome)}</span>
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Total Expenses */}
-          <Card className="border-red-500">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <TrendingDown className="w-4 h-4 text-red-600" />
-                Výdaje celkem
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-red-600">
-                {formatCurrency(filteredInvoices.filter((inv) => inv.type === "expense").reduce((sum, inv) => sum + inv.amount, 0))}
-              </div>
-              <div className="mt-3 pt-3 border-t space-y-1">
-                <p className="text-sm text-muted-foreground flex justify-between">
-                  <span>Nezaplaceno:</span>
-                  <span className="font-medium text-amber-600">{formatCurrency(summary.totalExpenses)}</span>
-                </p>
-                {summary.overdueExpenses > 0 && (
-                  <p className="text-sm text-destructive flex justify-between">
-                    <span>Po splatnosti:</span>
-                    <span className="font-medium">{formatCurrency(summary.overdueExpenses)}</span>
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Current Month Overview */}
         <Card className="mb-8">
           <CardHeader>
@@ -397,7 +340,7 @@ export default function CashFlowPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="flex flex-col">
                 <span className="text-sm text-muted-foreground">Příjmy</span>
                 <span className="text-2xl font-bold text-green-600">
@@ -424,6 +367,31 @@ export default function CashFlowPage() {
                 </span>
               </div>
             </div>
+
+            {/* Unpaid invoices warning */}
+            {(summary.totalIncome > 0 || summary.totalExpenses > 0) && (
+              <div className="pt-4 border-t">
+                <div className="flex items-start gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
+                  <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm">
+                    <p className="font-medium">Nezaplacené faktury</p>
+                    <div className="mt-1 space-y-0.5 text-amber-700">
+                      {summary.totalIncome > 0 && (
+                        <p>Příjmy k inkasu: {formatCurrency(summary.totalIncome)}</p>
+                      )}
+                      {summary.totalExpenses > 0 && (
+                        <p>Výdaje k úhradě: {formatCurrency(summary.totalExpenses)}</p>
+                      )}
+                      {(summary.overdueIncome > 0 || summary.overdueExpenses > 0) && (
+                        <p className="text-red-600 font-medium mt-1">
+                          Po splatnosti: {formatCurrency(summary.overdueIncome + summary.overdueExpenses)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

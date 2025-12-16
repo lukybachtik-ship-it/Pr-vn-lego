@@ -3,117 +3,159 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { AppLayout } from "@/components/app-layout"
+import { Badge } from "@/components/ui/badge"
 import {
   FileText,
   Users,
-  DollarSign,
+  Wallet,
   Clock,
   Settings,
   Download,
   HelpCircle,
   BookOpen,
   CheckCircle,
+  Zap,
+  Calculator,
+  CreditCard,
+  QrCode,
+  BarChart3,
+  CalendarDays,
+  Bell,
+  ExternalLink,
+  Home,
 } from "lucide-react"
 
 export default function HelpPage() {
   const handleDownloadGuide = () => {
-    // Create a simple text guide
     const guideContent = `
-BUSINESSHUB - UŽIVATELSKÁ PŘÍRUČKA
-=====================================
+BUSINESSHUB - KOMPLETNÍ UŽIVATELSKÁ PŘÍRUČKA
+=============================================
 
 ## 1. ÚVOD
-BusinessHub je aplikace pro správu právních dokumentů, klientů, faktur a časové evidence práce.
+BusinessHub je komplexní aplikace pro živnostníky a malé podnikatele, která pomáhá s:
+- Správou klientů a jejich kontaktních údajů
+- Evidencí příjmů a výdajů
+- Rychlým vystavováním zakázek
+- Kalkulací zisku a daní
+- Sledováním odpracovaného času
+- Tvorbou právních dokumentů a smluv
 
-## 2. PŘEHLED FUNKCÍ
+## 2. DASHBOARD
+Hlavní přehledová stránka zobrazující:
+- Měsíční statistiky (příjmy, výdaje, zisk)
+- Nezaplacené faktury
+- Nadcházející splatnosti
+- Rychlé akce
 
-### 2.1 Dashboard
-- Přehled všech smluv
-- Rychlé akce pro vytvoření nové smlouvy nebo faktury
-- Vyhledávání a filtrování smluv
+## 3. MOJE KONCEPTY
+Správa právních dokumentů a smluv:
+- Tvorba smluv pomocí bloků
+- Šablony pro různé typy smluv
+- Export do PDF a DOCX
+- Změnové listy a dodatky
 
-### 2.2 Tvorba smluv
-1. Klikněte na "Nová smlouva"
-2. Vyberte typ smlouvy
-3. Vyplňte údaje smluvních stran
-4. Přidejte bloky obsahu podle potřeby
-5. Exportujte jako PDF nebo DOCX
+## 4. KLIENTI
+Evidence a správa klientů:
+- Kontaktní údaje (jméno, IČO, DIČ, adresa)
+- Výchozí hodinová sazba
+- Typ fakturace (hodinová, paušální)
+- Přehled smluv a faktur pro klienta
 
-### 2.3 Správa klientů
-- Automatické vytváření klientů ze smluv
-- Ruční přidání klientů
-- Nastavení výchozí hodinové sazby pro klienta
-- Typ fakturace: hodinový nebo paušál
-- Přehled smluv a faktur klienta
+## 5. PENÍZE (CASH FLOW)
+Kompletní správa financí:
+- Evidence příjmů a výdajů
+- Měsíční přehled s filtrováním
+- Varování nezaplacených faktur
+- QR kódy pro snadnou platbu
+- Položkové faktury (služby, materiál, cestovné)
+- Připomenutí splatnosti
+- Měsíční přehled grafů
+- Daňový kalendář
 
-### 2.4 Fakturace
-**Jednoduché faktury:**
-- Klikněte na "Nová faktura"
-- Vyber příjem nebo výdaj
-- Zadejte částku a splatnost
+## 6. RYCHLÉ ZAKÁZKY
+Zjednodušené vystavování zakázek:
+1. Klikněte "Nová zakázka"
+2. Vyberte klienta nebo zadejte nového
+3. Zadejte popis zakázky
+4. Nastavte cenu
+5. Vygenerujte fakturu s QR kódem
 
-**Položkové faktury:**
-- Zaškrtněte "Použít položkovou fakturu"
-- Přidejte položky:
-  * Služby (hodiny práce)
-  * Materiál (kusy, metry)
-  * Cestovné (kilometry)
-- Automatický výpočet celkové částky
+Stavy zakázek:
+- Nová - čeká na zpracování
+- Fakturovaná - vystavena faktura
+- Dokončená - zaplaceno
 
-**QR platby:**
-- Každá faktura obsahuje QR kód pro okamžitou platbu
-- Možnost tisku nebo stažení
+## 7. KALKULAČKA ZISKU
+Výpočet čistého zisku po odečtení daní a odvodů:
+- Příjmy z fakturace
+- Výdaje na materiál a služby
+- Paušální výdaje (60%)
+- Sociální pojištění
+- Zdravotní pojištění
+- Daň z příjmu (15%)
 
-### 2.5 Time Tracking
-**Časomíra:**
-1. Vyberte klienta z postranního panelu
-2. Zadejte popis práce
-3. Spusťte časomíru
-4. Po dokončení zastavte
+Výstup:
+- Čistý měsíční příjem
+- Odhadovaný roční příjem
+- Upozornění na DPH limit
 
-**Ruční záznamy:**
-- Klikněte "Přidat čas ručně"
-- Zadejte hodiny a minuty
-- Hodinová sazba se automaticky vyplní z klienta
+## 8. TIME TRACKING
+Sledování odpracovaného času:
+- Výběr klienta z postranního panelu
+- Automatické vyplnění hodinové sazby
+- Časomíra pro přesné měření
+- Ruční zadání času
+- Fakturace nevyfakturovaných hodin
+- Historie odpracovaného času
 
-**Fakturace času:**
-- Nevyfakturované hodiny se zobrazí v přehledu
-- Klikněte "Vystavit fakturu"
-- Faktura se vytvoří s detailním popisem
+## 9. NASTAVENÍ
 
-### 2.6 Změnové listy
-- Správa dodatků ke smlouvám
-- Sledování navýšení ceny
-- Prodloužení termínů
-- Export jako DOCX
+### Bankovní účty
+- Více bankovních účtů
+- Výchozí účet pro QR platby
+- Podporované měny: CZK, EUR, USD
 
-### 2.7 Nastavení profilu
-- Změna hesla
-- Firemní údaje (IČO, DIČ, adresa)
-- Nahrání loga firmy
-- Logo se zobrazí na fakturách a smlouvách
+### Nastavení profilu
+- Firemní údaje (IČO, DIČ)
+- Adresa firmy
+- Logo firmy pro dokumenty
 
-## 3. TIPY A TRIKY
+### Daňové nastavení
+- Plátce DPH ano/ne
+- Paušální výdaje
+- Zdravotní a sociální pojištění
 
-### Rychlé akce
-- CTRL+K: Vyhledávání
-- Kliknutím na klienta v Time Trackingu se automaticky vyplní sazba
+## 10. UŽITEČNÉ ODKAZY
+V postranním panelu najdete odkazy na:
+- Finanční úřady ČR
+- Živnostenské úřady
+- Test finančního zdraví
 
-### Doporučené workflow
-1. Vytvořte klienta s výchozí sazbou
-2. Vytvořte smlouvu pro klienta
-3. Sledujte čas v Time Trackingu
-4. Vyfakturujte odpracované hodiny
-5. Exportujte fakturu s QR kódem
+## 11. TIPY A TRIKY
 
-### Export dokumentů
-- PDF: Pro sdílení a archivaci
-- DOCX: Pro další úpravy v Wordu
+### Workflow pro nového klienta
+1. Vytvořte klienta v sekci Klienti
+2. Nastavte výchozí hodinovou sazbu
+3. Vytvořte smlouvu nebo zakázku
+4. Sledujte čas v Time Trackingu
+5. Vyfakturujte odpracované hodiny
 
-## 4. PODPORA
-Pro další pomoc kontaktujte podporu nebo navštivte dokumentaci online.
+### QR platby
+- Každá faktura obsahuje QR kód
+- Klient naskenuje mobilním bankovnictvím
+- Automaticky se vyplní platební údaje
 
-Verze: 2.0
+### Synchronizace dat
+- Data jsou automaticky synchronizována s cloudem
+- Funguje i offline s lokálním úložištěm
+- Při přihlášení se data načtou ze serveru
+
+## 12. KLÁVESOVÉ ZKRATKY
+- Sidebar: Kliknutím na logo přejdete na Dashboard
+
+---
+BusinessHub v3.0
+Vytvořeno pro živnostníky v České republice
 Datum: ${new Date().toLocaleDateString("cs-CZ")}
 `
 
@@ -121,41 +163,100 @@ Datum: ${new Date().toLocaleDateString("cs-CZ")}
     const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
     link.href = url
-    link.download = "pravni-lego-prirucka.txt"
+    link.download = "businesshub-prirucka.txt"
     link.click()
     URL.revokeObjectURL(url)
   }
 
   const features = [
     {
+      icon: Home,
+      title: "Dashboard",
+      badge: null,
+      description: "Hlavní přehled vašeho podnikání - měsíční statistiky, nezaplacené faktury a rychlé akce.",
+      steps: ["Zobrazí měsíční příjmy, výdaje a zisk", "Upozorní na nezaplacené faktury", "Rychlý přístup k důležitým funkcím"],
+    },
+    {
       icon: FileText,
-      title: "Tvorba smluv",
-      description: "Vytvářejte právní dokumenty pomocí bloků. Vyberte typ smlouvy a postupně přidávejte bloky obsahu.",
-      steps: ["Klikněte na 'Nová smlouva'", "Vyberte typ smlouvy", "Vyplňte údaje stran", "Přidejte bloky obsahu", "Exportujte jako PDF/DOCX"],
+      title: "Moje koncepty",
+      badge: null,
+      description: "Tvorba právních dokumentů a smluv pomocí modulárních bloků.",
+      steps: ["Vyberte typ smlouvy", "Vyplňte údaje smluvních stran", "Přidejte bloky obsahu", "Exportujte jako PDF nebo DOCX"],
     },
     {
       icon: Users,
-      title: "Správa klientů",
-      description: "Spravujte své klienty, nastavte výchozí hodinové sazby a typ fakturace.",
-      steps: ["Přidejte klienta ručně nebo ze smlouvy", "Nastavte výchozí hodinovou sazbu", "Vyberte typ fakturace", "Sledujte smlouvy a faktury klienta"],
+      title: "Klienti",
+      badge: null,
+      description: "Evidence klientů s kontaktními údaji, hodinovými sazbami a přehledem faktur.",
+      steps: ["Přidejte klienta ručně nebo ze smlouvy", "Nastavte IČO, DIČ a adresu", "Určete výchozí hodinovou sazbu", "Sledujte smlouvy a faktury klienta"],
     },
     {
-      icon: DollarSign,
-      title: "Fakturace",
-      description: "Vytvářejte jednoduché i položkové faktury s QR kódy pro okamžitou platbu.",
-      steps: ["Vytvořte novou fakturu", "Použijte položkovou fakturu pro detaily", "Přidejte služby, materiál, cestovné", "Vygenerujte QR kód", "Vytiskněte nebo stáhněte"],
+      icon: Wallet,
+      title: "Peníze",
+      badge: null,
+      description: "Kompletní správa příjmů a výdajů s QR platbami a měsíčními přehledy.",
+      steps: ["Přidávejte příjmové a výdajové faktury", "Generujte QR kódy pro platby", "Sledujte měsíční cash flow", "Nastavte připomenutí splatnosti"],
+    },
+    {
+      icon: Zap,
+      title: "Rychlé zakázky",
+      badge: "Nové",
+      description: "Zjednodušené vystavování zakázek pro rychlé objednávky a malé práce.",
+      steps: ["Klikněte 'Nová zakázka'", "Vyberte nebo vytvořte klienta", "Zadejte popis a cenu", "Vygenerujte fakturu s QR kódem"],
+    },
+    {
+      icon: Calculator,
+      title: "Kalkulačka zisku",
+      badge: "Nové",
+      description: "Výpočet čistého příjmu po odečtení daní, sociálního a zdravotního pojištění.",
+      steps: ["Zadejte hrubé příjmy", "Zadejte výdaje", "Zobrazte odvody a daně", "Zjistěte čistý měsíční příjem"],
     },
     {
       icon: Clock,
       title: "Time Tracking",
-      description: "Sledujte odpracovaný čas a automaticky generujte faktury.",
-      steps: ["Vyberte klienta z postranního panelu", "Spusťte časomíru", "Zastavte po dokončení", "Vyfakturujte nevyfakturované hodiny"],
+      badge: null,
+      description: "Sledování odpracovaného času s automatickou fakturací.",
+      steps: ["Vyberte klienta v postranním panelu", "Spusťte časomíru", "Zastavte po dokončení práce", "Vyfakturujte nevyfakturované hodiny"],
     },
     {
-      icon: Settings,
-      title: "Nastavení profilu",
-      description: "Spravujte své firemní údaje a nahrajte logo pro dokumenty.",
-      steps: ["Otevřete nastavení profilu", "Vyplňte firemní údaje", "Nahrajte logo firmy", "Uložte změny"],
+      icon: CreditCard,
+      title: "Bankovní účty",
+      badge: null,
+      description: "Správa více bankovních účtů pro QR platby na fakturách.",
+      steps: ["Přidejte bankovní účty", "Nastavte výchozí účet", "Účet se automaticky použije pro QR kódy"],
+    },
+  ]
+
+  const tips = [
+    {
+      title: "QR platby",
+      description: "Každá faktura obsahuje QR kód, který klient naskenuje mobilním bankovnictvím pro okamžitou platbu.",
+      icon: QrCode,
+    },
+    {
+      title: "Měsíční přehled",
+      description: "V sekci Peníze najdete tlačítko 'Měsíční přehled' s grafy příjmů a výdajů za celý rok.",
+      icon: BarChart3,
+    },
+    {
+      title: "Daňový kalendář",
+      description: "Tlačítko 'Daňový kalendář' zobrazuje důležité termíny pro podání daňových přiznání a platby odvodů.",
+      icon: CalendarDays,
+    },
+    {
+      title: "Připomenutí",
+      description: "U nezaplacených faktur můžete nastavit připomenutí, které vás upozorní na blížící se splatnost.",
+      icon: Bell,
+    },
+    {
+      title: "Synchronizace",
+      description: "Data se automaticky ukládají lokálně i do cloudu. Funguje i offline.",
+      icon: CheckCircle,
+    },
+    {
+      title: "Užitečné odkazy",
+      description: "V postranním panelu najdete odkazy na finanční úřady, živnostenské úřady a test finančního zdraví.",
+      icon: ExternalLink,
     },
   ]
 
@@ -170,7 +271,9 @@ Datum: ${new Date().toLocaleDateString("cs-CZ")}
                 <HelpCircle className="w-10 h-10 text-primary" />
                 Nápověda a dokumentace
               </h1>
-              <p className="text-muted-foreground">Vše, co potřebujete vědět o použití aplikace BusinessHub</p>
+              <p className="text-muted-foreground">
+                Kompletní průvodce aplikací BusinessHub pro živnostníky
+              </p>
             </div>
             <Button onClick={handleDownloadGuide} variant="outline">
               <Download className="w-4 h-4 mr-2" />
@@ -185,38 +288,48 @@ Datum: ${new Date().toLocaleDateString("cs-CZ")}
                 <BookOpen className="w-5 h-5" />
                 Rychlý start
               </CardTitle>
-              <CardDescription>První kroky s aplikací</CardDescription>
+              <CardDescription>Začněte používat BusinessHub za 5 minut</CardDescription>
             </CardHeader>
             <CardContent>
               <ol className="space-y-3">
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                  <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
+                    1
+                  </div>
                   <div>
-                    <strong>Nastavte profil:</strong> Vyplňte firemní údaje a nahrajte logo v Nastavení profilu
+                    <strong>Nastavte profil:</strong> V menu Nastavení → Nastavení profilu vyplňte IČO, DIČ a adresu firmy
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                  <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
+                    2
+                  </div>
                   <div>
-                    <strong>Přidejte klienty:</strong> Vytvořte klienty a nastavte jejich výchozí hodinové sazby
+                    <strong>Přidejte bankovní účet:</strong> V menu Nastavení → Bankovní účty zadejte číslo účtu pro QR platby
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                  <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
+                    3
+                  </div>
                   <div>
-                    <strong>Vytvořte první smlouvu:</strong> Použijte builder smluv pro vytvoření právního dokumentu
+                    <strong>Vytvořte klienty:</strong> V sekci Klienti přidejte své zákazníky s kontaktními údaji
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                  <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
+                    4
+                  </div>
                   <div>
-                    <strong>Sledujte čas:</strong> Používejte Time Tracking pro evidenci práce
+                    <strong>Vystavte první fakturu:</strong> V sekci Peníze nebo Rychlé zakázky vytvořte fakturu
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                  <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
+                    5
+                  </div>
                   <div>
-                    <strong>Fakturujte:</strong> Generujte faktury s QR kódy pro snadnou platbu
+                    <strong>Sledujte finance:</strong> Dashboard vám zobrazí přehled příjmů, výdajů a nezaplacených faktur
                   </div>
                 </li>
               </ol>
@@ -224,65 +337,80 @@ Datum: ${new Date().toLocaleDateString("cs-CZ")}
           </Card>
 
           {/* Features */}
-          <div className="grid gap-6 md:grid-cols-2">
-            {features.map((feature, index) => (
-              <Card key={index}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <feature.icon className="w-5 h-5" />
-                    {feature.title}
-                  </CardTitle>
-                  <CardDescription>{feature.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {feature.steps.map((step, stepIndex) => (
-                      <div key={stepIndex} className="flex items-start gap-2 text-sm">
-                        <span className="text-muted-foreground">{stepIndex + 1}.</span>
-                        <span>{step}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Funkce aplikace</h2>
+            <div className="grid gap-6 md:grid-cols-2">
+              {features.map((feature, index) => (
+                <Card key={index}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <feature.icon className="w-5 h-5" />
+                      {feature.title}
+                      {feature.badge && (
+                        <Badge variant="secondary" className="ml-2">
+                          {feature.badge}
+                        </Badge>
+                      )}
+                    </CardTitle>
+                    <CardDescription>{feature.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {feature.steps.map((step, stepIndex) => (
+                        <div key={stepIndex} className="flex items-start gap-2 text-sm">
+                          <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span>{step}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
 
           {/* Tips */}
           <Card>
             <CardHeader>
               <CardTitle>Tipy a triky</CardTitle>
-              <CardDescription>Vylepšete svou produktivitu</CardDescription>
+              <CardDescription>Vylepšete svou produktivitu s BusinessHub</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
-                <div>
-                  <strong>Postranní panel klientů:</strong> V Time Trackingu klikněte na klienta v postranním panelu
-                  pro automatické vyplnění hodinové sazby
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
-                <div>
-                  <strong>Položková fakturace:</strong> Použijte pro detailní faktury se službami, materiálem a
-                  cestovným
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
-                <div>
-                  <strong>Změnové listy:</strong> Spravujte dodatky ke smlouvám přímo v detailu smlouvy
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
-                <div>
-                  <strong>Export dokumentů:</strong> PDF pro sdílení, DOCX pro další úpravy v Wordu
-                </div>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2">
+                {tips.map((tip, index) => (
+                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <tip.icon className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong className="text-sm">{tip.title}</strong>
+                      <p className="text-sm text-muted-foreground mt-0.5">{tip.description}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
+
+          {/* DPH Warning */}
+          <Card className="border-amber-200 bg-amber-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-amber-800">
+                <Calculator className="w-5 h-5" />
+                Sledování limitu pro DPH
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-amber-700">
+              <p>
+                BusinessHub automaticky sleduje vaše příjmy a upozorní vás, když se blížíte k limitu{" "}
+                <strong>2 000 000 Kč</strong> pro povinnou registraci k DPH. Tento ukazatel najdete v sekci Peníze.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Version Info */}
+          <div className="text-center text-sm text-muted-foreground pt-4 border-t">
+            <p>BusinessHub verze 3.0 | Vytvořeno pro živnostníky v České republice</p>
+            <p className="mt-1">© 2025 BusinessHub</p>
+          </div>
         </div>
       </main>
     </AppLayout>
