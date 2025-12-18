@@ -3,8 +3,11 @@
 import { useState } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
-import { Menu, ChevronLeft } from "lucide-react"
+import { Menu, ChevronLeft, Search } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { CommandPalette } from "@/components/command-palette"
+import { NotificationCenter } from "@/components/notification-center"
+import { Breadcrumbs } from "@/components/breadcrumbs"
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -17,50 +20,70 @@ export function AppLayout({ children, title, showBack = false }: AppLayoutProps)
   const router = useRouter()
 
   return (
-    <div className="min-h-screen flex bg-background overflow-hidden">
+    <div className="min-h-screen flex bg-background overflow-hidden safe-area-inset">
       <AppSidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Top bar - mobile header */}
-        <header className="sticky top-0 z-30 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:hidden">
+        <header className="sticky top-0 z-30 h-14 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:hidden">
           <div className="flex items-center justify-between h-full px-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setSidebarOpen(true)}
+                className="touch-target touch-feedback"
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-5 h-5" strokeWidth={1.75} />
               </Button>
               {showBack && (
-                <Button variant="ghost" size="sm" onClick={() => router.back()}>
-                  <ChevronLeft className="w-4 h-4 mr-1" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.back()}
+                  className="touch-feedback h-9"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" strokeWidth={1.75} />
                   Zpět
                 </Button>
               )}
-              {title && <span className="font-semibold">{title}</span>}
+              {title && <span className="font-semibold text-sm truncate max-w-[180px]">{title}</span>}
+            </div>
+            {/* Notification and Search buttons for mobile */}
+            <div className="flex items-center gap-1">
+              <NotificationCenter />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  const event = new KeyboardEvent("keydown", {
+                    key: "k",
+                    metaKey: true,
+                    bubbles: true,
+                  })
+                  document.dispatchEvent(event)
+                }}
+                className="text-muted-foreground touch-target touch-feedback"
+              >
+                <Search className="w-5 h-5" strokeWidth={1.75} />
+              </Button>
             </div>
           </div>
         </header>
 
-        {/* Desktop header with title */}
-        {(title || showBack) && (
-          <header className="hidden lg:flex items-center gap-4 h-16 px-8 border-b bg-background">
-            {showBack && (
-              <Button variant="ghost" size="sm" onClick={() => router.back()}>
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Zpět
-              </Button>
-            )}
-            {title && <h1 className="text-xl font-semibold">{title}</h1>}
-          </header>
-        )}
+        {/* Desktop breadcrumbs */}
+        <div className="hidden lg:block px-6 pt-4">
+          <Breadcrumbs />
+        </div>
 
         {/* Main content */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto scroll-smooth-touch">
           {children}
         </main>
       </div>
+
+      {/* Command Palette */}
+      <CommandPalette />
     </div>
   )
 }

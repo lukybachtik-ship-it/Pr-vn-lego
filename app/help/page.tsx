@@ -1,28 +1,27 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { AppLayout } from "@/components/app-layout"
 import { Badge } from "@/components/ui/badge"
 import {
-  FileText,
-  Users,
-  Wallet,
-  Clock,
-  Settings,
+  FileStack,
+  UsersRound,
+  Landmark,
+  Timer,
   Download,
-  HelpCircle,
+  LifeBuoy,
   BookOpen,
-  CheckCircle,
-  Zap,
-  Calculator,
-  CreditCard,
+  CircleCheck,
+  Bolt,
+  PieChart,
+  Banknote,
   QrCode,
-  BarChart3,
-  CalendarDays,
-  Bell,
-  ExternalLink,
-  Home,
+  BarChart4,
+  CalendarRange,
+  BellRing,
+  Link2,
+  LayoutDashboard,
+  TriangleAlert,
 } from "lucide-react"
 
 export default function HelpPage() {
@@ -170,56 +169,56 @@ Datum: ${new Date().toLocaleDateString("cs-CZ")}
 
   const features = [
     {
-      icon: Home,
+      icon: LayoutDashboard,
       title: "Dashboard",
       badge: null,
       description: "Hlavní přehled vašeho podnikání - měsíční statistiky, nezaplacené faktury a rychlé akce.",
       steps: ["Zobrazí měsíční příjmy, výdaje a zisk", "Upozorní na nezaplacené faktury", "Rychlý přístup k důležitým funkcím"],
     },
     {
-      icon: FileText,
+      icon: FileStack,
       title: "Moje koncepty",
       badge: null,
       description: "Tvorba právních dokumentů a smluv pomocí modulárních bloků.",
       steps: ["Vyberte typ smlouvy", "Vyplňte údaje smluvních stran", "Přidejte bloky obsahu", "Exportujte jako PDF nebo DOCX"],
     },
     {
-      icon: Users,
+      icon: UsersRound,
       title: "Klienti",
       badge: null,
       description: "Evidence klientů s kontaktními údaji, hodinovými sazbami a přehledem faktur.",
       steps: ["Přidejte klienta ručně nebo ze smlouvy", "Nastavte IČO, DIČ a adresu", "Určete výchozí hodinovou sazbu", "Sledujte smlouvy a faktury klienta"],
     },
     {
-      icon: Wallet,
+      icon: Landmark,
       title: "Peníze",
       badge: null,
       description: "Kompletní správa příjmů a výdajů s QR platbami a měsíčními přehledy.",
       steps: ["Přidávejte příjmové a výdajové faktury", "Generujte QR kódy pro platby", "Sledujte měsíční cash flow", "Nastavte připomenutí splatnosti"],
     },
     {
-      icon: Zap,
+      icon: Bolt,
       title: "Rychlé zakázky",
       badge: "Nové",
       description: "Zjednodušené vystavování zakázek pro rychlé objednávky a malé práce.",
       steps: ["Klikněte 'Nová zakázka'", "Vyberte nebo vytvořte klienta", "Zadejte popis a cenu", "Vygenerujte fakturu s QR kódem"],
     },
     {
-      icon: Calculator,
+      icon: PieChart,
       title: "Kalkulačka zisku",
       badge: "Nové",
       description: "Výpočet čistého příjmu po odečtení daní, sociálního a zdravotního pojištění.",
       steps: ["Zadejte hrubé příjmy", "Zadejte výdaje", "Zobrazte odvody a daně", "Zjistěte čistý měsíční příjem"],
     },
     {
-      icon: Clock,
+      icon: Timer,
       title: "Time Tracking",
       badge: null,
       description: "Sledování odpracovaného času s automatickou fakturací.",
       steps: ["Vyberte klienta v postranním panelu", "Spusťte časomíru", "Zastavte po dokončení práce", "Vyfakturujte nevyfakturované hodiny"],
     },
     {
-      icon: CreditCard,
+      icon: Banknote,
       title: "Bankovní účty",
       badge: null,
       description: "Správa více bankovních účtů pro QR platby na fakturách.",
@@ -236,183 +235,151 @@ Datum: ${new Date().toLocaleDateString("cs-CZ")}
     {
       title: "Měsíční přehled",
       description: "V sekci Peníze najdete tlačítko 'Měsíční přehled' s grafy příjmů a výdajů za celý rok.",
-      icon: BarChart3,
+      icon: BarChart4,
     },
     {
       title: "Daňový kalendář",
       description: "Tlačítko 'Daňový kalendář' zobrazuje důležité termíny pro podání daňových přiznání a platby odvodů.",
-      icon: CalendarDays,
+      icon: CalendarRange,
     },
     {
       title: "Připomenutí",
       description: "U nezaplacených faktur můžete nastavit připomenutí, které vás upozorní na blížící se splatnost.",
-      icon: Bell,
+      icon: BellRing,
     },
     {
       title: "Synchronizace",
       description: "Data se automaticky ukládají lokálně i do cloudu. Funguje i offline.",
-      icon: CheckCircle,
+      icon: CircleCheck,
     },
     {
       title: "Užitečné odkazy",
       description: "V postranním panelu najdete odkazy na finanční úřady, živnostenské úřady a test finančního zdraví.",
-      icon: ExternalLink,
+      icon: Link2,
     },
   ]
 
   return (
-    <AppLayout title="Nápověda" showBack>
-      <main className="p-4 md:p-8">
-        <div className="max-w-6xl mx-auto space-y-8">
-          {/* Header */}
+    <AppLayout>
+      <div className="p-5 lg:p-6 max-w-[1000px] mx-auto">
+        {/* Header */}
+        <header className="mb-6">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-                <HelpCircle className="w-10 h-10 text-primary" />
-                Nápověda a dokumentace
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground flex items-center gap-2.5">
+                <LifeBuoy className="w-6 h-6 text-primary" strokeWidth={1.75} />
+                Nápověda
               </h1>
-              <p className="text-muted-foreground">
-                Kompletní průvodce aplikací BusinessHub pro živnostníky
+              <p className="text-sm text-muted-foreground mt-1">
+                Kompletní průvodce aplikací BusinessHub
               </p>
             </div>
-            <Button onClick={handleDownloadGuide} variant="outline">
-              <Download className="w-4 h-4 mr-2" />
+            <Button onClick={handleDownloadGuide} variant="outline" size="sm">
+              <Download className="w-4 h-4 mr-1.5" />
               Stáhnout příručku
             </Button>
           </div>
+        </header>
 
-          {/* Quick Start */}
-          <Card className="border-primary">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5" />
-                Rychlý start
-              </CardTitle>
-              <CardDescription>Začněte používat BusinessHub za 5 minut</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ol className="space-y-3">
-                <li className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
-                    1
-                  </div>
-                  <div>
-                    <strong>Nastavte profil:</strong> V menu Nastavení → Nastavení profilu vyplňte IČO, DIČ a adresu firmy
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
-                    2
-                  </div>
-                  <div>
-                    <strong>Přidejte bankovní účet:</strong> V menu Nastavení → Bankovní účty zadejte číslo účtu pro QR platby
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
-                    3
-                  </div>
-                  <div>
-                    <strong>Vytvořte klienty:</strong> V sekci Klienti přidejte své zákazníky s kontaktními údaji
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
-                    4
-                  </div>
-                  <div>
-                    <strong>Vystavte první fakturu:</strong> V sekci Peníze nebo Rychlé zakázky vytvořte fakturu
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
-                    5
-                  </div>
-                  <div>
-                    <strong>Sledujte finance:</strong> Dashboard vám zobrazí přehled příjmů, výdajů a nezaplacených faktur
-                  </div>
-                </li>
-              </ol>
-            </CardContent>
-          </Card>
+        {/* Quick Start */}
+        <section className="mb-6 p-4 bg-card border border-primary/20 rounded-md">
+          <div className="flex items-center gap-2 mb-3">
+            <BookOpen className="w-4 h-4 text-primary" strokeWidth={1.75} />
+            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Rychlý start</span>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">Začněte používat BusinessHub za 5 minut</p>
 
-          {/* Features */}
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Funkce aplikace</h2>
-            <div className="grid gap-6 md:grid-cols-2">
-              {features.map((feature, index) => (
-                <Card key={index}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <feature.icon className="w-5 h-5" />
-                      {feature.title}
-                      {feature.badge && (
-                        <Badge variant="secondary" className="ml-2">
-                          {feature.badge}
-                        </Badge>
-                      )}
-                    </CardTitle>
-                    <CardDescription>{feature.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {feature.steps.map((step, stepIndex) => (
-                        <div key={stepIndex} className="flex items-start gap-2 text-sm">
-                          <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                          <span>{step}</span>
-                        </div>
-                      ))}
+          <ol className="space-y-2">
+            {[
+              { num: 1, text: "Nastavte profil: V menu Nastavení → Nastavení profilu vyplňte IČO, DIČ a adresu firmy" },
+              { num: 2, text: "Přidejte bankovní účet: V menu Nastavení → Bankovní účty zadejte číslo účtu pro QR platby" },
+              { num: 3, text: "Vytvořte klienty: V sekci Klienti přidejte své zákazníky s kontaktními údaji" },
+              { num: 4, text: "Vystavte první fakturu: V sekci Peníze nebo Rychlé zakázky vytvořte fakturu" },
+              { num: 5, text: "Sledujte finance: Dashboard vám zobrazí přehled příjmů, výdajů a nezaplacených faktur" },
+            ].map((step) => (
+              <li key={step.num} className="flex items-start gap-2.5">
+                <div className="w-5 h-5 rounded bg-primary text-primary-foreground flex items-center justify-center text-[11px] font-semibold flex-shrink-0 mt-0.5">
+                  {step.num}
+                </div>
+                <p className="text-sm">{step.text}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        {/* Features */}
+        <section className="mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Funkce aplikace</h2>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            {features.map((feature, index) => (
+              <div key={index} className="p-4 bg-card border border-border rounded-md stagger-item interactive-card">
+                <div className="flex items-center gap-2 mb-2">
+                  <feature.icon className="w-4 h-4 text-primary" strokeWidth={1.75} />
+                  <span className="text-sm font-medium">{feature.title}</span>
+                  {feature.badge && (
+                    <Badge variant="success" className="ml-1">
+                      {feature.badge}
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">{feature.description}</p>
+                <div className="space-y-1.5">
+                  {feature.steps.map((step, stepIndex) => (
+                    <div key={stepIndex} className="flex items-start gap-1.5 text-xs">
+                      <CircleCheck className="w-3 h-3 text-success mt-0.5 flex-shrink-0" />
+                      <span className="text-muted-foreground">{step}</span>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Tips */}
+        <section className="mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Tipy a triky</h2>
+          </div>
+
+          <div className="grid gap-2 md:grid-cols-2">
+            {tips.map((tip, index) => (
+              <div key={index} className="flex items-start gap-2.5 p-3 bg-muted/30 rounded-md stagger-item">
+                <tip.icon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" strokeWidth={1.75} />
+                <div>
+                  <p className="text-sm font-medium">{tip.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{tip.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* DPH Warning */}
+        <section className="mb-6">
+          <div className="p-4 bg-warning/5 border border-warning/20 rounded-md">
+            <div className="flex items-start gap-2.5">
+              <TriangleAlert className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" strokeWidth={1.75} />
+              <div>
+                <p className="text-sm font-medium text-foreground">Sledování limitu pro DPH</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  BusinessHub automaticky sleduje vaše příjmy a upozorní vás, když se blížíte k limitu{" "}
+                  <strong className="text-foreground">2 000 000 Kč</strong> pro povinnou registraci k DPH. Tento ukazatel najdete v sekci Peníze.
+                </p>
+              </div>
             </div>
           </div>
+        </section>
 
-          {/* Tips */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Tipy a triky</CardTitle>
-              <CardDescription>Vylepšete svou produktivitu s BusinessHub</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                {tips.map((tip, index) => (
-                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                    <tip.icon className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                    <div>
-                      <strong className="text-sm">{tip.title}</strong>
-                      <p className="text-sm text-muted-foreground mt-0.5">{tip.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* DPH Warning */}
-          <Card className="border-amber-200 bg-amber-50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-amber-800">
-                <Calculator className="w-5 h-5" />
-                Sledování limitu pro DPH
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-amber-700">
-              <p>
-                BusinessHub automaticky sleduje vaše příjmy a upozorní vás, když se blížíte k limitu{" "}
-                <strong>2 000 000 Kč</strong> pro povinnou registraci k DPH. Tento ukazatel najdete v sekci Peníze.
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Version Info */}
-          <div className="text-center text-sm text-muted-foreground pt-4 border-t">
-            <p>BusinessHub verze 3.0 | Vytvořeno pro živnostníky v České republice</p>
-            <p className="mt-1">© 2025 BusinessHub</p>
-          </div>
+        {/* Version Info */}
+        <div className="text-center text-xs text-muted-foreground pt-4 border-t border-border">
+          <p>BusinessHub verze 3.0 | Vytvořeno pro živnostníky v České republice</p>
+          <p className="mt-1">© 2025 BusinessHub</p>
         </div>
-      </main>
+      </div>
     </AppLayout>
   )
 }

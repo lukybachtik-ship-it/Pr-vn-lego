@@ -11,21 +11,23 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
-  ChevronLeft,
+  ChevronRight,
   Plus,
-  TrendingUp,
-  TrendingDown,
-  Wallet,
-  AlertCircle,
-  CheckCircle,
+  ArrowUpRight,
+  ArrowDownRight,
+  Landmark,
+  CircleAlert,
+  CircleCheck,
   Trash2,
-  Calendar,
-  Users,
+  CalendarClock,
+  UsersRound,
   QrCode,
   Eye,
-  Bell,
-  CalendarDays,
-  BarChart3,
+  BellRing,
+  CalendarRange,
+  BarChart4,
+  Filter,
+  Receipt,
 } from "lucide-react"
 import {
   getAllInvoices,
@@ -48,6 +50,7 @@ import { getDefaultBankAccount } from "@/lib/bank-accounts"
 import { AppLayout } from "@/components/app-layout"
 import { InvoiceItemsEditor } from "@/components/invoice-items-editor"
 import { InvoiceReminderDialog } from "@/components/invoice-reminder-dialog"
+import { SkeletonCashFlow } from "@/components/ui/skeleton"
 
 export default function CashFlowPage() {
   const router = useRouter()
@@ -206,8 +209,8 @@ export default function CashFlowPage() {
   const getInvoiceStatusBadge = (invoice: Invoice) => {
     if (invoice.isPaid) {
       return (
-        <Badge variant="outline" className="bg-green-100 text-green-700">
-          <CheckCircle className="w-3 h-3 mr-1" />
+        <Badge variant="success">
+          <CircleCheck className="w-3 h-3 mr-1" />
           Zaplaceno
         </Badge>
       )
@@ -219,7 +222,7 @@ export default function CashFlowPage() {
     if (dueDate < now) {
       return (
         <Badge variant="destructive">
-          <AlertCircle className="w-3 h-3 mr-1" />
+          <CircleAlert className="w-3 h-3 mr-1" />
           Po splatnosti
         </Badge>
       )
@@ -227,9 +230,9 @@ export default function CashFlowPage() {
 
     return (
       <Badge variant="secondary">
-        <Calendar className="w-3 h-3 mr-1" />
+        <CalendarClock className="w-3 h-3 mr-1" />
         Čeká
-        </Badge>
+      </Badge>
     )
   }
 
@@ -253,192 +256,227 @@ export default function CashFlowPage() {
     ),
   ).sort((a, b) => b.localeCompare(a)) // Sort descending (newest first)
 
+  // Calculate totals for filtered invoices
+  const totalIncome = filteredInvoices.filter((inv) => inv.type === "income").reduce((sum, inv) => sum + inv.amount, 0)
+  const totalExpenses = filteredInvoices.filter((inv) => inv.type === "expense").reduce((sum, inv) => sum + inv.amount, 0)
+  const netProfit = totalIncome - totalExpenses
+
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-background p-4 md:p-8">
-        <div className="max-w-6xl mx-auto flex items-center justify-center">
-          <p className="text-muted-foreground">Načítám...</p>
-        </div>
-      </main>
+      <AppLayout>
+        <SkeletonCashFlow />
+      </AppLayout>
     )
   }
 
   return (
-    <AppLayout title="Palubní Deska Peněz" showBack>
-      <main className="p-4 md:p-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-start justify-between">
+    <AppLayout>
+      <div className="p-5 lg:p-6 max-w-[1200px] mx-auto">
+        {/* Header */}
+        <header className="mb-6">
+          <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-                <Wallet className="w-10 h-10 text-primary" />
-                Palubní Deska Peněz
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground flex items-center gap-2.5">
+                <Landmark className="w-6 h-6 text-primary" strokeWidth={1.75} />
+                Peníze
               </h1>
-              <p className="text-muted-foreground">Sledujte své příjmy a výdaje na jednom místě</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Sledujte příjmy a výdaje na jednom místě
+              </p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => router.push("/cash-flow/monthly-overview")}>
-                <BarChart3 className="w-4 h-4 mr-2" />
+              <Button variant="outline" size="sm" onClick={() => router.push("/cash-flow/monthly-overview")}>
+                <BarChart4 className="w-4 h-4 mr-1.5" strokeWidth={1.75} />
                 Měsíční přehled
               </Button>
-              <Button variant="outline" onClick={() => router.push("/cash-flow/tax-calendar")}>
-                <CalendarDays className="w-4 h-4 mr-2" />
+              <Button variant="outline" size="sm" onClick={() => router.push("/cash-flow/tax-calendar")}>
+                <CalendarRange className="w-4 h-4 mr-1.5" strokeWidth={1.75} />
                 Daňový kalendář
               </Button>
-              <Button onClick={() => setShowAddDialog(true)} size="lg">
-                <Plus className="w-4 h-4 mr-2" />
+              <Button size="sm" onClick={() => setShowAddDialog(true)}>
+                <Plus className="w-4 h-4 mr-1.5" />
                 Přidat fakturu
               </Button>
             </div>
           </div>
+        </header>
 
-          {/* VAT Limit Indicator */}
-          <div className="mt-6">
-            <VATLimitIndicator refreshTrigger={vatRefreshTrigger} />
-          </div>
-
-          {/* Month Selector */}
-          {availableMonths.length > 0 && (
-            <div className="mt-6 flex items-center gap-4">
-              <Label htmlFor="month-select" className="text-sm font-medium">
-                Zobrazit měsíc:
-              </Label>
-              <select
-                id="month-select"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                {availableMonths.map((month) => {
-                  const [year, monthNum] = month.split("-")
-                  const monthName = new Date(parseInt(year), parseInt(monthNum) - 1).toLocaleDateString("cs-CZ", {
-                    month: "long",
-                    year: "numeric",
-                  })
-                  return (
-                    <option key={month} value={month}>
-                      {monthName.charAt(0).toUpperCase() + monthName.slice(1)}
-                    </option>
-                  )
-                })}
-              </select>
-              <span className="text-sm text-muted-foreground">
-                (Celkem {filteredInvoices.length} faktur)
-              </span>
-            </div>
-          )}
+        {/* VAT Limit Indicator */}
+        <div className="mb-6">
+          <VATLimitIndicator refreshTrigger={vatRefreshTrigger} />
         </div>
 
-        {/* Current Month Overview */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Tento měsíc</CardTitle>
-            <CardDescription>
-              Přehled příjmů a výdajů pro{" "}
-              {new Date(selectedMonth + "-01").toLocaleDateString("cs-CZ", { month: "long", year: "numeric" })}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground">Příjmy</span>
-                <span className="text-2xl font-bold text-green-600">
-                  {formatCurrency(
-                    filteredInvoices.filter((inv) => inv.type === "income").reduce((sum, inv) => sum + inv.amount, 0),
-                  )}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground">Výdaje</span>
-                <span className="text-2xl font-bold text-red-600">
-                  {formatCurrency(
-                    filteredInvoices.filter((inv) => inv.type === "expense").reduce((sum, inv) => sum + inv.amount, 0),
-                  )}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground">Čistý zisk</span>
-                <span className="text-2xl font-bold">
-                  {formatCurrency(
-                    filteredInvoices.filter((inv) => inv.type === "income").reduce((sum, inv) => sum + inv.amount, 0) -
-                      filteredInvoices.filter((inv) => inv.type === "expense").reduce((sum, inv) => sum + inv.amount, 0),
-                  )}
-                </span>
-              </div>
-            </div>
-
-            {/* Unpaid invoices warning */}
-            {(summary.totalIncome > 0 || summary.totalExpenses > 0) && (
-              <div className="pt-4 border-t">
-                <div className="flex items-start gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
-                  <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm">
-                    <p className="font-medium">Nezaplacené faktury</p>
-                    <div className="mt-1 space-y-0.5 text-amber-700">
-                      {summary.totalIncome > 0 && (
-                        <p>Příjmy k inkasu: {formatCurrency(summary.totalIncome)}</p>
-                      )}
-                      {summary.totalExpenses > 0 && (
-                        <p>Výdaje k úhradě: {formatCurrency(summary.totalExpenses)}</p>
-                      )}
-                      {(summary.overdueIncome > 0 || summary.overdueExpenses > 0) && (
-                        <p className="text-red-600 font-medium mt-1">
-                          Po splatnosti: {formatCurrency(summary.overdueIncome + summary.overdueExpenses)}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+        {/* Financial Overview Cards */}
+        <section className="mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {/* Příjmy */}
+            <div className="relative p-4 bg-card border border-border rounded-md overflow-hidden stagger-item">
+              <div className="absolute top-0 left-0 w-0.5 h-full bg-success" />
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <p className="metric-label">Příjmy</p>
+                  <p className="metric-value text-foreground">{formatCurrency(totalIncome)}</p>
+                </div>
+                <div className="p-2 rounded bg-success/8">
+                  <ArrowUpRight className="w-4 h-4 text-success" strokeWidth={2} />
                 </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+              {summary.overdueIncome > 0 && (
+                <div className="mt-3 pt-3 border-t border-border/60">
+                  <p className="text-xs text-destructive flex items-center gap-1.5">
+                    <CircleAlert className="w-3.5 h-3.5" />
+                    Po splatnosti: {formatCurrency(summary.overdueIncome)}
+                  </p>
+                </div>
+              )}
+            </div>
 
-        {/* Unpaid Invoices */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Faktury za vybraný měsíc</CardTitle>
-            <CardDescription>
-              {filteredInvoices.length} faktur celkem (
-              {filteredInvoices.filter((inv) => !inv.isPaid).length} nezaplacených)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {filteredInvoices.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">Žádné faktury pro vybraný měsíc</p>
-            ) : (
-              <div className="space-y-3">
-                {filteredInvoices
-                  .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-                  .map((invoice) => (
+            {/* Výdaje */}
+            <div className="relative p-4 bg-card border border-border rounded-md overflow-hidden stagger-item">
+              <div className="absolute top-0 left-0 w-0.5 h-full bg-destructive" />
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <p className="metric-label">Výdaje</p>
+                  <p className="metric-value text-foreground">{formatCurrency(totalExpenses)}</p>
+                </div>
+                <div className="p-2 rounded bg-destructive/8">
+                  <ArrowDownRight className="w-4 h-4 text-destructive" strokeWidth={2} />
+                </div>
+              </div>
+              {summary.overdueExpenses > 0 && (
+                <div className="mt-3 pt-3 border-t border-border/60">
+                  <p className="text-xs text-destructive flex items-center gap-1.5">
+                    <CircleAlert className="w-3.5 h-3.5" />
+                    Po splatnosti: {formatCurrency(summary.overdueExpenses)}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Čistý zisk */}
+            <div className="relative p-4 bg-card border border-border rounded-md overflow-hidden stagger-item">
+              <div className={`absolute top-0 left-0 w-0.5 h-full ${netProfit >= 0 ? "bg-primary" : "bg-warning"}`} />
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <p className="metric-label">Čistý zisk</p>
+                  <p className={`metric-value ${netProfit >= 0 ? "text-foreground" : "text-warning"}`}>
+                    {formatCurrency(netProfit)}
+                  </p>
+                </div>
+                <div className={`p-2 rounded ${netProfit >= 0 ? "bg-primary/8" : "bg-warning/10"}`}>
+                  <Receipt className={`w-4 h-4 ${netProfit >= 0 ? "text-primary" : "text-warning"}`} strokeWidth={2} />
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-border/60">
+                <p className="text-xs text-muted-foreground">
+                  {netProfit >= 0 ? "Pozitivní bilance" : "Sledujte výdaje"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Unpaid invoices warning */}
+        {(summary.totalIncome > 0 || summary.totalExpenses > 0) && (
+          <section className="mb-6">
+            <div className="flex items-start gap-3 p-4 bg-warning/5 border border-warning/20 rounded-md">
+              <CircleAlert className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" strokeWidth={2} />
+              <div className="text-sm space-y-1">
+                <p className="font-medium text-foreground">Nezaplacené faktury</p>
+                <div className="text-muted-foreground space-y-0.5">
+                  {summary.totalIncome > 0 && (
+                    <p>Příjmy k inkasu: <span className="text-success font-medium">{formatCurrency(summary.totalIncome)}</span></p>
+                  )}
+                  {summary.totalExpenses > 0 && (
+                    <p>Výdaje k úhradě: <span className="text-destructive font-medium">{formatCurrency(summary.totalExpenses)}</span></p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Month Selector & Invoices List */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Faktury</h2>
+              <Badge variant="secondary" className="text-[10px] px-1.5">{filteredInvoices.length}</Badge>
+            </div>
+            {availableMonths.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="h-8 rounded border border-border bg-background px-2.5 text-xs transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                >
+                  {availableMonths.map((month) => {
+                    const [year, monthNum] = month.split("-")
+                    const monthName = new Date(parseInt(year), parseInt(monthNum) - 1).toLocaleDateString("cs-CZ", {
+                      month: "long",
+                      year: "numeric",
+                    })
+                    return (
+                      <option key={month} value={month}>
+                        {monthName.charAt(0).toUpperCase() + monthName.slice(1)}
+                      </option>
+                    )
+                  })}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {filteredInvoices.length === 0 ? (
+            <div className="text-center py-12 bg-card border border-border rounded-md">
+              <div className="w-12 h-12 bg-muted rounded flex items-center justify-center mx-auto mb-3">
+                <Receipt className="w-6 h-6 text-muted-foreground" strokeWidth={1.5} />
+              </div>
+              <p className="text-sm text-muted-foreground">Žádné faktury pro vybraný měsíc</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredInvoices
+                .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+                .map((invoice) => (
                   <div
                     key={invoice.id}
-                    className={`flex items-center justify-between p-4 border rounded-lg ${
-                      new Date(invoice.dueDate) < new Date() ? "bg-destructive/5 border-destructive" : ""
+                    className={`flex items-center justify-between p-3.5 bg-card border rounded-md stagger-item clickable-row ${
+                      !invoice.isPaid && new Date(invoice.dueDate) < new Date()
+                        ? "border-destructive/40 bg-destructive/[0.02]"
+                        : "border-border hover:border-border/80"
                     }`}
                   >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="font-semibold">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2.5 mb-1">
+                        <span className="text-sm font-medium">
                           {invoice.type === "income" ? (
-                            <span className="text-green-600">↓ Od: {invoice.from}</span>
+                            <span className="text-success flex items-center gap-1.5">
+                              <ArrowUpRight className="w-3.5 h-3.5" />
+                              Od: {invoice.from}
+                            </span>
                           ) : (
-                            <span className="text-red-600">↑ Pro: {invoice.from}</span>
+                            <span className="text-destructive flex items-center gap-1.5">
+                              <ArrowDownRight className="w-3.5 h-3.5" />
+                              Pro: {invoice.from}
+                            </span>
                           )}
                         </span>
                         {getInvoiceStatusBadge(invoice)}
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        Splatnost: {new Date(invoice.dueDate).toLocaleDateString("cs-CZ")} • {formatCurrency(invoice.amount)}
+                      <div className="text-xs text-muted-foreground flex items-center gap-2">
+                        <span>Splatnost: {new Date(invoice.dueDate).toLocaleDateString("cs-CZ")}</span>
+                        <span className="text-foreground font-medium">{formatCurrency(invoice.amount)}</span>
                       </div>
-                      {invoice.description && <div className="text-xs text-muted-foreground mt-1">{invoice.description}</div>}
+                      {invoice.description && (
+                        <p className="text-xs text-muted-foreground/80 mt-1 truncate">{invoice.description}</p>
+                      )}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-1.5 ml-4">
                       {invoice.type === "income" && !invoice.isPaid && (
-                        <Button size="sm" variant="outline" onClick={() => handleShowQR(invoice)}>
-                          <QrCode className="w-3 h-3 mr-1" />
-                          QR
+                        <Button size="sm" variant="outline" onClick={() => handleShowQR(invoice)} className="h-7 px-2">
+                          <QrCode className="w-3.5 h-3.5" />
                         </Button>
                       )}
                       {!invoice.isPaid && (
@@ -447,182 +485,194 @@ export default function CashFlowPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleAddReminder(invoice)}
+                            className="h-7 px-2"
                             title="Nastavit připomenutí"
                           >
-                            <Bell className="w-3 h-3" />
+                            <BellRing className="w-3.5 h-3.5" />
                           </Button>
-                          <Button size="sm" variant="outline" className="bg-green-50" onClick={() => handleMarkAsPaid(invoice.id)}>
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            Zaplaceno
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleMarkAsPaid(invoice.id)}
+                            className="h-7 px-2 text-success hover:text-success hover:bg-success/5 hover:border-success/30"
+                          >
+                            <CircleCheck className="w-3.5 h-3.5 mr-1" />
+                            <span className="text-xs">Zaplaceno</span>
                           </Button>
                         </>
                       )}
                       {invoice.isPaid && (
-                        <Button size="sm" variant="ghost" onClick={() => handleShowQR(invoice)}>
-                          <Eye className="w-3 h-3 mr-1" />
-                          Detail
+                        <Button size="sm" variant="ghost" onClick={() => handleShowQR(invoice)} className="h-7 px-2">
+                          <Eye className="w-3.5 h-3.5 mr-1" />
+                          <span className="text-xs">Detail</span>
                         </Button>
                       )}
-                      <Button size="sm" variant="destructive" onClick={() => handleDelete(invoice.id)}>
-                        <Trash2 className="w-3 h-3" />
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDelete(invoice.id)}
+                        className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/5"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Add Invoice Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Přidat fakturu</DialogTitle>
-            <DialogDescription>Zadejte údaje o faktuře, kterou jste vystavili nebo obdrželi.</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Typ faktury</Label>
-              <RadioGroup value={type} onValueChange={(val) => setType(val as "income" | "expense")}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="income" id="income" />
-                  <Label htmlFor="income" className="font-normal cursor-pointer flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-green-600" />
-                    Příjem (faktura, kterou jsem vystavil)
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="expense" id="expense" />
-                  <Label htmlFor="expense" className="font-normal cursor-pointer flex items-center gap-2">
-                    <TrendingDown className="w-4 h-4 text-red-600" />
-                    Výdaj (faktura, kterou mi přišla)
-                  </Label>
-                </div>
-              </RadioGroup>
             </div>
+          )}
+        </section>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="from">{type === "income" ? "Od koho" : "Komu platím"}</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowClientSelector(true)}
-                >
-                  <Users className="w-4 h-4 mr-2" />
-                  Vybrat z klientů
-                </Button>
-              </div>
-              <Input
-                id="from"
-                placeholder="např. ABC s.r.o."
-                value={from}
-                onChange={(e) => {
-                  setFrom(e.target.value)
-                  setSelectedClient(null) // Clear selected client if manually typing
-                }}
-              />
-              {selectedClient && (
-                <div className="text-xs text-muted-foreground bg-accent/10 p-2 rounded">
-                  ✓ Klient: {selectedClient.name}
-                  {selectedClient.ico && ` (IČO: ${selectedClient.ico})`}
-                </div>
-              )}
-            </div>
+        {/* Add Invoice Dialog */}
+        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Přidat fakturu</DialogTitle>
+              <DialogDescription>Zadejte údaje o faktuře, kterou jste vystavili nebo obdrželi.</DialogDescription>
+            </DialogHeader>
 
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="useLineItems"
-                  checked={useLineItems}
-                  onChange={(e) => setUseLineItems(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <Label htmlFor="useLineItems" className="font-normal cursor-pointer">
-                  Použít položkovou fakturu (služby, materiál, cestovné)
-                </Label>
-              </div>
-            </div>
-
-            {!useLineItems ? (
+            <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="amount">Částka (Kč)</Label>
+                <Label className="text-xs font-medium">Typ faktury</Label>
+                <RadioGroup value={type} onValueChange={(val) => setType(val as "income" | "expense")}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="income" id="income" />
+                    <Label htmlFor="income" className="font-normal cursor-pointer flex items-center gap-2 text-sm">
+                      <ArrowUpRight className="w-4 h-4 text-success" />
+                      Příjem (faktura, kterou jsem vystavil)
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="expense" id="expense" />
+                    <Label htmlFor="expense" className="font-normal cursor-pointer flex items-center gap-2 text-sm">
+                      <ArrowDownRight className="w-4 h-4 text-destructive" />
+                      Výdaj (faktura, kterou mi přišla)
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="from" className="text-xs font-medium">{type === "income" ? "Od koho" : "Komu platím"}</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowClientSelector(true)}
+                    className="h-7 px-2 text-xs"
+                  >
+                    <UsersRound className="w-3.5 h-3.5 mr-1.5" />
+                    Vybrat z klientů
+                  </Button>
+                </div>
                 <Input
-                  id="amount"
-                  type="number"
-                  placeholder="např. 50000"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  id="from"
+                  placeholder="např. ABC s.r.o."
+                  value={from}
+                  onChange={(e) => {
+                    setFrom(e.target.value)
+                    setSelectedClient(null) // Clear selected client if manually typing
+                  }}
+                />
+                {selectedClient && (
+                  <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                    <CircleCheck className="w-3 h-3 inline mr-1 text-success" />
+                    Klient: {selectedClient.name}
+                    {selectedClient.ico && ` (IČO: ${selectedClient.ico})`}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="useLineItems"
+                    checked={useLineItems}
+                    onChange={(e) => setUseLineItems(e.target.checked)}
+                    className="w-4 h-4 rounded border-border"
+                  />
+                  <Label htmlFor="useLineItems" className="font-normal cursor-pointer text-sm">
+                    Použít položkovou fakturu
+                  </Label>
+                </div>
+              </div>
+
+              {!useLineItems ? (
+                <div className="space-y-2">
+                  <Label htmlFor="amount" className="text-xs font-medium">Částka (Kč)</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    placeholder="např. 50000"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                  />
+                </div>
+              ) : (
+                <InvoiceItemsEditor
+                  items={lineItems}
+                  onChange={handleLineItemsChange}
+                  onTotalChange={handleLineItemsTotalChange}
+                />
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="dueDate" className="text-xs font-medium">Datum splatnosti</Label>
+                <Input id="dueDate" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description" className="text-xs font-medium">Popis (volitelné)</Label>
+                <Textarea
+                  id="description"
+                  placeholder="např. Faktura za vývoj webu"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={2}
                 />
               </div>
-            ) : (
-              <InvoiceItemsEditor
-                items={lineItems}
-                onChange={handleLineItemsChange}
-                onTotalChange={handleLineItemsTotalChange}
-              />
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="dueDate">Datum splatnosti</Label>
-              <Input id="dueDate" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Popis (volitelné)</Label>
-              <Textarea
-                id="description"
-                placeholder="např. Faktura za vývoj webu"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={2}
-              />
-            </div>
-          </div>
+            <DialogFooter>
+              <Button variant="outline" size="sm" onClick={() => setShowAddDialog(false)}>
+                Zrušit
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleAddInvoice}
+                disabled={!from || (!useLineItems && (!amount || parseFloat(amount) <= 0)) || (useLineItems && lineItems.length === 0)}
+              >
+                <Plus className="w-4 h-4 mr-1.5" />
+                Přidat
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddDialog(false)}>
-              Zrušit
-            </Button>
-            <Button
-              onClick={handleAddInvoice}
-              disabled={!from || (!useLineItems && (!amount || parseFloat(amount) <= 0)) || (useLineItems && lineItems.length === 0)}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Přidat
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Client Selector Dialog */}
-      <ClientSelector
-        open={showClientSelector}
-        onOpenChange={setShowClientSelector}
-        onSelect={handleClientSelect}
-      />
-
-      {/* QR Invoice Preview */}
-      {selectedInvoiceForQR && (
-        <QRInvoicePreview
-          invoice={selectedInvoiceForQR}
-          open={showQRPreview}
-          onOpenChange={setShowQRPreview}
+        {/* Client Selector Dialog */}
+        <ClientSelector
+          open={showClientSelector}
+          onOpenChange={setShowClientSelector}
+          onSelect={handleClientSelect}
         />
-      )}
 
-      {/* Invoice Reminder Dialog */}
-      <InvoiceReminderDialog
-        open={showReminderDialog}
-        onOpenChange={setShowReminderDialog}
-        invoice={selectedInvoiceForReminder}
-      />
-      </main>
+        {/* QR Invoice Preview */}
+        {selectedInvoiceForQR && (
+          <QRInvoicePreview
+            invoice={selectedInvoiceForQR}
+            open={showQRPreview}
+            onOpenChange={setShowQRPreview}
+          />
+        )}
+
+        {/* Invoice Reminder Dialog */}
+        <InvoiceReminderDialog
+          open={showReminderDialog}
+          onOpenChange={setShowReminderDialog}
+          invoice={selectedInvoiceForReminder}
+        />
+      </div>
     </AppLayout>
   )
 }

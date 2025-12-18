@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Trash2, Play, Copy, Plus } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Trash2, Play, Copy, Plus, FileStack, X } from "lucide-react"
 import { ContractTypeSelector } from "@/components/contract-type-selector"
 import { AppLayout } from "@/components/app-layout"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface Draft {
   id: string
@@ -14,6 +15,38 @@ interface Draft {
   type: string
   date: string
   blocks: number
+}
+
+// Skeleton component
+function SkeletonDrafts() {
+  return (
+    <div className="p-5 lg:p-6 max-w-[1200px] mx-auto">
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <Skeleton className="h-8 w-40 mb-2" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <Skeleton className="h-9 w-32" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="p-4 bg-card border border-border rounded-md stagger-item">
+            <Skeleton className="h-5 w-3/4 mb-2" />
+            <Skeleton className="h-4 w-1/2 mb-4" />
+            <div className="space-y-2 mb-4">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="h-8 flex-1" />
+              <Skeleton className="h-8 w-8" />
+              <Skeleton className="h-8 w-8" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export default function DraftsPage() {
@@ -92,7 +125,6 @@ export default function DraftsPage() {
   }
 
   const handleDuplicate = (draft: Draft) => {
-    // Always save copies to the contracts store
     const contracts = localStorage.getItem("contracts")
     const contractsData = contracts ? JSON.parse(contracts) : {}
 
@@ -118,38 +150,34 @@ export default function DraftsPage() {
       localStorage.setItem("contracts", JSON.stringify(contractsData))
 
       // Refresh the drafts list
-      const loadDrafts = () => {
-        const allDrafts: Draft[] = []
-        const currentDraft = localStorage.getItem("contract-draft")
-        if (currentDraft) {
-          try {
-            const data = JSON.parse(currentDraft)
-            allDrafts.push({
-              id: "contract-draft",
-              name: `Aktuální koncept`,
-              type: data.type,
-              date: new Date(data.savedAt).toLocaleDateString("cs-CZ"),
-              blocks: data.blocks?.length || 0,
-            })
-          } catch (e) {}
-        }
-
-        Object.entries(contractsData).forEach(([id, contract]: [string, any]) => {
-          if (!contract.finalized) {
-            allDrafts.push({
-              id,
-              name: contract.name || `Koncept ${id.slice(0, 8)}`,
-              type: contract.type,
-              date: new Date(contract.savedAt).toLocaleDateString("cs-CZ"),
-              blocks: contract.blocks?.length || 0,
-            })
-          }
-        })
-
-        setDrafts(allDrafts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()))
+      const allDrafts: Draft[] = []
+      const currentDraft = localStorage.getItem("contract-draft")
+      if (currentDraft) {
+        try {
+          const data = JSON.parse(currentDraft)
+          allDrafts.push({
+            id: "contract-draft",
+            name: `Aktuální koncept`,
+            type: data.type,
+            date: new Date(data.savedAt).toLocaleDateString("cs-CZ"),
+            blocks: data.blocks?.length || 0,
+          })
+        } catch (e) {}
       }
 
-      loadDrafts()
+      Object.entries(contractsData).forEach(([id, contract]: [string, any]) => {
+        if (!contract.finalized) {
+          allDrafts.push({
+            id,
+            name: contract.name || `Koncept ${id.slice(0, 8)}`,
+            type: contract.type,
+            date: new Date(contract.savedAt).toLocaleDateString("cs-CZ"),
+            blocks: contract.blocks?.length || 0,
+          })
+        }
+      })
+
+      setDrafts(allDrafts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()))
     }
   }
 
@@ -172,90 +200,117 @@ export default function DraftsPage() {
 
   const handleSelectType = (type: string) => {
     setShowTypeSelector(false)
-    // Clear the current draft before starting a new one
     localStorage.removeItem("contract-draft")
     router.push(`/builder?type=${type}`)
   }
 
-  return (
-    <AppLayout title="Moje koncepty" showBack>
-      <main className="p-4 md:p-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Moje koncepty</h1>
-            <p className="text-muted-foreground">Všechny vaše uložené a rozpracované smlouvy</p>
-          </div>
-          <Button onClick={() => setShowTypeSelector(true)} size="lg">
-            <Plus className="w-4 h-4 mr-2" /> Nová smlouva
-          </Button>
-        </div>
+  if (isLoading) {
+    return (
+      <AppLayout>
+        <SkeletonDrafts />
+      </AppLayout>
+    )
+  }
 
-        {isLoading ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Načítám koncepty...</p>
+  return (
+    <AppLayout>
+      <div className="p-5 lg:p-6 max-w-[1200px] mx-auto">
+        {/* Header */}
+        <header className="mb-6">
+          <div className="flex items-start justify-between flex-wrap gap-4">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground flex items-center gap-2.5">
+                <FileStack className="w-6 h-6 text-primary" strokeWidth={1.75} />
+                Moje koncepty
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Všechny vaše uložené a rozpracované smlouvy
+              </p>
+            </div>
+            <Button onClick={() => setShowTypeSelector(true)} size="sm">
+              <Plus className="w-4 h-4 mr-1.5" strokeWidth={1.75} />
+              Nová smlouva
+            </Button>
           </div>
-        ) : drafts.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <p className="text-muted-foreground mb-4">Ještě jste nevytvořili žádný koncept</p>
-              <Button onClick={() => setShowTypeSelector(true)}>Vytvořit nový koncept</Button>
-            </CardContent>
-          </Card>
+        </header>
+
+        {/* Content */}
+        {drafts.length === 0 ? (
+          <div className="text-center py-16">
+            <FileStack className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" strokeWidth={1.5} />
+            <p className="text-muted-foreground mb-4">Ještě jste nevytvořili žádný koncept</p>
+            <Button onClick={() => setShowTypeSelector(true)} size="sm">
+              <Plus className="w-4 h-4 mr-1.5" />
+              Vytvořit nový koncept
+            </Button>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {drafts.map((draft) => (
-              <Card key={draft.id} className="hover:shadow-lg transition-shadow flex flex-col">
-                <CardHeader>
-                  <CardTitle className="text-lg">{draft.name}</CardTitle>
-                  <CardDescription>{getContractTypeName(draft.type)}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col justify-between">
-                  <div className="mb-4 text-sm text-muted-foreground">
-                    <p>Bloky: {draft.blocks}</p>
-                    <p>Poslední úprava: {draft.date}</p>
-                  </div>
-                  <div className="flex gap-2 flex-wrap">
-                    <Button size="sm" className="flex-1" onClick={() => handleResume(draft.id)}>
-                      <Play className="w-4 h-4 mr-1" /> Pokračovat
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleDuplicate(draft)} title="Kopírovat">
-                      <Copy className="w-4 h-4" />
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleDelete(draft.id)} title="Smazat">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {drafts.map((draft, index) => (
+              <div
+                key={draft.id}
+                className="p-4 bg-card border border-border rounded-md interactive-card stagger-item"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <div className="mb-3">
+                  <h3 className="text-sm font-medium truncate">{draft.name}</h3>
+                  <Badge variant="outline" className="text-[10px] mt-1">
+                    {getContractTypeName(draft.type)}
+                  </Badge>
+                </div>
+                <div className="text-xs text-muted-foreground space-y-1 mb-4">
+                  <p>Bloky: {draft.blocks}</p>
+                  <p>Poslední úprava: {draft.date}</p>
+                </div>
+                <div className="flex gap-1.5">
+                  <Button size="sm" className="flex-1 h-8 text-xs" onClick={() => handleResume(draft.id)}>
+                    <Play className="w-3.5 h-3.5 mr-1" strokeWidth={1.75} />
+                    Pokračovat
+                  </Button>
+                  <Button
+                    size="icon-sm"
+                    variant="outline"
+                    onClick={() => handleDuplicate(draft)}
+                    title="Kopírovat"
+                    className="h-8 w-8"
+                  >
+                    <Copy className="w-3.5 h-3.5" strokeWidth={1.75} />
+                  </Button>
+                  <Button
+                    size="icon-sm"
+                    variant="outline"
+                    onClick={() => handleDelete(draft.id)}
+                    title="Smazat"
+                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" strokeWidth={1.75} />
+                  </Button>
+                </div>
+              </div>
             ))}
           </div>
         )}
 
-        <div className="mt-8">
-          <Button variant="outline" onClick={() => router.push("/")}>
-            ← Zpět na domovskou stránku
-          </Button>
-        </div>
-      </div>
-
-      {/* Type Selector Dialog */}
-      {showTypeSelector && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-background rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold">Vyber typ smlouvy</h2>
-                <Button variant="ghost" size="sm" onClick={() => setShowTypeSelector(false)}>
-                  ✕
-                </Button>
+        {/* Type Selector Modal */}
+        {showTypeSelector && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center p-4 z-50 fade-in">
+            <div className="bg-card border border-border rounded-md max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-xl scale-in">
+              <div className="p-5 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-medium">Vyber typ smlouvy</h2>
+                  <Button variant="ghost" size="icon-sm" onClick={() => setShowTypeSelector(false)}>
+                    <X className="w-4 h-4" />
+                    <span className="sr-only">Zavřít</span>
+                  </Button>
+                </div>
               </div>
-              <ContractTypeSelector onSelect={handleSelectType} />
+              <div className="p-5">
+                <ContractTypeSelector onSelect={handleSelectType} />
+              </div>
             </div>
           </div>
-        </div>
-      )}
-      </main>
+        )}
+      </div>
     </AppLayout>
   )
 }

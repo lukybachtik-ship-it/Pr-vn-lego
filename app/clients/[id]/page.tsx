@@ -2,14 +2,18 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
-  ArrowLeft,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Building2,
   MapPin,
   User,
@@ -23,10 +27,62 @@ import {
   CheckCircle,
   AlertCircle,
   Trash2,
-  Home,
+  Banknote,
 } from "lucide-react"
 import Link from "next/link"
 import { getClient, saveClient, deleteClient, getClientHistory, type Client } from "@/lib/clients"
+import { AppLayout } from "@/components/app-layout"
+import { Skeleton } from "@/components/ui/skeleton"
+
+// Skeleton component for this page
+function SkeletonClientDetail() {
+  return (
+    <div className="p-5 lg:p-6 max-w-[1200px] mx-auto">
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-6 w-24 rounded-full" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-24" />
+            <Skeleton className="h-9 w-9" />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left Column */}
+        <div className="lg:col-span-1 space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="p-4 bg-card border border-border rounded-md stagger-item">
+              <Skeleton className="h-5 w-32 mb-4" />
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Right Column */}
+        <div className="lg:col-span-2 space-y-4">
+          {[1, 2].map((i) => (
+            <div key={i} className="p-4 bg-card border border-border rounded-md stagger-item">
+              <Skeleton className="h-5 w-40 mb-4" />
+              <div className="space-y-3">
+                {[1, 2, 3].map((j) => (
+                  <Skeleton key={j} className="h-16 w-full rounded-md" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function ClientDetailPage() {
   const params = useParams()
@@ -76,130 +132,119 @@ export default function ClientDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <p className="text-muted-foreground">Načítání klienta...</p>
-        </div>
-      </div>
+      <AppLayout>
+        <SkeletonClientDetail />
+      </AppLayout>
     )
   }
 
   if (!client) {
     return (
-      <div className="container mx-auto p-6">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>Klient nebyl nalezen</AlertDescription>
-        </Alert>
-        <Link href="/clients">
-          <Button className="mt-4" variant="outline">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Zpět na seznam klientů
-          </Button>
-        </Link>
-      </div>
+      <AppLayout>
+        <div className="p-5 lg:p-6 max-w-[1200px] mx-auto">
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>Klient nebyl nalezen</AlertDescription>
+          </Alert>
+          <Link href="/clients">
+            <Button variant="outline" size="sm">
+              Zpět na seznam klientů
+            </Button>
+          </Link>
+        </div>
+      </AppLayout>
     )
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-4">
-          <Link href="/">
-            <Button variant="ghost" size="icon" title="Domů">
-              <Home className="w-4 h-4" />
-            </Button>
-          </Link>
-          <Link href="/clients">
-            <Button variant="ghost" size="icon" title="Zpět na klienty">
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-          </Link>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold">{client.name}</h1>
-              {client.ico ? (
-                <Badge variant="outline">IČO: {client.ico}</Badge>
+    <AppLayout>
+      <div className="p-5 lg:p-6 max-w-[1200px] mx-auto">
+        {/* Header */}
+        <header className="mb-6">
+          <div className="flex items-start justify-between flex-wrap gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                  {client.name}
+                </h1>
+                {client.ico ? (
+                  <Badge variant="outline">IČO: {client.ico}</Badge>
+                ) : (
+                  <Badge variant="secondary">Manuální</Badge>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Detail klienta a historie spolupráce
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {!isEditing ? (
+                <>
+                  <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
+                    <Edit className="w-4 h-4 mr-1.5" strokeWidth={1.75} />
+                    Upravit
+                  </Button>
+                  <Button onClick={handleDelete} variant="destructive" size="icon-sm">
+                    <Trash2 className="w-4 h-4" strokeWidth={1.75} />
+                  </Button>
+                </>
               ) : (
-                <Badge variant="secondary">Manuální</Badge>
+                <>
+                  <Button onClick={handleSave} size="sm">
+                    <Save className="w-4 h-4 mr-1.5" strokeWidth={1.75} />
+                    Uložit
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setIsEditing(false)
+                      setEditedClient(client)
+                    }}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <X className="w-4 h-4 mr-1.5" strokeWidth={1.75} />
+                    Zrušit
+                  </Button>
+                </>
               )}
             </div>
-            {client.ico && <p className="text-muted-foreground mt-1">IČO: {client.ico}</p>}
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {!isEditing ? (
-            <>
-              <Button onClick={() => setIsEditing(true)} variant="outline">
-                <Edit className="w-4 h-4 mr-2" />
-                Upravit
-              </Button>
-              <Button onClick={handleDelete} variant="destructive" size="icon">
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button onClick={handleSave} variant="default">
-                <Save className="w-4 h-4 mr-2" />
-                Uložit
-              </Button>
-              <Button
-                onClick={() => {
-                  setIsEditing(false)
-                  setEditedClient(client)
-                }}
-                variant="outline"
-              >
-                <X className="w-4 h-4 mr-2" />
-                Zrušit
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
+        </header>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left Column - Contact Info */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Basic Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="w-5 h-5" />
-                Základní údaje
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Address */}
-              {(client.street || client.city) && (
+        <div className="grid gap-4 lg:grid-cols-3">
+          {/* Left Column - Contact Info */}
+          <div className="lg:col-span-1 space-y-4">
+            {/* Basic Info */}
+            <div className="p-4 bg-card border border-border rounded-md stagger-item">
+              <div className="flex items-center gap-2 mb-4">
+                <Building2 className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
+                <h3 className="text-sm font-medium">Základní údaje</h3>
+              </div>
+              {(client.street || client.city) ? (
                 <div className="flex items-start gap-3">
-                  <MapPin className="w-4 h-4 text-muted-foreground mt-1" />
+                  <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" strokeWidth={1.75} />
                   <div className="text-sm">
                     {client.street && <p>{client.street}</p>}
-                    <p>
+                    <p className="text-muted-foreground">
                       {client.zip} {client.city}
                     </p>
                   </div>
                 </div>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">Adresa není vyplněna</p>
               )}
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Contact Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5" />
-                Kontaktní údaje
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            {/* Contact Info */}
+            <div className="p-4 bg-card border border-border rounded-md stagger-item">
+              <div className="flex items-center gap-2 mb-4">
+                <User className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
+                <h3 className="text-sm font-medium">Kontaktní údaje</h3>
+              </div>
               {isEditing ? (
-                <>
+                <div className="space-y-3">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Telefon</label>
+                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Telefon</label>
                     <Input
                       placeholder="např. +420 777 123 456"
                       value={editedClient.phone || ""}
@@ -212,7 +257,7 @@ export default function ClientDetailPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Email</label>
+                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Email</label>
                     <Input
                       type="email"
                       placeholder="např. jan.novak@firma.cz"
@@ -225,12 +270,12 @@ export default function ClientDetailPage() {
                       }
                     />
                   </div>
-                </>
+                </div>
               ) : (
-                <>
+                <div className="space-y-3">
                   {client.phone ? (
                     <div className="flex items-center gap-3">
-                      <Phone className="w-4 h-4 text-muted-foreground" />
+                      <Phone className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
                       <a href={`tel:${client.phone}`} className="text-sm hover:underline">
                         {client.phone}
                       </a>
@@ -240,7 +285,7 @@ export default function ClientDetailPage() {
                   )}
                   {client.email ? (
                     <div className="flex items-center gap-3">
-                      <Mail className="w-4 h-4 text-muted-foreground" />
+                      <Mail className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
                       <a href={`mailto:${client.email}`} className="text-sm hover:underline truncate">
                         {client.email}
                       </a>
@@ -248,24 +293,22 @@ export default function ClientDetailPage() {
                   ) : (
                     <p className="text-sm text-muted-foreground italic">Email není vyplněn</p>
                   )}
-                </>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Billing Configuration */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Receipt className="w-5 h-5" />
-                Fakturace
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            {/* Billing Configuration */}
+            <div className="p-4 bg-card border border-border rounded-md stagger-item">
+              <div className="flex items-center gap-2 mb-4">
+                <Banknote className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
+                <h3 className="text-sm font-medium">Fakturace</h3>
+              </div>
               {isEditing ? (
-                <>
+                <div className="space-y-3">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Výchozí hodinová sazba (Kč/h)</label>
+                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                      Výchozí hodinová sazba (Kč/h)
+                    </label>
                     <Input
                       type="number"
                       placeholder="např. 1000"
@@ -279,35 +322,38 @@ export default function ClientDetailPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Typ fakturace</label>
-                    <select
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Typ fakturace</label>
+                    <Select
                       value={editedClient.billingType || ""}
-                      onChange={(e) =>
+                      onValueChange={(value) =>
                         setEditedClient({
                           ...editedClient,
-                          billingType: e.target.value as "hourly" | "flat" | undefined,
+                          billingType: value as "hourly" | "flat" | undefined,
                         })
                       }
                     >
-                      <option value="">Nevyplněno</option>
-                      <option value="hourly">Hodinová sazba</option>
-                      <option value="flat">Paušál</option>
-                    </select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Vyberte typ" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hourly">Hodinová sazba</SelectItem>
+                        <SelectItem value="flat">Paušál</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                </>
+                </div>
               ) : (
-                <>
+                <div className="space-y-3">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">Hodinová sazba</p>
+                    <p className="text-xs text-muted-foreground mb-1">Hodinová sazba</p>
                     {client.defaultHourlyRate ? (
-                      <p className="text-lg font-semibold">{client.defaultHourlyRate.toLocaleString("cs-CZ")} Kč/h</p>
+                      <p className="text-sm font-semibold">{client.defaultHourlyRate.toLocaleString("cs-CZ")} Kč/h</p>
                     ) : (
                       <p className="text-sm text-muted-foreground italic">Není nastavena</p>
                     )}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">Typ fakturace</p>
+                    <p className="text-xs text-muted-foreground mb-1">Typ fakturace</p>
                     {client.billingType ? (
                       <Badge variant="outline">
                         {client.billingType === "hourly" ? "Hodinová sazba" : "Paušál"}
@@ -316,40 +362,41 @@ export default function ClientDetailPage() {
                       <p className="text-sm text-muted-foreground italic">Není nastaven</p>
                     )}
                   </div>
-                </>
+                </div>
               )}
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
 
-        {/* Right Column - History */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Contracts */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                Smlouvy ({history?.contracts.length || 0})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          {/* Right Column - History */}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Contracts */}
+            <div className="p-4 bg-card border border-border rounded-md stagger-item">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
+                <h3 className="text-sm font-medium">Smlouvy</h3>
+                <Badge variant="secondary" className="ml-auto text-xs">
+                  {history?.contracts.length || 0}
+                </Badge>
+              </div>
               {history && history.contracts.length > 0 ? (
-                <div className="space-y-3">
-                  {history.contracts.map((contract) => (
+                <div className="space-y-2">
+                  {history.contracts.map((contract, index) => (
                     <Link key={contract.id} href={`/contract/${contract.id}`}>
-                      <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold">{contract.name}</h4>
-                            <Badge variant="outline" className="text-xs">
+                      <div className={`flex items-center justify-between p-3 border border-border rounded-md clickable-row stagger-item`}
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <h4 className="text-sm font-medium truncate">{contract.name}</h4>
+                            <Badge variant="outline" className="text-[10px]">
                               {contract.type}
                             </Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            Vytvořeno: {new Date(contract.createdAt).toLocaleDateString("cs-CZ")}
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(contract.createdAt).toLocaleDateString("cs-CZ")}
                           </p>
                         </div>
-                        <Badge variant={contract.status === "active" ? "default" : "secondary"}>
+                        <Badge variant={contract.status === "active" ? "default" : "secondary"} className="text-xs">
                           {contract.status === "active" ? "Aktivní" : "Dokončeno"}
                         </Badge>
                       </div>
@@ -358,52 +405,54 @@ export default function ClientDetailPage() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground">Žádné smlouvy</p>
+                  <FileText className="w-10 h-10 text-muted-foreground/50 mx-auto mb-2" strokeWidth={1.5} />
+                  <p className="text-sm text-muted-foreground">Žádné smlouvy</p>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Invoices */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Receipt className="w-5 h-5" />
-                Faktury ({history?.invoices.length || 0})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+            {/* Invoices */}
+            <div className="p-4 bg-card border border-border rounded-md stagger-item">
+              <div className="flex items-center gap-2 mb-4">
+                <Receipt className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
+                <h3 className="text-sm font-medium">Faktury</h3>
+                <Badge variant="secondary" className="ml-auto text-xs">
+                  {history?.invoices.length || 0}
+                </Badge>
+              </div>
               {history && history.invoices.length > 0 ? (
-                <div className="space-y-3">
-                  {history.invoices.map((invoice) => (
+                <div className="space-y-2">
+                  {history.invoices.map((invoice, index) => (
                     <div
                       key={invoice.id}
-                      className="flex items-center justify-between p-4 border rounded-lg"
+                      className={`flex items-center justify-between p-3 border border-border rounded-md stagger-item`}
+                      style={{ animationDelay: `${index * 50}ms` }}
                     >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-1">
-                          <h4 className="font-semibold">{invoice.amount.toLocaleString("cs-CZ")} Kč</h4>
-                          <Badge variant={invoice.type === "income" ? "default" : "secondary"}>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <h4 className="text-sm font-semibold tabular-nums">
+                            {invoice.amount.toLocaleString("cs-CZ")} Kč
+                          </h4>
+                          <Badge variant={invoice.type === "income" ? "default" : "secondary"} className="text-[10px]">
                             {invoice.type === "income" ? "Příjem" : "Výdaj"}
                           </Badge>
                           {invoice.isPaid ? (
-                            <Badge variant="outline" className="text-green-600 border-green-600">
+                            <Badge variant="outline" className="text-[10px] text-success border-success">
                               <CheckCircle className="w-3 h-3 mr-1" />
                               Zaplaceno
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="text-orange-600 border-orange-600">
+                            <Badge variant="outline" className="text-[10px] text-warning border-warning">
                               <AlertCircle className="w-3 h-3 mr-1" />
                               Nezaplaceno
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           Splatnost: {new Date(invoice.dueDate).toLocaleDateString("cs-CZ")}
                         </p>
                         {invoice.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{invoice.description}</p>
+                          <p className="text-xs text-muted-foreground mt-1 truncate">{invoice.description}</p>
                         )}
                       </div>
                     </div>
@@ -411,14 +460,14 @@ export default function ClientDetailPage() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Receipt className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground">Žádné faktury</p>
+                  <Receipt className="w-10 h-10 text-muted-foreground/50 mx-auto mb-2" strokeWidth={1.5} />
+                  <p className="text-sm text-muted-foreground">Žádné faktury</p>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </AppLayout>
   )
 }

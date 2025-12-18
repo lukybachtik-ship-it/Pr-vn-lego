@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { AppLayout } from "@/components/app-layout"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   ChevronLeft,
   ChevronRight,
@@ -23,6 +24,41 @@ import {
   AlertCircle,
   Info,
 } from "lucide-react"
+
+// Skeleton component
+function SkeletonTaxCalendar() {
+  return (
+    <div className="p-5 lg:p-6 max-w-[1200px] mx-auto">
+      <div className="mb-6">
+        <Skeleton className="h-8 w-56 mb-2" />
+        <Skeleton className="h-4 w-72" />
+      </div>
+      <div className="flex flex-wrap gap-2 mb-6">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <Skeleton key={i} className="h-6 w-24" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 p-4 bg-card border border-border rounded-md">
+          <Skeleton className="h-6 w-32 mx-auto mb-4" />
+          <div className="grid grid-cols-7 gap-1">
+            {[...Array(35)].map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full" />
+            ))}
+          </div>
+        </div>
+        <div className="p-4 bg-card border border-border rounded-md">
+          <Skeleton className="h-5 w-48 mb-4" />
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-16 w-full" />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // Tax event types for styling
 type TaxEventType = "dph" | "dan_prijmu" | "socialni" | "zdravotni" | "pausalni" | "general"
@@ -493,12 +529,12 @@ const TAX_EVENTS_2026: TaxEvent[] = [
 ]
 
 const EVENT_TYPE_CONFIG: Record<TaxEventType, { icon: React.ReactNode; color: string; label: string }> = {
-  dph: { icon: <Banknote className="w-4 h-4" />, color: "bg-blue-100 text-blue-700 border-blue-200", label: "DPH" },
-  dan_prijmu: { icon: <FileText className="w-4 h-4" />, color: "bg-purple-100 text-purple-700 border-purple-200", label: "Daň z příjmů" },
-  socialni: { icon: <Building2 className="w-4 h-4" />, color: "bg-orange-100 text-orange-700 border-orange-200", label: "Sociální pojištění" },
-  zdravotni: { icon: <Heart className="w-4 h-4" />, color: "bg-red-100 text-red-700 border-red-200", label: "Zdravotní pojištění" },
-  pausalni: { icon: <Calendar className="w-4 h-4" />, color: "bg-green-100 text-green-700 border-green-200", label: "Paušální daň" },
-  general: { icon: <Info className="w-4 h-4" />, color: "bg-gray-100 text-gray-700 border-gray-200", label: "Obecné" },
+  dph: { icon: <Banknote className="w-4 h-4" />, color: "bg-primary/10 text-primary border-primary/20", label: "DPH" },
+  dan_prijmu: { icon: <FileText className="w-4 h-4" />, color: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20", label: "Daň z příjmů" },
+  socialni: { icon: <Building2 className="w-4 h-4" />, color: "bg-warning/10 text-warning border-warning/20", label: "Sociální pojištění" },
+  zdravotni: { icon: <Heart className="w-4 h-4" />, color: "bg-destructive/10 text-destructive border-destructive/20", label: "Zdravotní pojištění" },
+  pausalni: { icon: <Calendar className="w-4 h-4" />, color: "bg-success/10 text-success border-success/20", label: "Paušální daň" },
+  general: { icon: <Info className="w-4 h-4" />, color: "bg-muted text-muted-foreground border-border", label: "Obecné" },
 }
 
 const MONTH_NAMES = [
@@ -658,117 +694,112 @@ export default function TaxCalendarPage() {
   }
 
   return (
-    <AppLayout title="Daňový kalendář" showBack>
-      <main className="p-4 md:p-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <Calendar className="w-10 h-10 text-primary" />
-              <div>
-                <h1 className="text-3xl font-bold">Daňový kalendář 2026</h1>
-                <p className="text-muted-foreground">Důležité termíny pro OSVČ a podnikatele</p>
-              </div>
+    <AppLayout>
+      <div className="p-5 lg:p-6 max-w-[1200px] mx-auto">
+        {/* Header */}
+        <header className="mb-6">
+          <div className="flex items-start justify-between flex-wrap gap-4">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground flex items-center gap-2.5">
+                <Calendar className="w-6 h-6 text-primary" strokeWidth={1.75} />
+                Daňový kalendář 2026
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">Důležité termíny pro OSVČ a podnikatele</p>
             </div>
           </div>
+        </header>
 
           {/* Legend */}
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="flex flex-wrap gap-1.5 mb-6">
             {Object.entries(EVENT_TYPE_CONFIG).map(([type, config]) => (
-              <Badge key={type} variant="outline" className={config.color}>
+              <Badge key={type} variant="outline" className={`text-[10px] ${config.color}`}>
                 {config.icon}
                 <span className="ml-1">{config.label}</span>
               </Badge>
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Calendar */}
-            <Card className="lg:col-span-2">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <Button variant="outline" size="icon" onClick={handlePrevMonth}>
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <CardTitle className="text-xl">
-                    {MONTH_NAMES[currentMonth]} {currentYear}
-                  </CardTitle>
-                  <Button variant="outline" size="icon" onClick={handleNextMonth}>
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {/* Day headers */}
-                <div className="grid grid-cols-7 gap-1 mb-2">
-                  {DAY_NAMES.map((day) => (
-                    <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2">
-                      {day}
-                    </div>
-                  ))}
-                </div>
+            <div className="lg:col-span-2 p-4 bg-card border border-border rounded-md stagger-item" style={{ animationDelay: "0ms" }}>
+              <div className="flex items-center justify-between mb-4">
+                <Button variant="outline" size="icon-sm" onClick={handlePrevMonth}>
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <h3 className="text-sm font-medium">
+                  {MONTH_NAMES[currentMonth]} {currentYear}
+                </h3>
+                <Button variant="outline" size="icon-sm" onClick={handleNextMonth}>
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+              {/* Day headers */}
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {DAY_NAMES.map((day) => (
+                  <div key={day} className="text-center text-[10px] font-medium text-muted-foreground py-1">
+                    {day}
+                  </div>
+                ))}
+              </div>
 
-                {/* Calendar grid */}
-                <div className="grid grid-cols-7 gap-1">
-                  {calendarDays.map((day, index) => {
-                    if (day === null) {
-                      return <div key={`empty-${index}`} className="min-h-[80px]" />
-                    }
+              {/* Calendar grid */}
+              <div className="grid grid-cols-7 gap-1">
+                {calendarDays.map((day, index) => {
+                  if (day === null) {
+                    return <div key={`empty-${index}`} className="min-h-[70px]" />
+                  }
 
-                    const dayEvents = getEventsForDay(day)
-                    const hasImportant = dayEvents.some((e) => e.important)
+                  const dayEvents = getEventsForDay(day)
+                  const hasImportant = dayEvents.some((e) => e.important)
 
-                    return (
-                      <div
-                        key={day}
-                        className={`min-h-[80px] p-1 border rounded-lg transition-all ${
-                          isToday(day)
-                            ? "bg-primary/10 border-primary"
-                            : isPast(day)
-                              ? "bg-muted/30 border-muted"
-                              : "border-border hover:border-primary/50"
-                        } ${dayEvents.length > 0 ? "cursor-pointer" : ""}`}
-                        onClick={() => dayEvents.length > 0 && handleEventClick(dayEvents[0])}
-                      >
-                        <div className={`text-sm font-medium mb-1 ${isPast(day) ? "text-muted-foreground" : ""}`}>
-                          {day}
-                        </div>
-                        <div className="space-y-0.5">
-                          {dayEvents.slice(0, 2).map((event) => (
-                            <div
-                              key={event.id}
-                              className={`text-[10px] px-1 py-0.5 rounded truncate ${EVENT_TYPE_CONFIG[event.type].color} ${
-                                event.important ? "font-semibold" : ""
-                              }`}
-                              title={event.title}
-                            >
-                              {event.title.slice(0, 15)}...
-                            </div>
-                          ))}
-                          {dayEvents.length > 2 && (
-                            <div className="text-[10px] text-muted-foreground">
-                              +{dayEvents.length - 2} další
-                            </div>
-                          )}
-                        </div>
+                  return (
+                    <div
+                      key={day}
+                      className={`min-h-[70px] p-1 border rounded-md transition-all ${
+                        isToday(day)
+                          ? "bg-primary/10 border-primary"
+                          : isPast(day)
+                            ? "bg-muted/30 border-muted"
+                            : "border-border hover:border-primary/50"
+                      } ${dayEvents.length > 0 ? "cursor-pointer" : ""}`}
+                      onClick={() => dayEvents.length > 0 && handleEventClick(dayEvents[0])}
+                    >
+                      <div className={`text-xs font-medium mb-1 ${isPast(day) ? "text-muted-foreground" : ""}`}>
+                        {day}
                       </div>
-                    )
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+                      <div className="space-y-0.5">
+                        {dayEvents.slice(0, 2).map((event) => (
+                          <div
+                            key={event.id}
+                            className={`text-[8px] px-1 py-0.5 rounded truncate ${EVENT_TYPE_CONFIG[event.type].color} ${
+                              event.important ? "font-semibold" : ""
+                            }`}
+                            title={event.title}
+                          >
+                            {event.title.slice(0, 12)}...
+                          </div>
+                        ))}
+                        {dayEvents.length > 2 && (
+                          <div className="text-[8px] text-muted-foreground">
+                            +{dayEvents.length - 2} další
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
 
             {/* Events List */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Události v {MONTH_NAMES[currentMonth].toLowerCase()}u</CardTitle>
-                <CardDescription>
-                  {eventsInMonth.length} {eventsInMonth.length === 1 ? "událost" : eventsInMonth.length < 5 ? "události" : "událostí"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
+            <div className="p-4 bg-card border border-border rounded-md stagger-item" style={{ animationDelay: "50ms" }}>
+              <h3 className="text-sm font-medium mb-1">Události v {MONTH_NAMES[currentMonth].toLowerCase()}u</h3>
+              <p className="text-xs text-muted-foreground mb-4">
+                {eventsInMonth.length} {eventsInMonth.length === 1 ? "událost" : eventsInMonth.length < 5 ? "události" : "událostí"}
+              </p>
+              <div className="space-y-2 max-h-[500px] overflow-y-auto">
                 {eventsInMonth.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">
+                  <p className="text-xs text-muted-foreground text-center py-8">
                     Žádné daňové události v tomto měsíci
                   </p>
                 ) : (
@@ -782,25 +813,25 @@ export default function TaxCalendarPage() {
                       return (
                         <div
                           key={event.id}
-                          className={`p-3 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
+                          className={`p-3 rounded-md border border-border cursor-pointer transition-all hover:shadow-sm ${
                             eventIsPast ? "opacity-60" : ""
                           } ${event.important ? "border-l-4 border-l-primary" : ""}`}
                           onClick={() => handleEventClick(event)}
                         >
                           <div className="flex items-start gap-3">
-                            <div className={`p-2 rounded-lg ${config.color}`}>
+                            <div className={`p-1.5 rounded-md ${config.color}`}>
                               {config.icon}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <p className="font-medium text-sm truncate">{event.title}</p>
+                                <p className="font-medium text-xs truncate">{event.title}</p>
                                 {event.important && (
-                                  <Badge variant="secondary" className="text-[10px] px-1">
+                                  <Badge variant="secondary" className="text-[8px] px-1">
                                     Důležité
                                   </Badge>
                                 )}
                               </div>
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-[10px] text-muted-foreground">
                                 {eventDate.toLocaleDateString("cs-CZ", { day: "numeric", month: "long" })}
                               </p>
                             </div>
@@ -809,63 +840,57 @@ export default function TaxCalendarPage() {
                       )
                     })
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
           {/* Info Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-            <Card className="bg-green-50 border-green-200">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <Calendar className="w-5 h-5 text-green-700" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-green-900">Paušální daň 2026</h3>
-                    <p className="text-sm text-green-700 mt-1">
-                      1. pásmo: 9 984 Kč/měsíc<br />
-                      2. pásmo: 16 745 Kč/měsíc<br />
-                      3. pásmo: 27 139 Kč/měsíc
-                    </p>
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
+            <div className="p-4 bg-success/5 border border-success/20 rounded-md stagger-item" style={{ animationDelay: "100ms" }}>
+              <div className="flex items-start gap-3">
+                <div className="p-1.5 bg-success/10 rounded-md">
+                  <Calendar className="w-4 h-4 text-success" strokeWidth={1.75} />
                 </div>
-              </CardContent>
-            </Card>
+                <div>
+                  <h3 className="font-medium text-sm text-success">Paušální daň 2026</h3>
+                  <p className="text-xs text-success/80 mt-1">
+                    1. pásmo: 9 984 Kč/měsíc<br />
+                    2. pásmo: 16 745 Kč/měsíc<br />
+                    3. pásmo: 27 139 Kč/měsíc
+                  </p>
+                </div>
+              </div>
+            </div>
 
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Banknote className="w-5 h-5 text-blue-700" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-blue-900">DPH 2026</h3>
-                    <p className="text-sm text-blue-700 mt-1">
-                      Limit pro registraci: 2 000 000 Kč/rok<br />
-                      Čtvrtletní plátce: obrat do 15 mil. Kč
-                    </p>
-                  </div>
+            <div className="p-4 bg-primary/5 border border-primary/20 rounded-md stagger-item" style={{ animationDelay: "150ms" }}>
+              <div className="flex items-start gap-3">
+                <div className="p-1.5 bg-primary/10 rounded-md">
+                  <Banknote className="w-4 h-4 text-primary" strokeWidth={1.75} />
                 </div>
-              </CardContent>
-            </Card>
+                <div>
+                  <h3 className="font-medium text-sm text-primary">DPH 2026</h3>
+                  <p className="text-xs text-primary/80 mt-1">
+                    Limit pro registraci: 2 000 000 Kč/rok<br />
+                    Čtvrtletní plátce: obrat do 15 mil. Kč
+                  </p>
+                </div>
+              </div>
+            </div>
 
-            <Card className="bg-orange-50 border-orange-200">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <Building2 className="w-5 h-5 text-orange-700" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-orange-900">Zálohy OSVČ 2026</h3>
-                    <p className="text-sm text-orange-700 mt-1">
-                      Sociální: min. 5 720 Kč/měsíc<br />
-                      Zdravotní: min. 3 306 Kč/měsíc
-                    </p>
-                  </div>
+            <div className="p-4 bg-warning/5 border border-warning/20 rounded-md stagger-item" style={{ animationDelay: "200ms" }}>
+              <div className="flex items-start gap-3">
+                <div className="p-1.5 bg-warning/10 rounded-md">
+                  <Building2 className="w-4 h-4 text-warning" strokeWidth={1.75} />
                 </div>
-              </CardContent>
-            </Card>
+                <div>
+                  <h3 className="font-medium text-sm text-warning">Zálohy OSVČ 2026</h3>
+                  <p className="text-xs text-warning/80 mt-1">
+                    Sociální: min. 5 720 Kč/měsíc<br />
+                    Zdravotní: min. 3 306 Kč/měsíc
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -951,8 +976,8 @@ export default function TaxCalendarPage() {
               </div>
 
               {selectedEvent && (
-                <div className="p-3 bg-blue-50 rounded-lg text-sm">
-                  <Calendar className="w-4 h-4 inline mr-2 text-blue-600" />
+                <div className="p-3 bg-primary/5 border border-primary/20 rounded-md text-xs">
+                  <Calendar className="w-4 h-4 inline mr-2 text-primary" />
                   Připomenutí bude nastaveno na:{" "}
                   <strong>
                     {new Date(
@@ -965,38 +990,38 @@ export default function TaxCalendarPage() {
               )}
 
               {reminderResult && (
-                <div className={`p-3 rounded-lg flex items-center gap-2 ${
-                  reminderResult.success ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                <div className={`p-3 rounded-md flex items-center gap-2 text-xs ${
+                  reminderResult.success ? "bg-success/10 text-success border border-success/20" : "bg-destructive/10 text-destructive border border-destructive/20"
                 }`}>
                   {reminderResult.success ? (
                     <CheckCircle className="w-4 h-4" />
                   ) : (
                     <AlertCircle className="w-4 h-4" />
                   )}
-                  <span className="text-sm">{reminderResult.message}</span>
+                  <span>{reminderResult.message}</span>
                 </div>
               )}
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => {
+              <Button variant="outline" size="sm" onClick={() => {
                 setShowReminderDialog(false)
                 setReminderResult(null)
               }}>
                 Zavřít
               </Button>
-              <Button onClick={handleAddReminder} disabled={isAddingReminder}>
+              <Button size="sm" onClick={handleAddReminder} disabled={isAddingReminder}>
                 {isAddingReminder ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
                 ) : (
-                  <Calendar className="w-4 h-4 mr-2" />
+                  <Calendar className="w-4 h-4 mr-1.5" strokeWidth={1.75} />
                 )}
                 {accessToken ? "Přidat do Google Calendar" : "Přihlásit se ke Google Calendar"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </main>
+      </div>
     </AppLayout>
   )
 }

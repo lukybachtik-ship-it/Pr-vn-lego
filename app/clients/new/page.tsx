@@ -2,14 +2,14 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Save, Home } from "lucide-react"
-import Link from "next/link"
+import { Label } from "@/components/ui/label"
+import { Save, UserPlus } from "lucide-react"
 import { saveClient } from "@/lib/clients"
 import { IcoVerifier } from "@/components/ico-verifier"
+import { AppLayout } from "@/components/app-layout"
 
 export default function NewClientPage() {
   const router = useRouter()
@@ -66,50 +66,37 @@ export default function NewClientPage() {
   const isFormValid = formData.name.trim().length > 0
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <AppLayout>
+      <div className="p-5 lg:p-6 max-w-[800px] mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Link href="/">
-            <Button variant="ghost" size="icon" title="Domů">
-              <Home className="w-4 h-4" />
-            </Button>
-          </Link>
-          <Link href="/clients">
-            <Button variant="ghost" size="icon" title="Zpět na klienty">
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold">Nový klient</h1>
-            <p className="text-muted-foreground mt-1">Přidejte nového klienta do adresáře</p>
-          </div>
-        </div>
+        <header className="mb-6">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground flex items-center gap-2.5">
+            <UserPlus className="w-6 h-6 text-primary" strokeWidth={1.75} />
+            Nový klient
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Přidejte nového klienta do adresáře
+          </p>
+        </header>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* ICO Verification */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Ověření IČO (volitelné)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <IcoVerifier value={ico} onChange={setIco} onVerified={handleIcoVerified} required={false} />
-              <p className="text-sm text-muted-foreground mt-2">
-                Pokud zadáte IČO, údaje se automaticky doplní z registru ARES
-              </p>
-            </CardContent>
-          </Card>
+          <div className="p-4 bg-card border border-border rounded-md stagger-item">
+            <Label className="text-sm font-medium mb-3 block">Ověření IČO (volitelné)</Label>
+            <IcoVerifier value={ico} onChange={setIco} onVerified={handleIcoVerified} required={false} />
+            <p className="text-xs text-muted-foreground mt-2">
+              Pokud zadáte IČO, údaje se automaticky doplní z registru ARES
+            </p>
+          </div>
 
           {/* Basic Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Základní údaje</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="p-4 bg-card border border-border rounded-md stagger-item">
+            <h3 className="text-sm font-medium mb-4">Základní údaje</h3>
+            <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Název / Jméno <span className="text-red-500">*</span>
-                </label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Název / Jméno <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   placeholder="např. ABC s.r.o. nebo Jan Novák"
                   value={formData.name}
@@ -119,7 +106,9 @@ export default function NewClientPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Ulice a číslo popisné</label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Ulice a číslo popisné
+                </Label>
                 <Input
                   placeholder="např. Hlavní 123/45"
                   value={formData.street}
@@ -127,9 +116,9 @@ export default function NewClientPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">PSČ</label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">PSČ</Label>
                   <Input
                     placeholder="110 00"
                     value={formData.zip}
@@ -137,7 +126,7 @@ export default function NewClientPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Město</label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Město</Label>
                   <Input
                     placeholder="Praha"
                     value={formData.city}
@@ -147,24 +136,24 @@ export default function NewClientPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Kraj</label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Kraj</Label>
                 <Input
                   placeholder="např. Hlavní město Praha"
                   value={formData.region}
                   onChange={(e) => setFormData({ ...formData, region: e.target.value })}
                 />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Contact Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Kontaktní údaje</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="p-4 bg-card border border-border rounded-md stagger-item">
+            <h3 className="text-sm font-medium mb-4">Kontaktní údaje</h3>
+            <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Kontaktní osoba</label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Kontaktní osoba
+                </Label>
                 <Input
                   placeholder="např. Jan Novák"
                   value={formData.contactPerson}
@@ -177,57 +166,53 @@ export default function NewClientPage() {
                 />
               </div>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">Telefon</label>
-                <Input
-                  type="tel"
-                  placeholder="např. +420 777 123 456"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Telefon</Label>
+                  <Input
+                    type="tel"
+                    placeholder="+420 777 123 456"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Email</Label>
+                  <Input
+                    type="email"
+                    placeholder="jan.novak@firma.cz"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
+                </div>
               </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Email</label>
-                <Input
-                  type="email"
-                  placeholder="např. jan.novak@firma.cz"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Notes */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Poznámky</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Interní poznámky o klientovi..."
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                rows={4}
-              />
-            </CardContent>
-          </Card>
+          <div className="p-4 bg-card border border-border rounded-md stagger-item">
+            <h3 className="text-sm font-medium mb-4">Poznámky</h3>
+            <Textarea
+              placeholder="Interní poznámky o klientovi..."
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              rows={3}
+              className="resize-none"
+            />
+          </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3">
-            <Link href="/clients">
-              <Button type="button" variant="outline">
-                Zrušit
-              </Button>
-            </Link>
-            <Button type="submit" disabled={!isFormValid}>
-              <Save className="w-4 h-4 mr-2" />
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => router.push("/clients")}>
+              Zrušit
+            </Button>
+            <Button type="submit" size="sm" disabled={!isFormValid}>
+              <Save className="w-4 h-4 mr-1.5" strokeWidth={1.75} />
               Uložit klienta
             </Button>
           </div>
         </form>
       </div>
-    </div>
+    </AppLayout>
   )
 }

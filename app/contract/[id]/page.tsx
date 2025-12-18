@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, FileText, Trash2, Calendar, DollarSign, Plus, CheckCircle, XCircle, AlertCircle, Download } from "lucide-react"
+import { FileText, Trash2, Calendar, DollarSign, Plus, CheckCircle, XCircle, AlertCircle, Download, Loader2 } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 import { getContract, deleteContract } from "@/lib/contract-storage"
 import { ContractTimelineComponent } from "@/components/contract-timeline"
 import { HandoverProtocolGenerator } from "@/components/handover-protocol-generator"
@@ -27,6 +28,38 @@ import {
   type ChangeRequest,
 } from "@/lib/change-requests"
 import type { SavedContract } from "@/lib/contract-storage"
+
+// Skeleton component
+function SkeletonContractDetail() {
+  return (
+    <div className="p-5 lg:p-6 max-w-[1200px] mx-auto">
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-36" />
+          <Skeleton className="h-9 w-24" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-4">
+          <div className="p-4 bg-card border border-border rounded-md">
+            <Skeleton className="h-5 w-32 mb-3" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div className="p-4 bg-card border border-border rounded-md">
+            <Skeleton className="h-5 w-32 mb-3" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function ContractDetailPage() {
   const params = useParams()
@@ -177,11 +210,9 @@ export default function ContractDetailPage() {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-background p-4 md:p-8">
-        <div className="max-w-6xl mx-auto flex items-center justify-center">
-          <p className="text-muted-foreground">Načítám...</p>
-        </div>
-      </main>
+      <AppLayout>
+        <SkeletonContractDetail />
+      </AppLayout>
     )
   }
 
@@ -318,167 +349,165 @@ export default function ContractDetailPage() {
   const contractText = renderContractText()
 
   return (
-    <AppLayout title={contract.name} showBack>
-      <main className="p-4 md:p-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-start justify-between">
+    <AppLayout>
+      <div className="p-5 lg:p-6 max-w-[1200px] mx-auto">
+        {/* Header */}
+        <header className="mb-6">
+          <div className="flex items-start justify-between flex-wrap gap-4">
             <div>
-              <h1 className="text-4xl font-bold mb-2">{contract.name}</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground flex items-center gap-2.5">
+                <FileText className="w-6 h-6 text-primary" strokeWidth={1.75} />
+                {contract.name}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
                 Vytvořeno: {new Date(contract.createdAt).toLocaleDateString("cs-CZ")}
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleGenerateInvoice}>
-                <DollarSign className="w-4 h-4 mr-2" />
+            <div className="flex gap-1.5">
+              <Button variant="outline" size="sm" onClick={handleGenerateInvoice}>
+                <DollarSign className="w-4 h-4 mr-1.5" strokeWidth={1.75} />
                 Vystavit fakturu
               </Button>
-              <Button variant="destructive" onClick={handleDelete}>
-                <Trash2 className="w-4 h-4 mr-2" />
-                Smazat
+              <Button variant="ghost" size="icon-sm" onClick={handleDelete} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                <Trash2 className="w-4 h-4" strokeWidth={1.75} />
               </Button>
             </div>
           </div>
-        </div>
+        </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
-                  Náhled smlouvy
-                </CardTitle>
-                <CardDescription>
+          <div className="lg:col-span-2 space-y-4">
+            <div className="p-4 bg-card border border-border rounded-md stagger-item" style={{ animationDelay: "0ms" }}>
+              <div className="flex items-center gap-2 mb-3">
+                <FileText className="w-5 h-5 text-primary" strokeWidth={1.75} />
+                <h3 className="text-sm font-medium">Náhled smlouvy</h3>
+                <span className="text-xs text-muted-foreground ml-auto">
                   {completedBlocks.length} ze {contract.blocks.length} sekcí vyplněno
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-background p-6 rounded-lg border border-border whitespace-pre-wrap font-mono text-sm overflow-x-auto max-h-[600px] overflow-y-auto">
-                  {contractText}
-                </div>
-              </CardContent>
-            </Card>
+                </span>
+              </div>
+              <div className="bg-background p-4 rounded-md border border-border whitespace-pre-wrap font-mono text-xs overflow-x-auto max-h-[600px] overflow-y-auto">
+                {contractText}
+              </div>
+            </div>
 
             {/* Contract Exporter */}
-            <ContractExporter
-              blocks={contract.blocks}
-              contractText={contractText}
-              contractType={contract.type}
-            />
+            <div className="stagger-item" style={{ animationDelay: "50ms" }}>
+              <ContractExporter
+                blocks={contract.blocks}
+                contractText={contractText}
+                contractType={contract.type}
+              />
+            </div>
           </div>
 
           {/* Side Panel */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Change Requests */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Změnové listy</CardTitle>
-                  <Button onClick={() => setShowChangeRequestDialog(true)} size="sm" variant="outline">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nový
-                  </Button>
-                </div>
-                <CardDescription>Dodatky a změny smlouvy</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {changeRequests.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">Zatím žádné změnové listy</p>
-                  ) : (
-                    changeRequests.map((request) => (
-                      <div key={request.id} className="p-3 border rounded-lg space-y-2">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold text-sm">Dodatek #{request.requestNumber}</span>
-                              {getChangeRequestStatusBadge(request.status)}
-                            </div>
-                            <p className="text-sm text-muted-foreground">{request.description}</p>
+            <div className="p-4 bg-card border border-border rounded-md stagger-item" style={{ animationDelay: "100ms" }}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium">Změnové listy</h3>
+                <Button onClick={() => setShowChangeRequestDialog(true)} size="sm" variant="outline" className="h-7 text-xs">
+                  <Plus className="w-3.5 h-3.5 mr-1" strokeWidth={1.75} />
+                  Nový
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">Dodatky a změny smlouvy</p>
+              <div className="space-y-2">
+                {changeRequests.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-4">Zatím žádné změnové listy</p>
+                ) : (
+                  changeRequests.map((request, index) => (
+                    <div key={request.id} className="p-3 border border-border rounded-md space-y-2">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-xs">Dodatek #{request.requestNumber}</span>
+                            {getChangeRequestStatusBadge(request.status)}
                           </div>
-                        </div>
-
-                        {(request.priceIncrease > 0 || request.deadlineExtensionDays > 0) && (
-                          <div className="flex gap-2 text-xs text-muted-foreground">
-                            {request.priceIncrease > 0 && (
-                              <span>+{request.priceIncrease.toLocaleString("cs-CZ")} Kč</span>
-                            )}
-                            {request.deadlineExtensionDays > 0 && (
-                              <span>+{request.deadlineExtensionDays}d</span>
-                            )}
-                          </div>
-                        )}
-
-                        <div className="flex gap-2 pt-2">
-                          {request.status === "pending" && (
-                            <>
-                              <Button
-                                onClick={() => handleApproveChangeRequest(request.id)}
-                                size="sm"
-                                variant="outline"
-                                className="flex-1"
-                              >
-                                <CheckCircle className="w-3 h-3 mr-1" />
-                                Schválit
-                              </Button>
-                              <Button
-                                onClick={() => handleRejectChangeRequest(request.id)}
-                                size="sm"
-                                variant="outline"
-                                className="flex-1"
-                              >
-                                <XCircle className="w-3 h-3 mr-1" />
-                                Zamítnout
-                              </Button>
-                            </>
-                          )}
-                          {request.status === "approved" && (
-                            <Button
-                              onClick={() => handleDownloadAmendment(request)}
-                              size="sm"
-                              variant="outline"
-                              className="flex-1"
-                            >
-                              <Download className="w-3 h-3 mr-1" />
-                              Stáhnout dodatek
-                            </Button>
-                          )}
-                          <Button
-                            onClick={() => handleDeleteChangeRequest(request.id)}
-                            size="sm"
-                            variant="ghost"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
+                          <p className="text-xs text-muted-foreground">{request.description}</p>
                         </div>
                       </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+
+                      {(request.priceIncrease > 0 || request.deadlineExtensionDays > 0) && (
+                        <div className="flex gap-2 text-[10px] text-muted-foreground">
+                          {request.priceIncrease > 0 && (
+                            <span className="text-success">+{request.priceIncrease.toLocaleString("cs-CZ")} Kč</span>
+                          )}
+                          {request.deadlineExtensionDays > 0 && (
+                            <span>+{request.deadlineExtensionDays}d</span>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex gap-1.5 pt-2">
+                        {request.status === "pending" && (
+                          <>
+                            <Button
+                              onClick={() => handleApproveChangeRequest(request.id)}
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 h-7 text-xs"
+                            >
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Schválit
+                            </Button>
+                            <Button
+                              onClick={() => handleRejectChangeRequest(request.id)}
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 h-7 text-xs"
+                            >
+                              <XCircle className="w-3 h-3 mr-1" />
+                              Zamítnout
+                            </Button>
+                          </>
+                        )}
+                        {request.status === "approved" && (
+                          <Button
+                            onClick={() => handleDownloadAmendment(request)}
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 h-7 text-xs"
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            Stáhnout dodatek
+                          </Button>
+                        )}
+                        <Button
+                          onClick={() => handleDeleteChangeRequest(request.id)}
+                          size="icon-sm"
+                          variant="ghost"
+                          className="h-7 w-7"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
 
             {/* Handover Protocol Generator - only for work contracts */}
             {contract.type === "work-contract" && (
-              <HandoverProtocolGenerator
-                contractId={contract.id}
-                contractName={contract.name}
-                contractType={contract.type}
-                blocks={contract.blocks}
-              />
+              <div className="stagger-item" style={{ animationDelay: "150ms" }}>
+                <HandoverProtocolGenerator
+                  contractId={contract.id}
+                  contractName={contract.name}
+                  contractType={contract.type}
+                  blocks={contract.blocks}
+                />
+              </div>
             )}
 
             {/* Timeline */}
             {timeline.deadlines.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Časová osa smlouvy</h2>
-                  <Button onClick={() => setShowCalendarDialog(true)} variant="outline" size="sm">
-                    <Calendar className="w-4 h-4 mr-2" />
+              <div className="p-4 bg-card border border-border rounded-md stagger-item" style={{ animationDelay: "200ms" }}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-medium">Časová osa smlouvy</h3>
+                  <Button onClick={() => setShowCalendarDialog(true)} variant="outline" size="sm" className="h-7 text-xs">
+                    <Calendar className="w-3.5 h-3.5 mr-1" strokeWidth={1.75} />
                     Přidat do kalendáře
                   </Button>
                 </div>
@@ -487,11 +516,9 @@ export default function ContractDetailPage() {
             )}
 
             {/* Contract Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Informace o smlouvě</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
+            <div className="p-4 bg-card border border-border rounded-md stagger-item" style={{ animationDelay: "250ms" }}>
+              <h3 className="text-sm font-medium mb-3">Informace o smlouvě</h3>
+              <div className="space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Typ:</span>
                   <span className="font-medium">{getContractTitle()}</span>
@@ -510,8 +537,8 @@ export default function ContractDetailPage() {
                       : "Neuvedeno"}
                   </span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -529,7 +556,7 @@ export default function ContractDetailPage() {
 
       {/* Change Request Dialog */}
       <Dialog open={showChangeRequestDialog} onOpenChange={setShowChangeRequestDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Nový změnový list</DialogTitle>
             <DialogDescription>
@@ -537,9 +564,11 @@ export default function ContractDetailPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-4 py-2">
             <div>
-              <Label htmlFor="changeDescription">Co klient chce změnit?</Label>
+              <Label htmlFor="changeDescription" className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                Co klient chce změnit?
+              </Label>
               <Textarea
                 id="changeDescription"
                 placeholder="např. Rozšíření projektu o další funkcionalitu..."
@@ -549,41 +578,46 @@ export default function ContractDetailPage() {
               />
             </div>
 
-            <div>
-              <Label htmlFor="priceIncrease">Navýšení ceny (Kč)</Label>
-              <Input
-                id="priceIncrease"
-                type="number"
-                placeholder="0"
-                value={priceIncrease}
-                onChange={(e) => setPriceIncrease(e.target.value)}
-              />
-            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="priceIncrease" className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Navýšení ceny (Kč)
+                </Label>
+                <Input
+                  id="priceIncrease"
+                  type="number"
+                  placeholder="0"
+                  value={priceIncrease}
+                  onChange={(e) => setPriceIncrease(e.target.value)}
+                />
+              </div>
 
-            <div>
-              <Label htmlFor="deadlineExtension">Prodloužení termínu (dny)</Label>
-              <Input
-                id="deadlineExtension"
-                type="number"
-                placeholder="0"
-                value={deadlineExtension}
-                onChange={(e) => setDeadlineExtension(e.target.value)}
-              />
+              <div>
+                <Label htmlFor="deadlineExtension" className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Prodloužení termínu (dny)
+                </Label>
+                <Input
+                  id="deadlineExtension"
+                  type="number"
+                  placeholder="0"
+                  value={deadlineExtension}
+                  onChange={(e) => setDeadlineExtension(e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowChangeRequestDialog(false)}>
+            <Button variant="outline" size="sm" onClick={() => setShowChangeRequestDialog(false)}>
               Zrušit
             </Button>
-            <Button onClick={handleCreateChangeRequest}>
-              <Plus className="w-4 h-4 mr-2" />
+            <Button size="sm" onClick={handleCreateChangeRequest}>
+              <Plus className="w-4 h-4 mr-1.5" strokeWidth={1.75} />
               Vytvořit změnový list
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      </main>
     </AppLayout>
   )
 }

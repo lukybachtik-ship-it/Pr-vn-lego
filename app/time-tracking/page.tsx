@@ -3,11 +3,10 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Play, StopCircle, Clock, Trash2, DollarSign, FileText, Plus, Users, ChevronLeft, ChevronRight } from "lucide-react"
+import { Play, CircleStop, Timer, Trash2, Banknote, FileStack, Plus, UsersRound, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   getAllTimeEntries,
@@ -26,6 +25,7 @@ import type { TimeEntry } from "@/lib/time-tracking"
 import type { Client } from "@/lib/clients"
 import type { SavedContract } from "@/lib/contract-storage"
 import { AppLayout } from "@/components/app-layout"
+import { SkeletonTimeTracking } from "@/components/ui/skeleton"
 
 export default function TimeTrackingPage() {
   const router = useRouter()
@@ -34,6 +34,7 @@ export default function TimeTrackingPage() {
   const [elapsedTime, setElapsedTime] = useState<string>("00:00:00")
   const [clients, setClients] = useState<Client[]>([])
   const [contracts, setContracts] = useState<SavedContract[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [stats, setStats] = useState({
     totalHoursThisMonth: 0,
     billableHoursThisMonth: 0,
@@ -61,6 +62,7 @@ export default function TimeTrackingPage() {
 
   useEffect(() => {
     loadData()
+    setIsLoading(false)
   }, [])
 
   useEffect(() => {
@@ -94,7 +96,6 @@ export default function TimeTrackingPage() {
   const handleSidebarClientClick = (clientId: string) => {
     setSelectedSidebarClientId(clientId)
     setSelectedClientId(clientId)
-    // Auto-populate hourly rate from client's default
     const client = clients.find((c) => c.id === clientId)
     if (client?.defaultHourlyRate) {
       setHourlyRate(client.defaultHourlyRate.toString())
@@ -183,25 +184,21 @@ export default function TimeTrackingPage() {
       return
     }
 
-    // Navigate to cash-flow with prefilled data
     const totalAmount = unbilled.reduce((sum, e) => {
       const hours = (e.durationMinutes || 0) / 60
       return sum + hours * (e.hourlyRate || 0)
     }, 0)
 
-    // Create detailed description from unbilled entries
     const descriptions = unbilled.map(e => e.description).filter(d => d)
     const uniqueDescriptions = [...new Set(descriptions)]
     const detailedDescription = uniqueDescriptions.length > 0
       ? uniqueDescriptions.join(", ")
       : `Práce za ${unbilled.length} ${unbilled.length === 1 ? "záznam" : unbilled.length <= 4 ? "záznamy" : "záznamů"}`
 
-    // Get first client ID if all entries are for same client
     const clientIds = unbilled.map(e => e.clientId).filter(id => id)
     const uniqueClientIds = [...new Set(clientIds)]
     const clientId = uniqueClientIds.length === 1 ? uniqueClientIds[0] : undefined
 
-    // Get client name if we have one consistent client
     const from = clientId ? getClientName(clientId) : ""
 
     const params = new URLSearchParams({
@@ -232,156 +229,159 @@ export default function TimeTrackingPage() {
     return contract?.name || "-"
   }
 
-  return (
-    <AppLayout title="Time Tracking" showBack>
-      <main className="p-6">
-        <div className="max-w-7xl mx-auto flex gap-6">
-          {/* Client Sidebar */}
-          <div className={`transition-all duration-300 ${showClientSidebar ? "w-64" : "w-12"} flex-shrink-0`}>
-            <Card className="sticky top-6 h-fit">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  {showClientSidebar && (
-                    <CardTitle className="flex items-center gap-2 text-sm">
-                      <Users className="w-4 h-4" />
-                      Klienti
-                    </CardTitle>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowClientSidebar(!showClientSidebar)}
-                    className="h-8 w-8 p-0"
-                  >
-                    {showClientSidebar ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </Button>
-                </div>
-              </CardHeader>
-              {showClientSidebar && (
-                <CardContent className="space-y-1 max-h-[calc(100vh-200px)] overflow-y-auto">
-                  <Button
-                    variant={selectedSidebarClientId === null ? "secondary" : "ghost"}
-                    size="sm"
-                    className="w-full justify-start text-xs"
-                    onClick={() => {
-                      setSelectedSidebarClientId(null)
-                      setSelectedClientId("")
-                    }}
-                  >
-                    Všichni
-                  </Button>
-                  {clients.map((client) => (
-                    <Button
-                      key={client.id}
-                      variant={selectedSidebarClientId === client.id ? "secondary" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start text-xs"
-                      onClick={() => handleSidebarClientClick(client.id)}
-                    >
-                      {client.name}
-                    </Button>
-                  ))}
-                </CardContent>
-              )}
-            </Card>
-          </div>
+  if (isLoading) {
+    return (
+      <AppLayout>
+        <SkeletonTimeTracking />
+      </AppLayout>
+    )
+  }
 
-          {/* Main Content */}
-          <div className="flex-1 space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold">Time Tracking</h1>
-                <p className="text-muted-foreground">Evidence práce a vyfakturování hodin</p>
+  return (
+    <AppLayout>
+      <div className="p-5 lg:p-6 max-w-[1200px] mx-auto flex gap-6">
+        {/* Client Sidebar */}
+        <div className={`transition-all duration-200 ${showClientSidebar ? "w-56" : "w-10"} flex-shrink-0`}>
+          <div className="sticky top-6 p-3 bg-card border border-border rounded-md">
+            <div className="flex items-center justify-between mb-3">
+              {showClientSidebar && (
+                <div className="flex items-center gap-2">
+                  <UsersRound className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
+                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Klienti</span>
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowClientSidebar(!showClientSidebar)}
+                className="h-7 w-7 p-0"
+              >
+                {showClientSidebar ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              </Button>
+            </div>
+            {showClientSidebar && (
+              <div className="space-y-0.5 max-h-[calc(100vh-200px)] overflow-y-auto">
+                <Button
+                  variant={selectedSidebarClientId === null ? "secondary" : "ghost"}
+                  size="sm"
+                  className="w-full justify-start text-xs h-7"
+                  onClick={() => {
+                    setSelectedSidebarClientId(null)
+                    setSelectedClientId("")
+                  }}
+                >
+                  Všichni
+                </Button>
+                {clients.map((client) => (
+                  <Button
+                    key={client.id}
+                    variant={selectedSidebarClientId === client.id ? "secondary" : "ghost"}
+                    size="sm"
+                    className="w-full justify-start text-xs h-7 truncate"
+                    onClick={() => handleSidebarClientClick(client.id)}
+                  >
+                    {client.name}
+                  </Button>
+                ))}
               </div>
-              <Button onClick={() => setShowManualDialog(true)} variant="outline">
-                <Plus className="w-4 h-4 mr-2" />
+            )}
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 space-y-6">
+          {/* Header */}
+          <header>
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight text-foreground flex items-center gap-2.5">
+                  <Timer className="w-6 h-6 text-primary" strokeWidth={1.75} />
+                  Time Tracking
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Evidence práce a vyfakturování hodin
+                </p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setShowManualDialog(true)}>
+                <Plus className="w-4 h-4 mr-1.5" />
                 Přidat čas ručně
               </Button>
             </div>
+          </header>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Tento měsíc</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalHoursThisMonth}h</div>
-              <p className="text-xs text-muted-foreground">Celkem odpracováno</p>
-            </CardContent>
-          </Card>
+          {/* Stats Cards */}
+          <section>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="relative p-4 bg-card border border-border rounded-md overflow-hidden stagger-item">
+                <div className="absolute top-0 left-0 w-0.5 h-full bg-primary" />
+                <p className="metric-label mb-1">Tento měsíc</p>
+                <p className="metric-value">{stats.totalHoursThisMonth}h</p>
+                <p className="text-xs text-muted-foreground">Celkem odpracováno</p>
+              </div>
+              <div className="relative p-4 bg-card border border-border rounded-md overflow-hidden stagger-item">
+                <div className="absolute top-0 left-0 w-0.5 h-full bg-success" />
+                <p className="metric-label mb-1">Fakturovatelné</p>
+                <p className="metric-value">{stats.billableHoursThisMonth}h</p>
+                <p className="text-xs text-muted-foreground">K vyfakturování</p>
+              </div>
+              <div className="relative p-4 bg-card border border-border rounded-md overflow-hidden stagger-item">
+                <div className="absolute top-0 left-0 w-0.5 h-full bg-warning" />
+                <p className="metric-label mb-1">Nevyfakturováno</p>
+                <p className="metric-value">{stats.unbilledRevenue.toLocaleString("cs-CZ")} Kč</p>
+                <p className="text-xs text-muted-foreground">Potenciální příjem</p>
+              </div>
+            </div>
+          </section>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Fakturovatelné</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.billableHoursThisMonth}h</div>
-              <p className="text-xs text-muted-foreground">K vyfakturování</p>
-            </CardContent>
-          </Card>
+          {/* Timer Section */}
+          <section className={`p-4 bg-card border rounded-md ${runningEntry ? "border-success/50" : "border-border"}`}>
+            <div className="flex items-center gap-2 mb-4">
+              <Timer className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
+              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {runningEntry ? "Časomíra běží" : "Spustit časomíru"}
+              </span>
+            </div>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Nevyfakturováno</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.unbilledRevenue.toLocaleString("cs-CZ")} Kč</div>
-              <p className="text-xs text-muted-foreground">Potenciální příjem</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Timer Section */}
-        <Card className={runningEntry ? "border-green-500 bg-green-50" : ""}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              {runningEntry ? "Časomíra běží" : "Spustit časomíru"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
             {runningEntry ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Popis</p>
-                    <p className="font-medium">{runningEntry.description}</p>
+                    <p className="text-xs text-muted-foreground">Popis</p>
+                    <p className="text-sm font-medium">{runningEntry.description}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Uplynulý čas</p>
-                    <p className="text-3xl font-mono font-bold text-green-600">{elapsedTime}</p>
+                    <p className="text-xs text-muted-foreground">Uplynulý čas</p>
+                    <p className="text-2xl font-mono font-bold text-success tabular-nums">{elapsedTime}</p>
                   </div>
                 </div>
-                <Button onClick={handleStop} variant="destructive" className="w-full">
-                  <StopCircle className="w-4 h-4 mr-2" />
+                <Button onClick={handleStop} variant="destructive" size="sm" className="w-full">
+                  <CircleStop className="w-4 h-4 mr-1.5" />
                   Zastavit
                 </Button>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2">
-                    <Label htmlFor="description">Co děláš?</Label>
+                    <Label htmlFor="description" className="text-xs font-medium">Co děláš?</Label>
                     <Input
                       id="description"
                       placeholder="např. Vývoj smlouvy, Konzultace..."
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
+                      className="mt-1"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="client">Klient</Label>
+                    <Label htmlFor="client" className="text-xs font-medium">Klient</Label>
                     <select
                       id="client"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      className="mt-1 flex h-9 w-full rounded border border-border bg-background px-3 py-1.5 text-sm transition-colors hover:border-border/80 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
                       value={selectedClientId}
                       onChange={(e) => {
                         const clientId = e.target.value
                         setSelectedClientId(clientId)
-                        // Auto-populate hourly rate from client's default
                         if (clientId) {
                           const client = clients.find((c) => c.id === clientId)
                           if (client?.defaultHourlyRate) {
@@ -401,10 +401,10 @@ export default function TimeTrackingPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="contract">Smlouva (volitelné)</Label>
+                    <Label htmlFor="contract" className="text-xs font-medium">Smlouva (volitelné)</Label>
                     <select
                       id="contract"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      className="mt-1 flex h-9 w-full rounded border border-border bg-background px-3 py-1.5 text-sm transition-colors hover:border-border/80 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50"
                       value={selectedContractId}
                       onChange={(e) => setSelectedContractId(e.target.value)}
                       disabled={!selectedClientId}
@@ -412,7 +412,6 @@ export default function TimeTrackingPage() {
                       <option value="">Žádná smlouva</option>
                       {contracts
                         .filter((c) => {
-                          // Filter contracts by selected client
                           const partiesBlock = c.blocks.find((b) => b.templateId === "parties")
                           if (!partiesBlock) return false
                           const client = clients.find((cl) => cl.id === selectedClientId)
@@ -431,49 +430,51 @@ export default function TimeTrackingPage() {
                   </div>
 
                   <div className="col-span-2">
-                    <Label htmlFor="hourlyRate">Hodinová sazba (Kč/hod)</Label>
+                    <Label htmlFor="hourlyRate" className="text-xs font-medium">Hodinová sazba (Kč/hod)</Label>
                     <Input
                       id="hourlyRate"
                       type="number"
                       placeholder="1000"
                       value={hourlyRate}
                       onChange={(e) => setHourlyRate(e.target.value)}
+                      className="mt-1"
                     />
                   </div>
                 </div>
 
-                <Button onClick={handleStart} className="w-full" size="lg">
-                  <Play className="w-4 h-4 mr-2" />
+                <Button onClick={handleStart} size="sm" className="w-full">
+                  <Play className="w-4 h-4 mr-1.5" />
                   Spustit časomíru
                 </Button>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </section>
 
-        {/* Unbilled Summary */}
-        {stats.unbilledRevenue > 0 && (
-          <Card className="border-blue-500 bg-blue-50">
-            <CardHeader>
-              <CardTitle className="text-lg text-blue-900">Připraveno k vyfakturování</CardTitle>
-              <CardDescription>Máš nevyfakturované hodiny v hodnotě {stats.unbilledRevenue.toLocaleString("cs-CZ")} Kč</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={handleGenerateInvoice} className="w-full" variant="default">
-                <FileText className="w-4 h-4 mr-2" />
-                Vystavit fakturu
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+          {/* Unbilled Summary */}
+          {stats.unbilledRevenue > 0 && (
+            <section className="p-4 bg-primary/5 border border-primary/20 rounded-md">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Připraveno k vyfakturování</p>
+                  <p className="text-xs text-muted-foreground">Nevyfakturované hodiny v hodnotě {stats.unbilledRevenue.toLocaleString("cs-CZ")} Kč</p>
+                </div>
+                <Button onClick={handleGenerateInvoice} size="sm">
+                  <FileStack className="w-4 h-4 mr-1.5" />
+                  Vystavit fakturu
+                </Button>
+              </div>
+            </section>
+          )}
 
-        {/* Entries List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Historie záznamů</CardTitle>
-            <CardDescription>Všechny tvoje time entries</CardDescription>
-          </CardHeader>
-          <CardContent>
+          {/* Entries List */}
+          <section>
+            <div className="flex items-center gap-3 mb-4">
+              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Historie záznamů</h2>
+              <Badge variant="secondary" className="text-[10px] px-1.5">
+                {entries.filter((e) => e.durationMinutes).length}
+              </Badge>
+            </div>
+
             <div className="space-y-2">
               {entries
                 .filter((e) => e.durationMinutes)
@@ -481,30 +482,30 @@ export default function TimeTrackingPage() {
                 .map((entry) => (
                   <div
                     key={entry.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                    className="flex items-center justify-between p-3.5 bg-card border border-border rounded-md clickable-row stagger-item"
                   >
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-medium">{entry.description}</p>
+                        <p className="text-sm font-medium truncate">{entry.description}</p>
                         {entry.invoiceId && <Badge variant="secondary">Vyfakturováno</Badge>}
                         {!entry.invoiceId && entry.billable && <Badge variant="default">K vyúčtování</Badge>}
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         <span>{new Date(entry.createdAt).toLocaleDateString("cs-CZ")}</span>
                         <span>Klient: {getClientName(entry.clientId)}</span>
                         {entry.contractId && <span>Smlouva: {getContractName(entry.contractId)}</span>}
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 ml-4">
                       <div className="text-right">
-                        <p className="font-mono font-semibold">{formatDuration(entry.durationMinutes || 0)}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm font-mono font-semibold tabular-nums">{formatDuration(entry.durationMinutes || 0)}</p>
+                        <p className="text-xs text-muted-foreground tabular-nums">
                           {entry.hourlyRate} Kč/h = {Math.round(((entry.durationMinutes || 0) / 60) * (entry.hourlyRate || 0))} Kč
                         </p>
                       </div>
                       {!entry.invoiceId && (
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(entry.id)}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(entry.id)} className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/5">
+                          <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       )}
                     </div>
@@ -512,143 +513,142 @@ export default function TimeTrackingPage() {
                 ))}
 
               {entries.filter((e) => e.durationMinutes).length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Zatím žádné záznamy. Spusť časomíru a začni tracovat svou práci!</p>
+                <div className="text-center py-12 bg-card border border-border rounded-md">
+                  <div className="w-12 h-12 bg-muted rounded flex items-center justify-center mx-auto mb-3">
+                    <Timer className="w-6 h-6 text-muted-foreground" strokeWidth={1.5} />
+                  </div>
+                  <p className="text-sm text-muted-foreground">Zatím žádné záznamy. Spusť časomíru a začni tracovat svou práci!</p>
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
-          </div>
+          </section>
         </div>
 
-      {/* Manual Entry Dialog */}
-      <Dialog open={showManualDialog} onOpenChange={setShowManualDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Přidat čas ručně</DialogTitle>
-            <DialogDescription>Zaznamenej odpracovanou dobu bez spuštění časomíry</DialogDescription>
-          </DialogHeader>
+        {/* Manual Entry Dialog */}
+        <Dialog open={showManualDialog} onOpenChange={setShowManualDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Přidat čas ručně</DialogTitle>
+              <DialogDescription>Zaznamenej odpracovanou dobu bez spuštění časomíry</DialogDescription>
+            </DialogHeader>
 
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="manualDescription">Co jsi dělal?</Label>
-              <Input
-                id="manualDescription"
-                placeholder="např. Vývoj smlouvy, Konzultace..."
-                value={manualDescription}
-                onChange={(e) => setManualDescription(e.target.value)}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="manualHours">Hodiny</Label>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="manualDescription" className="text-xs font-medium">Co jsi dělal?</Label>
                 <Input
-                  id="manualHours"
-                  type="number"
-                  placeholder="0"
-                  min="0"
-                  value={manualHours}
-                  onChange={(e) => setManualHours(e.target.value)}
+                  id="manualDescription"
+                  placeholder="např. Vývoj smlouvy, Konzultace..."
+                  value={manualDescription}
+                  onChange={(e) => setManualDescription(e.target.value)}
                 />
               </div>
-              <div>
-                <Label htmlFor="manualMinutes">Minuty</Label>
-                <Input
-                  id="manualMinutes"
-                  type="number"
-                  placeholder="0"
-                  min="0"
-                  max="59"
-                  value={manualMinutes}
-                  onChange={(e) => setManualMinutes(e.target.value)}
-                />
-              </div>
-            </div>
 
-            <div>
-              <Label htmlFor="manualClient">Klient (volitelné)</Label>
-              <select
-                id="manualClient"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={manualClientId}
-                onChange={(e) => {
-                  const clientId = e.target.value
-                  setManualClientId(clientId)
-                  // Auto-populate hourly rate from client's default
-                  if (clientId) {
-                    const client = clients.find((c) => c.id === clientId)
-                    if (client?.defaultHourlyRate) {
-                      setManualHourlyRate(client.defaultHourlyRate.toString())
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="manualHours" className="text-xs font-medium">Hodiny</Label>
+                  <Input
+                    id="manualHours"
+                    type="number"
+                    placeholder="0"
+                    min="0"
+                    value={manualHours}
+                    onChange={(e) => setManualHours(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="manualMinutes" className="text-xs font-medium">Minuty</Label>
+                  <Input
+                    id="manualMinutes"
+                    type="number"
+                    placeholder="0"
+                    min="0"
+                    max="59"
+                    value={manualMinutes}
+                    onChange={(e) => setManualMinutes(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="manualClient" className="text-xs font-medium">Klient (volitelné)</Label>
+                <select
+                  id="manualClient"
+                  className="flex h-9 w-full rounded border border-border bg-background px-3 py-1.5 text-sm transition-colors hover:border-border/80 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                  value={manualClientId}
+                  onChange={(e) => {
+                    const clientId = e.target.value
+                    setManualClientId(clientId)
+                    if (clientId) {
+                      const client = clients.find((c) => c.id === clientId)
+                      if (client?.defaultHourlyRate) {
+                        setManualHourlyRate(client.defaultHourlyRate.toString())
+                      }
                     }
-                  }
-                }}
-              >
-                <option value="">Vyberte klienta</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.name}
-                    {client.defaultHourlyRate && ` (${client.defaultHourlyRate} Kč/h)`}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <Label htmlFor="manualContract">Smlouva (volitelné)</Label>
-              <select
-                id="manualContract"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={manualContractId}
-                onChange={(e) => setManualContractId(e.target.value)}
-                disabled={!manualClientId}
-              >
-                <option value="">Žádná smlouva</option>
-                {contracts
-                  .filter((c) => {
-                    if (!manualClientId) return false
-                    const partiesBlock = c.blocks.find((b) => b.templateId === "parties")
-                    if (!partiesBlock) return false
-                    const client = clients.find((cl) => cl.id === manualClientId)
-                    if (!client) return false
-                    return (
-                      partiesBlock.data.party1Name === client.name || partiesBlock.data.party2Name === client.name
-                    )
-                  })
-                  .map((contract) => (
-                    <option key={contract.id} value={contract.id}>
-                      {contract.name}
+                  }}
+                >
+                  <option value="">Vyberte klienta</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.name}
+                      {client.defaultHourlyRate && ` (${client.defaultHourlyRate} Kč/h)`}
                     </option>
                   ))}
-              </select>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="manualContract" className="text-xs font-medium">Smlouva (volitelné)</Label>
+                <select
+                  id="manualContract"
+                  className="flex h-9 w-full rounded border border-border bg-background px-3 py-1.5 text-sm transition-colors hover:border-border/80 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50"
+                  value={manualContractId}
+                  onChange={(e) => setManualContractId(e.target.value)}
+                  disabled={!manualClientId}
+                >
+                  <option value="">Žádná smlouva</option>
+                  {contracts
+                    .filter((c) => {
+                      if (!manualClientId) return false
+                      const partiesBlock = c.blocks.find((b) => b.templateId === "parties")
+                      if (!partiesBlock) return false
+                      const client = clients.find((cl) => cl.id === manualClientId)
+                      if (!client) return false
+                      return (
+                        partiesBlock.data.party1Name === client.name || partiesBlock.data.party2Name === client.name
+                      )
+                    })
+                    .map((contract) => (
+                      <option key={contract.id} value={contract.id}>
+                        {contract.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="manualHourlyRate" className="text-xs font-medium">Hodinová sazba (Kč/hod)</Label>
+                <Input
+                  id="manualHourlyRate"
+                  type="number"
+                  placeholder="1000"
+                  value={manualHourlyRate}
+                  onChange={(e) => setManualHourlyRate(e.target.value)}
+                />
+              </div>
             </div>
 
-            <div>
-              <Label htmlFor="manualHourlyRate">Hodinová sazba (Kč/hod)</Label>
-              <Input
-                id="manualHourlyRate"
-                type="number"
-                placeholder="1000"
-                value={manualHourlyRate}
-                onChange={(e) => setManualHourlyRate(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowManualDialog(false)}>
-              Zrušit
-            </Button>
-            <Button onClick={handleManualEntry}>
-              <Plus className="w-4 h-4 mr-2" />
-              Přidat záznam
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      </main>
+            <DialogFooter>
+              <Button variant="outline" size="sm" onClick={() => setShowManualDialog(false)}>
+                Zrušit
+              </Button>
+              <Button size="sm" onClick={handleManualEntry}>
+                <Plus className="w-4 h-4 mr-1.5" />
+                Přidat záznam
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </AppLayout>
   )
 }
