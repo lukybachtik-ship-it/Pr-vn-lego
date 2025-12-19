@@ -71,9 +71,12 @@ export function AppLayout({ children, title, showBack = false }: AppLayoutProps)
           </div>
         </header>
 
-        {/* Desktop breadcrumbs */}
-        <div className="hidden lg:block px-6 pt-4">
+        {/* Desktop header with breadcrumbs and notifications */}
+        <div className="hidden lg:flex items-center justify-between px-6 pt-4">
           <Breadcrumbs />
+          <div className="flex items-center gap-2">
+            <NotificationCenter />
+          </div>
         </div>
 
         {/* Main content */}

@@ -22,6 +22,8 @@ import {
   Briefcase,
   Scale,
   Search,
+  Receipt,
+  FileText,
 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
@@ -41,6 +43,7 @@ interface NavItem {
 
 const mainNavItems: NavItem[] = [
   { title: "Dashboard", href: "/", icon: <LayoutDashboard className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
+  { title: "Moje smlouvy", href: "/contracts", icon: <FileText className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
   { title: "Moje koncepty", href: "/drafts", icon: <FileStack className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
   { title: "Klienti", href: "/clients", icon: <UsersRound className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
   { title: "Peníze", href: "/cash-flow", icon: <Landmark className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
@@ -52,7 +55,7 @@ const mainNavItems: NavItem[] = [
 const settingsNavItems: NavItem[] = [
   { title: "Bankovní účty", href: "/settings/bank-accounts", icon: <Banknote className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
   { title: "Nastavení profilu", href: "/settings/profile", icon: <UserCircle2 className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
-  { title: "Daňové nastavení", href: "/settings/tax", icon: <Scale className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
+  { title: "Daňové nastavení", href: "/settings/tax", icon: <Receipt className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
 ]
 
 export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {

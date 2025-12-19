@@ -40,8 +40,25 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="cs" suppressHydrationWarning>
-      <body className={`font-sans antialiased`}>
+    <html lang="cs" suppressHydrationWarning className="bg-background">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('theme');
+                  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.style.colorScheme = 'dark';
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className={`font-sans antialiased bg-background`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
