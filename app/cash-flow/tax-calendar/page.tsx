@@ -1021,7 +1021,6 @@ export default function TaxCalendarPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
     </AppLayout>
   )
 }

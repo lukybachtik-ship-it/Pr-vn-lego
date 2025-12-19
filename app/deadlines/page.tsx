@@ -154,7 +154,7 @@ export default function DeadlinesPage() {
           isPast,
           isUpcoming,
           sourceId: inv.id,
-          sourceName: inv.clientName,
+          sourceName: inv.from,
           amount: inv.amount,
         })
       })
