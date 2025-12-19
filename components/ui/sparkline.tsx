@@ -46,24 +46,27 @@ export function Sparkline({
   // Generate SVG path for the area
   const areaPath = `${linePath} L ${points[points.length - 1].x.toFixed(2)} ${height - padding} L ${points[0].x.toFixed(2)} ${height - padding} Z`
 
-  const colorClasses = {
+  // Use CSS custom properties for colors that work in both light and dark mode
+  const colorStyles = {
     primary: {
-      stroke: "stroke-primary",
-      fill: "fill-primary/10",
+      stroke: "var(--primary)",
+      fill: "oklch(from var(--primary) l c h / 0.15)",
     },
     success: {
-      stroke: "stroke-success",
-      fill: "fill-success/10",
+      stroke: "var(--success)",
+      fill: "oklch(from var(--success) l c h / 0.15)",
     },
     warning: {
-      stroke: "stroke-warning",
-      fill: "fill-warning/10",
+      stroke: "var(--warning)",
+      fill: "oklch(from var(--warning) l c h / 0.15)",
     },
     destructive: {
-      stroke: "stroke-destructive",
-      fill: "fill-destructive/10",
+      stroke: "var(--destructive)",
+      fill: "oklch(from var(--destructive) l c h / 0.15)",
     },
   }
+
+  const currentColor = colorStyles[color]
 
   return (
     <div className={cn("relative", className)} {...props}>
@@ -76,10 +79,8 @@ export function Sparkline({
         {showArea && (
           <path
             d={areaPath}
-            className={cn(
-              colorClasses[color].fill,
-              animated && "animate-in fade-in duration-500"
-            )}
+            style={{ fill: currentColor.fill }}
+            className={animated ? "animate-in fade-in duration-500" : undefined}
           />
         )}
         <path
@@ -88,25 +89,21 @@ export function Sparkline({
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={cn(
-            colorClasses[color].stroke,
-            animated && "animate-in fade-in duration-500"
-          )}
           style={{
+            stroke: currentColor.stroke,
             strokeDasharray: animated ? 1000 : undefined,
             strokeDashoffset: animated ? 1000 : undefined,
             animation: animated ? "sparkline-draw 1s ease-out forwards" : undefined,
           }}
+          className={animated ? "animate-in fade-in duration-500" : undefined}
         />
         {/* End point dot */}
         <circle
           cx={points[points.length - 1].x}
           cy={points[points.length - 1].y}
           r="2"
-          className={cn(
-            colorClasses[color].stroke.replace("stroke-", "fill-"),
-            animated && "animate-in zoom-in duration-300 delay-500"
-          )}
+          style={{ fill: currentColor.stroke }}
+          className={animated ? "animate-in zoom-in duration-300 delay-500" : undefined}
         />
       </svg>
     </div>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useState, memo } from "react"
 import { Button } from "@/components/ui/button"
 import {
   LayoutDashboard,
@@ -24,6 +24,7 @@ import {
   Search,
   Receipt,
   FileText,
+  type LucideIcon,
 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
@@ -37,26 +38,58 @@ interface AppSidebarProps {
 interface NavItem {
   title: string
   href: string
-  icon: React.ReactNode
+  Icon: LucideIcon
   badge?: string
 }
 
 const mainNavItems: NavItem[] = [
-  { title: "Dashboard", href: "/", icon: <LayoutDashboard className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
-  { title: "Moje smlouvy", href: "/contracts", icon: <FileText className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
-  { title: "Moje koncepty", href: "/drafts", icon: <FileStack className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
-  { title: "Klienti", href: "/clients", icon: <UsersRound className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
-  { title: "Peníze", href: "/cash-flow", icon: <Landmark className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
-  { title: "Kalendář termínů", href: "/deadlines", icon: <Timer className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
-  { title: "Rychlé zakázky", href: "/quick-orders", icon: <Bolt className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
-  { title: "Kalkulačka zisku", href: "/calculator", icon: <PieChart className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
+  { title: "Dashboard", href: "/", Icon: LayoutDashboard },
+  { title: "Moje smlouvy", href: "/contracts", Icon: FileText },
+  { title: "Moje koncepty", href: "/drafts", Icon: FileStack },
+  { title: "Klienti", href: "/clients", Icon: UsersRound },
+  { title: "Peníze", href: "/cash-flow", Icon: Landmark },
+  { title: "Kalendář termínů", href: "/deadlines", Icon: Timer },
+  { title: "Rychlé zakázky", href: "/quick-orders", Icon: Bolt },
+  { title: "Kalkulačka zisku", href: "/calculator", Icon: PieChart },
 ]
 
 const settingsNavItems: NavItem[] = [
-  { title: "Bankovní účty", href: "/settings/bank-accounts", icon: <Banknote className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
-  { title: "Nastavení profilu", href: "/settings/profile", icon: <UserCircle2 className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
-  { title: "Daňové nastavení", href: "/settings/tax", icon: <Receipt className="w-[18px] h-[18px]" strokeWidth={1.75} /> },
+  { title: "Bankovní účty", href: "/settings/bank-accounts", Icon: Banknote },
+  { title: "Nastavení profilu", href: "/settings/profile", Icon: UserCircle2 },
+  { title: "Daňové nastavení", href: "/settings/tax", Icon: Receipt },
 ]
+
+// Memoized nav button to prevent unnecessary re-renders
+const NavButton = memo(function NavButton({
+  item,
+  isActive,
+  onClick,
+}: {
+  item: NavItem
+  isActive: boolean
+  onClick: () => void
+}) {
+  const { Icon } = item
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "w-full flex items-center gap-2.5 px-3 py-2.5 rounded text-left transition-colors text-[13px] touch-feedback min-h-[44px]",
+        isActive
+          ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+          : "text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+      )}
+    >
+      <Icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
+      <span>{item.title}</span>
+      {item.badge && (
+        <span className="ml-auto bg-sidebar-primary text-sidebar-primary-foreground text-[10px] px-1.5 py-0.5 rounded font-medium">
+          {item.badge}
+        </span>
+      )}
+    </button>
+  )
+})
 
 export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
   const router = useRouter()
@@ -193,24 +226,12 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
         <nav className="flex-1 overflow-y-auto px-3 py-4 sidebar-scroll scroll-smooth-touch">
           <div className="space-y-1">
             {mainNavItems.map((item) => (
-              <button
+              <NavButton
                 key={item.href}
+                item={item}
+                isActive={isActive(item.href)}
                 onClick={() => handleNavigation(item.href)}
-                className={cn(
-                  "w-full flex items-center gap-2.5 px-3 py-2.5 rounded text-left transition-colors text-[13px] touch-feedback min-h-[44px]",
-                  isActive(item.href)
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
-                    : "text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                )}
-              >
-                {item.icon}
-                <span>{item.title}</span>
-                {item.badge && (
-                  <span className="ml-auto bg-sidebar-primary text-sidebar-primary-foreground text-[10px] px-1.5 py-0.5 rounded font-medium">
-                    {item.badge}
-                  </span>
-                )}
-              </button>
+              />
             ))}
           </div>
 
@@ -221,19 +242,12 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
             </p>
             <div className="space-y-1">
               {settingsNavItems.map((item) => (
-                <button
+                <NavButton
                   key={item.href}
+                  item={item}
+                  isActive={isActive(item.href)}
                   onClick={() => handleNavigation(item.href)}
-                  className={cn(
-                    "w-full flex items-center gap-2.5 px-3 py-2.5 rounded text-left transition-colors text-[13px] touch-feedback min-h-[44px]",
-                    isActive(item.href)
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
-                      : "text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                  )}
-                >
-                  {item.icon}
-                  <span>{item.title}</span>
-                </button>
+                />
               ))}
             </div>
           </div>
