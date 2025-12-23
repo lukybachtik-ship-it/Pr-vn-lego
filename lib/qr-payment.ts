@@ -29,6 +29,31 @@ function removeDiacritics(str: string): string {
 }
 
 /**
+ * Calculate CRC32 checksum for SPAYD string
+ * Some banks require this for validation
+ */
+function calculateCRC32(str: string): string {
+  // CRC32 lookup table
+  const table: number[] = []
+  for (let i = 0; i < 256; i++) {
+    let c = i
+    for (let j = 0; j < 8; j++) {
+      c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)
+    }
+    table[i] = c >>> 0
+  }
+
+  let crc = 0xFFFFFFFF
+  for (let i = 0; i < str.length; i++) {
+    crc = table[(crc ^ str.charCodeAt(i)) & 0xFF] ^ (crc >>> 8)
+  }
+  crc = (crc ^ 0xFFFFFFFF) >>> 0
+
+  // Return as uppercase hex string
+  return crc.toString(16).toUpperCase().padStart(8, '0')
+}
+
+/**
  * Generate SPD (Short Payment Descriptor) string
  * Format: SPD*1.0*ACC:{IBAN}*AM:{amount}*CC:{currency}*MSG:{message}*X-VS:{vs}
  * Compliant with Czech QR Platba (SPAYD) specification
@@ -97,6 +122,13 @@ export function generateSPDString(data: QRPaymentData): string {
       parts.push(`MSG:${sanitized}`)
     }
   }
+
+  // Build the string without CRC first
+  const spdWithoutCRC = parts.join("*")
+
+  // Add CRC32 checksum for better compatibility with some banks
+  const crc = calculateCRC32(spdWithoutCRC)
+  parts.push(`CRC32:${crc}`)
 
   return parts.join("*")
 }
