@@ -16,8 +16,22 @@ export interface QRPaymentData {
 }
 
 /**
+ * Remove diacritics from string (convert to ASCII)
+ */
+function removeDiacritics(str: string): string {
+  const diacriticsMap: Record<string, string> = {
+    'á': 'a', 'č': 'c', 'ď': 'd', 'é': 'e', 'ě': 'e', 'í': 'i', 'ň': 'n',
+    'ó': 'o', 'ř': 'r', 'š': 's', 'ť': 't', 'ú': 'u', 'ů': 'u', 'ý': 'y', 'ž': 'z',
+    'Á': 'A', 'Č': 'C', 'Ď': 'D', 'É': 'E', 'Ě': 'E', 'Í': 'I', 'Ň': 'N',
+    'Ó': 'O', 'Ř': 'R', 'Š': 'S', 'Ť': 'T', 'Ú': 'U', 'Ů': 'U', 'Ý': 'Y', 'Ž': 'Z'
+  }
+  return str.replace(/[áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]/g, char => diacriticsMap[char] || char)
+}
+
+/**
  * Generate SPD (Short Payment Descriptor) string
  * Format: SPD*1.0*ACC:{IBAN}*AM:{amount}*CC:{currency}*MSG:{message}*X-VS:{vs}
+ * Compliant with Czech QR Platba (SPAYD) specification
  */
 export function generateSPDString(data: QRPaymentData): string {
   const parts: string[] = ["SPD*1.0"]
@@ -33,34 +47,55 @@ export function generateSPDString(data: QRPaymentData): string {
   }
   parts.push(`ACC:${iban}`)
 
-  // Amount
+  // Amount - for CZK use integer (no decimal places), for other currencies use 2 decimal places
   if (data.amount > 0) {
-    parts.push(`AM:${data.amount.toFixed(2)}`)
+    if (data.currency === "CZK") {
+      // CZK amounts must be whole numbers
+      parts.push(`AM:${Math.round(data.amount)}`)
+    } else {
+      parts.push(`AM:${data.amount.toFixed(2)}`)
+    }
   }
 
   // Currency
   parts.push(`CC:${data.currency}`)
 
-  // Variable symbol
+  // Variable symbol (max 10 digits)
   if (data.vs) {
-    parts.push(`X-VS:${data.vs}`)
+    const cleanVs = data.vs.replace(/\D/g, "").substring(0, 10)
+    if (cleanVs) {
+      parts.push(`X-VS:${cleanVs}`)
+    }
   }
 
-  // Constant symbol
+  // Constant symbol (max 10 digits)
   if (data.ks) {
-    parts.push(`X-KS:${data.ks}`)
+    const cleanKs = data.ks.replace(/\D/g, "").substring(0, 10)
+    if (cleanKs) {
+      parts.push(`X-KS:${cleanKs}`)
+    }
   }
 
-  // Specific symbol
+  // Specific symbol (max 10 digits)
   if (data.ss) {
-    parts.push(`X-SS:${data.ss}`)
+    const cleanSs = data.ss.replace(/\D/g, "").substring(0, 10)
+    if (cleanSs) {
+      parts.push(`X-SS:${cleanSs}`)
+    }
   }
 
-  // Message
+  // Message - must be ASCII only (no diacritics), max 60 chars
   if (data.message) {
-    // Sanitize message (remove special characters that could break QR)
-    const sanitized = data.message.replace(/[*\n\r]/g, " ").substring(0, 60)
-    parts.push(`MSG:${sanitized}`)
+    // Remove diacritics and special characters
+    let sanitized = removeDiacritics(data.message)
+    // Remove any remaining non-ASCII and special SPD characters
+    sanitized = sanitized.replace(/[*\n\r]/g, " ")
+    // Keep only printable ASCII
+    sanitized = sanitized.replace(/[^\x20-\x7E]/g, "")
+    sanitized = sanitized.substring(0, 60).trim()
+    if (sanitized) {
+      parts.push(`MSG:${sanitized}`)
+    }
   }
 
   return parts.join("*")
