@@ -245,16 +245,44 @@ export function formatAccountNumber(accountNumber: string, bankCode: string): st
 
 /**
  * Generate IBAN from Czech account number
- * Note: Simplified - real IBAN generation requires check digit calculation
+ * Uses MOD 97-10 algorithm for proper check digit calculation
  */
 export function generateIBAN(accountNumber: string, bankCode: string): string {
-  // Remove spaces and dashes
-  const cleanAccount = accountNumber.replace(/[-\s]/g, "")
-  const [prefix, number] = cleanAccount.includes("-") ? cleanAccount.split("-") : ["", cleanAccount]
+  // Remove spaces
+  const cleanAccount = accountNumber.replace(/\s/g, "")
+  const cleanBankCode = bankCode.replace(/\s/g, "")
 
-  // Pad prefix to 6 digits, number to 10 digits
+  // Split by dash if present (format: prefix-number or just number)
+  let prefix = ""
+  let number = cleanAccount
+
+  if (cleanAccount.includes("-")) {
+    const parts = cleanAccount.split("-")
+    prefix = parts[0]
+    number = parts[1]
+  }
+
+  // Pad bank code to 4 digits, prefix to 6 digits, number to 10 digits
+  const paddedBankCode = cleanBankCode.padStart(4, "0")
   const paddedPrefix = prefix.padStart(6, "0")
   const paddedNumber = number.padStart(10, "0")
 
-  return `CZ__${bankCode}${paddedPrefix}${paddedNumber}` // __ = check digits (would need calculation)
+  // BBAN = bank code (4) + prefix (6) + account number (10) = 20 digits
+  const bban = `${paddedBankCode}${paddedPrefix}${paddedNumber}`
+
+  // For MOD 97-10 calculation:
+  // 1. Move country code to end: BBAN + CZ00
+  // 2. Replace letters with numbers: C=12, Z=35
+  // 3. Calculate: 98 - (number mod 97)
+  const numericString = `${bban}123500` // BBAN + C(12) + Z(35) + 00
+
+  // Use string-based modulo for large numbers
+  let remainder = 0
+  for (let i = 0; i < numericString.length; i++) {
+    remainder = (remainder * 10 + parseInt(numericString[i], 10)) % 97
+  }
+
+  const checkDigits = String(98 - remainder).padStart(2, "0")
+
+  return `CZ${checkDigits}${bban}`
 }

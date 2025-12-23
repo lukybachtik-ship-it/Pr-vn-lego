@@ -23,7 +23,14 @@ export function generateSPDString(data: QRPaymentData): string {
   const parts: string[] = ["SPD*1.0"]
 
   // Account (use IBAN if available, otherwise format from account number)
-  const iban = data.iban || formatToIBAN(data.accountNumber!, data.bankCode!)
+  let iban: string
+  if (data.iban && data.iban.length >= 24 && !data.iban.includes("_")) {
+    // Use provided IBAN, but remove any spaces
+    iban = data.iban.replace(/\s/g, "").toUpperCase()
+  } else {
+    // Generate IBAN from account number and bank code
+    iban = formatToIBAN(data.accountNumber!, data.bankCode!)
+  }
   parts.push(`ACC:${iban}`)
 
   // Amount
@@ -61,32 +68,46 @@ export function generateSPDString(data: QRPaymentData): string {
 
 /**
  * Format Czech account number to IBAN
- * Format: CZ{check digits}{bank code}{prefix(6)}{account(10)}
+ * Format: CZ{check digits}{bank code 4 digits}{prefix 6 digits}{account 10 digits}
  */
 function formatToIBAN(accountNumber: string, bankCode: string): string {
+  // Remove any spaces or dashes that might be in the input
+  const cleanAccount = accountNumber.replace(/\s/g, "")
+  const cleanBankCode = bankCode.replace(/\s/g, "")
+
   // Split account number by dash (format: prefix-number or just number)
   let prefix = ""
-  let number = accountNumber
+  let number = cleanAccount
 
-  if (accountNumber.includes("-")) {
-    const parts = accountNumber.split("-")
+  if (cleanAccount.includes("-")) {
+    const parts = cleanAccount.split("-")
     prefix = parts[0]
     number = parts[1]
   }
 
-  // Pad prefix to 6 digits, number to 10 digits
+  // Pad bank code to 4 digits, prefix to 6 digits, number to 10 digits
+  const paddedBankCode = cleanBankCode.padStart(4, "0")
   const paddedPrefix = prefix.padStart(6, "0")
   const paddedNumber = number.padStart(10, "0")
 
-  // Calculate check digits using MOD 97-10 algorithm for IBAN
-  const bban = `${bankCode}${paddedPrefix}${paddedNumber}`
-  const numericIban = `${bban}123500` // CZ = 1235, add 00 for check calculation
+  // BBAN = bank code (4) + prefix (6) + account number (10) = 20 digits
+  const bban = `${paddedBankCode}${paddedPrefix}${paddedNumber}`
 
-  // Convert to BigInt for modulo calculation
-  const remainder = BigInt(numericIban) % BigInt(97)
-  const checkDigits = String(BigInt(98) - remainder).padStart(2, "0")
+  // For MOD 97-10 calculation:
+  // 1. Move country code to end: BBAN + CZ00
+  // 2. Replace letters with numbers: C=12, Z=35
+  // 3. Calculate: 98 - (number mod 97)
+  const numericString = `${bban}123500` // BBAN + C(12) + Z(35) + 00
 
-  return `CZ${checkDigits}${bankCode}${paddedPrefix}${paddedNumber}`
+  // Use string-based modulo for large numbers
+  let remainder = 0
+  for (let i = 0; i < numericString.length; i++) {
+    remainder = (remainder * 10 + parseInt(numericString[i], 10)) % 97
+  }
+
+  const checkDigits = String(98 - remainder).padStart(2, "0")
+
+  return `CZ${checkDigits}${bban}`
 }
 
 /**
