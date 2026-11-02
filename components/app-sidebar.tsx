@@ -1,7 +1,8 @@
 "use client"
 
+import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { useEffect, useState, memo } from "react"
+import { useState, memo } from "react"
 import { Button } from "@/components/ui/button"
 import {
   LayoutDashboard,
@@ -29,6 +30,7 @@ import {
 import { supabase } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useAuth } from "@/components/auth-provider"
 
 interface AppSidebarProps {
   isOpen: boolean
@@ -59,7 +61,8 @@ const settingsNavItems: NavItem[] = [
   { title: "Daňové nastavení", href: "/settings/tax", Icon: Receipt },
 ]
 
-// Memoized nav button to prevent unnecessary re-renders
+// Memoized nav link to prevent unnecessary re-renders.
+// <Link> prefetches the page, so switching screens is instant.
 const NavButton = memo(function NavButton({
   item,
   isActive,
@@ -71,7 +74,8 @@ const NavButton = memo(function NavButton({
 }) {
   const { Icon } = item
   return (
-    <button
+    <Link
+      href={item.href}
       onClick={onClick}
       className={cn(
         "w-full flex items-center gap-2.5 px-3 py-2.5 rounded text-left transition-colors text-[13px] touch-feedback min-h-[44px]",
@@ -87,19 +91,17 @@ const NavButton = memo(function NavButton({
           {item.badge}
         </span>
       )}
-    </button>
+    </Link>
   )
 })
 
 export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const [userEmail, setUserEmail] = useState<string | null>(null)
+  // User comes from AuthProvider, so it is already known when the page changes
+  const { user } = useAuth()
+  const userEmail = user?.email ?? null
   const [touchStart, setTouchStart] = useState<number | null>(null)
-
-  useEffect(() => {
-    loadUser()
-  }, [])
 
   // Handle swipe to close on mobile
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -117,26 +119,21 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
     setTouchStart(null)
   }
 
-  const loadUser = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (user) {
-      setUserEmail(user.email || null)
-    }
-  }
-
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     router.push("/login")
   }
 
-  const handleNavigation = (href: string) => {
-    router.push(href)
-    // Close sidebar on mobile after navigation
+  // Close sidebar on mobile after navigation (the <Link> itself navigates)
+  const closeOnMobile = () => {
     if (window.innerWidth < 1024) {
       onToggle()
     }
+  }
+
+  const handleNavigation = (href: string) => {
+    router.push(href)
+    closeOnMobile()
   }
 
   const isActive = (href: string) => {
@@ -230,7 +227,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                 key={item.href}
                 item={item}
                 isActive={isActive(item.href)}
-                onClick={() => handleNavigation(item.href)}
+                onClick={closeOnMobile}
               />
             ))}
           </div>
@@ -246,7 +243,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                   key={item.href}
                   item={item}
                   isActive={isActive(item.href)}
-                  onClick={() => handleNavigation(item.href)}
+                  onClick={closeOnMobile}
                 />
               ))}
             </div>
@@ -298,13 +295,14 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
             <span className="text-[13px] text-sidebar-foreground/90">Téma</span>
             <ThemeToggle />
           </div>
-          <button
-            onClick={() => handleNavigation("/help")}
+          <Link
+            href="/help"
+            onClick={closeOnMobile}
             className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded text-left transition-colors text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-foreground text-[13px] touch-feedback min-h-[44px]"
           >
             <LifeBuoy className="w-[18px] h-[18px]" strokeWidth={1.75} />
             <span>Nápověda</span>
-          </button>
+          </Link>
           <button
             onClick={handleSignOut}
             className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded text-left transition-colors text-destructive/90 hover:bg-destructive/10 hover:text-destructive text-[13px] touch-feedback min-h-[44px]"

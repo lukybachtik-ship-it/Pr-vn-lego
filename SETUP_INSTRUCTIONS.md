@@ -1,40 +1,33 @@
 # Supabase Setup - Instrukce
 
-## 1. Spusť SQL Schema
+## 1. Založ projekt a spusť SQL
 
-1. Otevři https://supabase.com/dashboard/project/imrbnrzbjyesdpjmkfuv
+1. Na https://supabase.com/dashboard vytvoř nový projekt (Free plán stačí, region např. Frankfurt)
 2. Jdi na **SQL Editor** v levém menu
-3. Zkopíruj celý obsah souboru `supabase-schema.sql`
+3. Zkopíruj celý obsah souboru `supabase-setup.sql`
 4. Vlož do editoru a klikni **RUN**
-5. Počkej až se vytvoří všechny tabulky
 
-## 2. Co se stane
+Skript vytvoří všechny tabulky, Row Level Security (každý uživatel vidí jen svá data), indexy, triggery a Storage bucket `logos` pro loga. Jde bezpečně spustit i opakovaně.
 
-- **Vytvoří se 7 tabulek**: contracts, clients, invoices, time_entries, bank_accounts, change_requests, user_settings
-- **Row Level Security (RLS)**: Každý user vidí jen svá data
-- **Indexy**: Pro rychlé dotazy
-- **Triggery**: Auto-update `updated_at` sloupců
+## 2. Nastav přihlašování
 
-## 3. Test Auth
+V **Authentication → Sign In / Providers → Email**:
+- vypni **Confirm email**, aby se studenti mohli rovnou registrovat (vestavěný e-mail Supabase pošle jen pár e-mailů za hodinu)
 
-Po buildu:
-1. Spusť `npm run dev`
-2. Otevři http://localhost:3000
-3. Automaticky redirect na `/login`
-4. Registruj se (email + heslo min 6 znaků)
-5. Zkontroluj email pro potvrzení
+V **Authentication → URL Configuration**:
+- **Site URL**: `https://nejnovejsipravnilego.vercel.app`
+- **Redirect URLs**: přidej `https://nejnovejsipravnilego.vercel.app/**` a `http://localhost:3000/**`
 
-## 4. Migrace localStorage dat
+## 3. Propoj s Vercelem
 
-Po prvním přihlášení můžeš spustit migraci:
-- Tlačítko "Migrovat data z localStorage" se objeví na hlavní stránce
-- Zkopíruje všechna data do Supabase
-- Data v localStorage zůstanou jako backup
+1. V Supabase: **Project Settings → API** (nebo tlačítko **Connect**) zkopíruj **Project URL** a **anon public** klíč
+2. Ve Vercelu: **Settings → Environment Variables** přepiš:
+   - `NEXT_PUBLIC_SUPABASE_URL` = Project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = anon klíč
+3. **Deployments → poslední deployment → Redeploy** (proměnné se do aplikace dostanou až při novém buildu)
 
-## 5. Hotovo!
+Pro lokální vývoj dej stejné dvě proměnné do souboru `.env.local`.
 
-Všechny funkce budou fungovat stejně, ale data budou:
-- ✅ V cloudu (bezpečná záloha)
-- ✅ Multi-device (přihlásit se odkudkoliv)
-- ✅ Sdílená mezi zařízeními
-- ✅ Chráněná RLS (nikdo jiný nevidí tvá data)
+## 4. Udržení databáze vzhůru
+
+Free projekty Supabase se po 7 dnech bez aktivity pozastaví. Vercel Cron (`vercel.json`) proto jednou denně volá `/api/keep-alive`, který udělá jeden dotaz do databáze. Funkčnost ověříš otevřením `https://nejnovejsipravnilego.vercel.app/api/keep-alive` – má vrátit `{"ok":true,...}`.
